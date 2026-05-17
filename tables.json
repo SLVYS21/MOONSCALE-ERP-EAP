@@ -1,0 +1,1978 @@
+{
+    "tables": [
+        {
+            "id": "tbl28GhsfLRLdL33y",
+            "name": "PAIEMENTS",
+            "primaryFieldId": "fldFCpmOIeFkRTfin",
+            "fields": [
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "REPT(\"0\", 5-LEN({fldFm4CiV5tPxDxGU} & \"\")) & {fldFm4CiV5tPxDxGU}",
+                        "referencedFieldIds": [
+                            "fldFm4CiV5tPxDxGU"
+                        ],
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldFCpmOIeFkRTfin",
+                    "name": "ID"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selQIs2ObRmmy1msr",
+                                "name": "TRAITÉ",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "seljDYQMegQA4S0iX",
+                                "name": "NON TRAITÉ",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "selC9PNDI670XeId1",
+                                "name": "REJETÉ",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldXEB2SeBh6CXJ2p",
+                    "name": "STATUT DE TRAITEMENT"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selxV0A2FZ0D8Hm9P",
+                                "name": "Partiel",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selOGf1DdrqDZ5okk",
+                                "name": "Complet",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldkJKJvuxotGhzy0",
+                    "name": "MODALITE DE PAIEMENT"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "sel8EUVFTgo201ooO",
+                                "name": "Elite",
+                                "color": "redBright"
+                            },
+                            {
+                                "id": "selBrZvme5WiEqM0J",
+                                "name": "Premium",
+                                "color": "yellowBright"
+                            },
+                            {
+                                "id": "selJjEpzlnlHIjh8z",
+                                "name": "Standard",
+                                "color": "blueBright"
+                            }
+                        ]
+                    },
+                    "id": "fldhQzkOeOizzmGuB",
+                    "name": "Plan"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fld5djmqRHEwMSaO0",
+                        "fieldIdInLinkedTable": "fldR5fxOnblwnhDVV",
+                        "result": {
+                            "type": "phoneNumber"
+                        }
+                    },
+                    "id": "fldIS2Pe8KiG4JbT6",
+                    "name": "WhatsApp"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldjhWQkzKaAo1uP0",
+                    "name": "MONTANT"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblAivp3x8I2rB6gG",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldt8R2diuD1B1IHo"
+                    },
+                    "id": "fld5djmqRHEwMSaO0",
+                    "name": "ETUDIANT"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fld5djmqRHEwMSaO0",
+                        "fieldIdInLinkedTable": "fldvi9sZGiKErSj5u",
+                        "result": {
+                            "type": "email"
+                        }
+                    },
+                    "id": "fld1DGTbpukJUo7Jr",
+                    "name": "EMAIL"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selhr1j7OZ5JrlpD0",
+                                "name": "ECOM AFRICA PRO",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selK2KG0AlvkL1Ho9",
+                                "name": "COACHING",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selxKpqGoiYj8bZPL",
+                                "name": "ECOM REVOLUTION",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldJ2A33TrmC9dWlN",
+                    "name": "PRODUIT"
+                },
+                {
+                    "type": "multipleAttachments",
+                    "options": {
+                        "isReversed": false
+                    },
+                    "id": "flduDkwXkP69GYeZ7",
+                    "name": "PREUVE DE PAIEMENT"
+                },
+                {
+                    "type": "createdTime",
+                    "options": {
+                        "result": {
+                            "type": "date",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                }
+                            }
+                        }
+                    },
+                    "id": "fldtHl8d7A14FqRcC",
+                    "name": "DATE DE PAIEMENT"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selI2knZO3NWoFM4s",
+                                "name": "Fedapay",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selSpyIiXOwstsB4A",
+                                "name": "Carte Bancaire ",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selbF6N4XkWCYSfXE",
+                                "name": "Autres",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selhCEt0dlMVpSHM0",
+                                "name": "Autres (Paiement Cash, Western Union, MoneyGram, etc.)",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selEV401wKWoNIC0B",
+                                "name": "FedaPay",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "sel6kR5W4oYPj8174",
+                                "name": "Carte Bancaire",
+                                "color": "orangeLight2"
+                            },
+                            {
+                                "id": "sel8FXgUd9GjHWdbM",
+                                "name": "Chariow",
+                                "color": "redLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldKofzsEX0vHHCnb",
+                    "name": "MOYEN DE PAIEMENT"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fldyrFvBwKDO0mIs7",
+                    "name": "Notes"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldDD33gvYYCV0F7Q",
+                    "name": "ID backend"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldnSJll9RbGTR7JN",
+                    "name": "NOM ET PRENOMS"
+                },
+                {
+                    "type": "phoneNumber",
+                    "id": "fld7bstk7T4n8CiY5",
+                    "name": "NUMERO DE TELEPHONE"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selQTJhkWD7h1jpRa",
+                                "name": "MODERE",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "seluVXupEjGlU0uOU",
+                                "name": "NON MODERE",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fld7nT4FNDjqUiDd3",
+                    "name": "STATUT MODERATION"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblpjSD81i6DdO4aW",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fld72yugRZGMBBZmd"
+                    },
+                    "id": "fldf2zJJB7HGBthjV",
+                    "name": "NOTIFICATIONS"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldb2yWyZTQRbgcNO",
+                    "name": "ID PAIEMENT"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblxHkUGph0gVaS4C",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldkD8UnOI6Gsdo9Q"
+                    },
+                    "id": "fldBMniTTFq1NrH15",
+                    "name": "DASHBOARD COACHING"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl9q0IzgxJ0rE8Hc",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldon1vHzZom9yDTi"
+                    },
+                    "id": "fldh0AdGfzZBHjRPc",
+                    "name": "DASHBOARD FORMATION"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldfiUo1s6jdiHy00",
+                    "name": "VALIDITÉ (en MOIS)"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selcbuF6F64ksRNpu",
+                                "name": "F CFA",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selR7HFvZDJ5URUzl",
+                                "name": "USD",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selhMXJ6TVIIPh7jZ",
+                                "name": "EURO",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selBNhqiNELEoNNa9",
+                                "name": "FCFA",
+                                "color": "greenLight2"
+                            }
+                        ]
+                    },
+                    "id": "fld1Rkj98QHqTii37",
+                    "name": "DEVISE"
+                },
+                {
+                    "type": "autoNumber",
+                    "id": "fldFm4CiV5tPxDxGU",
+                    "name": "Sequence Number"
+                },
+                {
+                    "type": "lastModifiedTime",
+                    "options": {
+                        "isValid": true,
+                        "referencedFieldIds": [
+                            "fldXEB2SeBh6CXJ2p"
+                        ],
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "12hour",
+                                    "format": "h:mma"
+                                },
+                                "timeZone": "client"
+                            }
+                        }
+                    },
+                    "id": "fldsYlQB1OVBfOTR5",
+                    "name": "Modifié statut de traitement a"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fld5djmqRHEwMSaO0",
+                        "fieldIdInLinkedTable": "fld8JeP2cKm2lTihI",
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldkJ7UIxxYaXby9G",
+                    "name": "Le Client a un Paiement Partiel ?"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblAivp3x8I2rB6gG",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldZ6AImM9VIg7Vry"
+                    },
+                    "id": "fldW6oMdmAVFU4K8b",
+                    "name": "ETUDIANTS"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldQOEvbftaY1uzW0",
+                    "name": "ETUDIANTS 2"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldHuQOGaPEbLJQr6",
+                    "name": "ETUDIANTS 3"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwk82HdxpNfY7Zre",
+                    "name": "A TRAITER",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwTlV8Yy4rNRfm4H",
+                    "name": "GLOBALE",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwD2MwnOqUJKVTiZ",
+                    "name": "TRAITÉ",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwLmvPP0VBr7MVH7",
+                    "name": "REJETÉ",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwMTVWjQYf0nLOwq",
+                    "name": "PAIEMENT PARTIEL",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwmKeZgdC3JduOwl",
+                    "name": "COACHING",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwLhwTXr900yHhUA",
+                    "name": "FORMATION",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwP0utTovgDvQuyV",
+                    "name": "Grid 8",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwvjpzDZoZ6648W4",
+                    "name": "NB PAIEMENT PARTIEL",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tblAivp3x8I2rB6gG",
+            "name": "ETUDIANTS",
+            "primaryFieldId": "fldpz0owp1FQIUTiU",
+            "fields": [
+                {
+                    "type": "singleLineText",
+                    "id": "fldpz0owp1FQIUTiU",
+                    "name": "NOM ET PRENOMS"
+                },
+                {
+                    "type": "email",
+                    "id": "fldvi9sZGiKErSj5u",
+                    "name": "EMAIL"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldt8R2diuD1B1IHo",
+                        "fieldIdInLinkedTable": "fldhQzkOeOizzmGuB",
+                        "result": {
+                            "type": "singleSelect",
+                            "options": {
+                                "choices": [
+                                    {
+                                        "id": "sel8EUVFTgo201ooO",
+                                        "name": "Elite",
+                                        "color": "redBright"
+                                    },
+                                    {
+                                        "id": "selBrZvme5WiEqM0J",
+                                        "name": "Premium",
+                                        "color": "yellowBright"
+                                    },
+                                    {
+                                        "id": "selJjEpzlnlHIjh8z",
+                                        "name": "Standard",
+                                        "color": "blueBright"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "id": "fldzW0MkuriIWQnf8",
+                    "name": "Plan"
+                },
+                {
+                    "type": "phoneNumber",
+                    "id": "fldR5fxOnblwnhDVV",
+                    "name": "WHATSAPP"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "local",
+                            "format": "l"
+                        }
+                    },
+                    "id": "fldwa87PpT1LsQhr0",
+                    "name": "AGE"
+                },
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "DATETIME_DIFF(TODAY(), {fldwa87PpT1LsQhr0}, 'years')",
+                        "referencedFieldIds": [
+                            "fldwa87PpT1LsQhr0"
+                        ],
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fldVNWOppjelHRhLF",
+                    "name": "AGE EN CHIFFRE"
+                },
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "IF(AND({fldVNWOppjelHRhLF} > 10, {fldVNWOppjelHRhLF} < 15), '10 à 15', IF(AND({fldVNWOppjelHRhLF} > 15, {fldVNWOppjelHRhLF} <= 20), '15 à 20', IF(AND({fldVNWOppjelHRhLF} > 20, {fldVNWOppjelHRhLF} <= 25), '20 à 25', IF(AND({fldVNWOppjelHRhLF} > 25, {fldVNWOppjelHRhLF} <= 30), '25 à 30', IF(AND({fldVNWOppjelHRhLF} > 30, {fldVNWOppjelHRhLF} <= 35), '30 à 35', IF(AND({fldVNWOppjelHRhLF} > 35, {fldVNWOppjelHRhLF} <= 40), '35 à 40', IF(AND({fldVNWOppjelHRhLF} > 40, {fldVNWOppjelHRhLF} <= 45), '40 à 45', IF({fldVNWOppjelHRhLF} > 45, 'Sup 45'))))))))",
+                        "referencedFieldIds": [
+                            "fldVNWOppjelHRhLF"
+                        ],
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldmSKMcx9bup5CYT",
+                    "name": "PLAGE D'AGE"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldFSMZGm5a4yPI2E",
+                    "name": "OCCUPATION"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selPd6SjzIid8XcN1",
+                                "name": "FACEBOOK",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selHF0ntls91O9A6q",
+                                "name": "INSTAGRAM",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selYH3wHiIYuacwbV",
+                                "name": "TIKTOK",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selcOoMrNKz4SaGVj",
+                                "name": "YOUTUBE",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selo5hTOQnB71dClq",
+                                "name": "RECOMMANDATIONS",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "selNeB1kP4JRjR63A",
+                                "name": "",
+                                "color": "orangeLight2"
+                            },
+                            {
+                                "id": "sel1MWs57r7WEiysq",
+                                "name": "Facebook",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selVUFqpCnW6stppD",
+                                "name": "TikTok",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selbht65fsQw4vyBN",
+                                "name": "Instagram",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selb8JxWo8qFDFFvc",
+                                "name": "YouTube",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selQF39waOW7ZYyih",
+                                "name": "Recommandations",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldxZu0dsXxZ6D1Az",
+                    "name": "OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?"
+                },
+                {
+                    "type": "createdTime",
+                    "options": {
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "24hour",
+                                    "format": "HH:mm"
+                                },
+                                "timeZone": "Africa/Porto-Novo"
+                            }
+                        }
+                    },
+                    "id": "fld4Y9QYk4ITd6Fow",
+                    "name": "Date de création"
+                },
+                {
+                    "type": "lastModifiedTime",
+                    "options": {
+                        "isValid": true,
+                        "referencedFieldIds": [],
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "24hour",
+                                    "format": "HH:mm"
+                                },
+                                "timeZone": "Africa/Porto-Novo"
+                            }
+                        }
+                    },
+                    "id": "fld7oumj0XhsPUup7",
+                    "name": "Dernière modification"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl28GhsfLRLdL33y",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fld5djmqRHEwMSaO0"
+                    },
+                    "id": "fldt8R2diuD1B1IHo",
+                    "name": "PAIEMENTS"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblxHkUGph0gVaS4C",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldmURYdHao7seFRO"
+                    },
+                    "id": "fldg5Y4sqY0kijnaD",
+                    "name": "DASHBOARD COACHING"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl9q0IzgxJ0rE8Hc",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "flddCpaXnxe5uVXgJ"
+                    },
+                    "id": "fldgemPsamETRQnUS",
+                    "name": "DASHBOARD FORMATION"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "seleDmuVrikJtR9Ac",
+                                "name": "EXACTE",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selxc7rJvvNxlNcZc",
+                                "name": "ERRONÉE",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "seli9KQ5JnABsbrjj",
+                                "name": "NON VÉRIFIÉ",
+                                "color": "yellowLight2"
+                            }
+                        ]
+                    },
+                    "id": "flddMLPrY0klw3gbl",
+                    "name": "STATUT DES INFOS"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fldSOatu5kVA0WNbC",
+                    "name": "Notes"
+                },
+                {
+                    "type": "rollup",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldt8R2diuD1B1IHo",
+                        "fieldIdInLinkedTable": "fldFCpmOIeFkRTfin",
+                        "referencedFieldIds": [],
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fld8JeP2cKm2lTihI",
+                    "name": "NB PAIEMENTS PARTIEL"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selzaHWSKFKdIYt6J",
+                                "name": "Oui",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldYZLN48Tuhde7pa",
+                    "name": "Croisé"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblpjSD81i6DdO4aW",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldJ31Z94PYlUlpPF"
+                    },
+                    "id": "fldQ9wbOS1G2gpWmc",
+                    "name": "NOTIFICATIONS"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldqVQnlfJMuVZ2OW",
+                    "name": "PAIEMENTS 2"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl28GhsfLRLdL33y",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldW6oMdmAVFU4K8b"
+                    },
+                    "id": "fldZ6AImM9VIg7Vry",
+                    "name": "PAIEMENTS 3"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fld5usGC8IPsTUjzp",
+                    "name": "PAIEMENTS 4"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwLOzvm0JjvNjw3I",
+                    "name": "LISTE GLOBALE",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwwdnD8QSjyrTn5q",
+                    "name": "Action Requise",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwk0hQIgMkN0cvdF",
+                    "name": "Gallery",
+                    "type": "gallery"
+                },
+                {
+                    "id": "viwSKUmyIQiP7sHzj",
+                    "name": "Kanban",
+                    "type": "kanban"
+                }
+            ]
+        },
+        {
+            "id": "tbl9q0IzgxJ0rE8Hc",
+            "name": "DASHBOARD FORMATION",
+            "primaryFieldId": "fldx2Kw7h0yawBv8a",
+            "fields": [
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldx2Kw7h0yawBv8a",
+                    "name": "ID CIRCLE"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblAivp3x8I2rB6gG",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": true,
+                        "inverseLinkFieldId": "fldgemPsamETRQnUS"
+                    },
+                    "id": "flddCpaXnxe5uVXgJ",
+                    "name": "ETUDIANT"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "flddCpaXnxe5uVXgJ",
+                        "fieldIdInLinkedTable": "fldR5fxOnblwnhDVV",
+                        "result": {
+                            "type": "phoneNumber"
+                        }
+                    },
+                    "id": "fldwwtXaMurrAUn8J",
+                    "name": "WHATSAPP"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "flddCpaXnxe5uVXgJ",
+                        "fieldIdInLinkedTable": "fldvi9sZGiKErSj5u",
+                        "result": {
+                            "type": "email"
+                        }
+                    },
+                    "id": "fldvks7Q4awHKBraK",
+                    "name": "EMAIL"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "sel0ogXfGflO6k5eo",
+                                "name": "Partiel",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "sel5zh1og1cpl4fyp",
+                                "name": "Complet",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldQqIgZAda2twSna",
+                    "name": "MODALITE DE PAIEMENT"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl28GhsfLRLdL33y",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldh0AdGfzZBHjRPc"
+                    },
+                    "id": "fldon1vHzZom9yDTi",
+                    "name": "PAIEMENTS"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "friendly",
+                            "format": "LL"
+                        }
+                    },
+                    "id": "fld5AsLlNO4HPfQJx",
+                    "name": "DATE DU PROCHAIN PAIEMENT"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selV2lvCHwDkXl0rL",
+                                "name": "EN RÈGLE",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selUeM0r7RybS40X4",
+                                "name": "EN RETARD",
+                                "color": "redLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldJiNBiao468jYXh",
+                    "name": "STATUT DE PAIEMENT"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selhsSUnLK6tPgJNZ",
+                                "name": "RELANCE 1",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "selIxpnZT1qj56LUm",
+                                "name": "RELANCE 2",
+                                "color": "orangeLight2"
+                            },
+                            {
+                                "id": "selIrranJJ0HRIIpS",
+                                "name": "RELANCE 3",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "selwycxzzEoOyB9ho",
+                                "name": "EN RÈGLE",
+                                "color": "greenLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldb4pvRISCDDPUAJ",
+                    "name": "STATUT RELANCE AUTO"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selhsSUnLK6tPgJNZ",
+                                "name": "RELANCE 1",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "selIxpnZT1qj56LUm",
+                                "name": "RELANCE 2",
+                                "color": "orangeLight2"
+                            },
+                            {
+                                "id": "selwycxzzEoOyB9ho",
+                                "name": "EN RÈGLE",
+                                "color": "greenLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldkP3iBwdbwMWlFc",
+                    "name": "STATUT RELANCE MANUELLE"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selx1QuRr4QQSo0kQ",
+                                "name": "RETIRER",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "selkFGHeCwOhxDDkj",
+                                "name": "INTÉGRER",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selAVYk3BBBy1G3pE",
+                                "name": "🤖 RETRAIT EFFECTUÉ",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selHXo6ljvpI9Xho2",
+                                "name": "🤖 INTÉGRÉ",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldpGt5zeSKWLAF5C",
+                    "name": "ACTIONS"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fld8t9ZcqDX3eK7gi",
+                    "name": "Notes"
+                },
+                {
+                    "type": "createdTime",
+                    "options": {
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "24hour",
+                                    "format": "HH:mm"
+                                },
+                                "timeZone": "client"
+                            }
+                        }
+                    },
+                    "id": "fldByoKZ6lxfWT2At",
+                    "name": "CREATION"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "flddCpaXnxe5uVXgJ",
+                        "fieldIdInLinkedTable": "fld8JeP2cKm2lTihI",
+                        "result": {
+                            "type": "number",
+                            "options": {
+                                "precision": 0
+                            }
+                        }
+                    },
+                    "id": "fld823yO0cYsS5bRZ",
+                    "name": "NB PAIEMENTS PARTIEL (à partir de ETUDIANT)"
+                },
+                {
+                    "type": "lastModifiedTime",
+                    "options": {
+                        "isValid": true,
+                        "referencedFieldIds": [],
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "24hour",
+                                    "format": "HH:mm"
+                                },
+                                "timeZone": "client"
+                            }
+                        }
+                    },
+                    "id": "fldWtToqV7XkGogHq",
+                    "name": "MODIFICATION"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwufohVoRXdyBda4",
+                    "name": "GLOBALE",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwPFPXKoVBf3JDb9",
+                    "name": "ETUDIANTS RETIRÉS",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwQIcBLjZNhMWTUp",
+                    "name": "RETRAIT LANCÉ",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwi5D2NODnUw5mlE",
+                    "name": "PROFILS COMPLETS",
+                    "type": "grid"
+                },
+                {
+                    "id": "viwJO5hDSmzReqsUn",
+                    "name": "EN RÈGLE",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tblxHkUGph0gVaS4C",
+            "name": "DASHBOARD COACHING",
+            "primaryFieldId": "fldwbDyTfFXXGRN3P",
+            "fields": [
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldwbDyTfFXXGRN3P",
+                    "name": "ID CIRCLE"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblAivp3x8I2rB6gG",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": true,
+                        "inverseLinkFieldId": "fldg5Y4sqY0kijnaD"
+                    },
+                    "id": "fldmURYdHao7seFRO",
+                    "name": "NOM ET PRÉNOMS"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldmURYdHao7seFRO",
+                        "fieldIdInLinkedTable": "fldR5fxOnblwnhDVV",
+                        "result": {
+                            "type": "phoneNumber"
+                        }
+                    },
+                    "id": "fldtquVcXQ0ks2mYy",
+                    "name": "WHATSAPP"
+                },
+                {
+                    "type": "multipleLookupValues",
+                    "options": {
+                        "isValid": true,
+                        "recordLinkFieldId": "fldmURYdHao7seFRO",
+                        "fieldIdInLinkedTable": "fldvi9sZGiKErSj5u",
+                        "result": {
+                            "type": "email"
+                        }
+                    },
+                    "id": "fldTjfzOJ4BqdwW0E",
+                    "name": "EMAIL"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "sel5b6JbZqjQrzSGG",
+                                "name": "MESSAGERIE ACTIVÉE",
+                                "color": "greenBright"
+                            },
+                            {
+                                "id": "selIGsFAgcA3jj1TN",
+                                "name": "MESSAGERIE DÉSACTIVÉE",
+                                "color": "redDark1"
+                            }
+                        ]
+                    },
+                    "id": "fldcxXkUvvv2h7iLI",
+                    "name": "MESSAGERIE"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl28GhsfLRLdL33y",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldBMniTTFq1NrH15"
+                    },
+                    "id": "fldkD8UnOI6Gsdo9Q",
+                    "name": "PAIEMENTS"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "friendly",
+                            "format": "LL"
+                        }
+                    },
+                    "id": "fldXuiN8dQvYmNB5j",
+                    "name": "DATE DE PAIEMENT COACHING",
+                    "description": "DATE DE PAIEMENT COACHING"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "friendly",
+                            "format": "LL"
+                        }
+                    },
+                    "id": "fldlD2BRXk02BOPv0",
+                    "name": "PROCHAIN PAIEMENT COACHING",
+                    "description": "DATE DE PAIEMENT COACHING"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selXVjQ0XOXLdkJXf",
+                                "name": "RETIRER",
+                                "color": "redLight2"
+                            },
+                            {
+                                "id": "selDsSLwZY0ImBfYu",
+                                "name": "INTÉGRER",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selaSmVO20OMmxDm3",
+                                "name": "🤖 RETRAIT EFFECTUÉ",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selbdIvTv52yYYT5B",
+                                "name": "🤖 INTÉGRÉ",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldW1n2u2OYe3nz5A",
+                    "name": "ACTIONS"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selKlbgdJvGS5im7m",
+                                "name": "EN REGLE",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selB5S2Asza6mHd3T",
+                                "name": "EN RETARD",
+                                "color": "redLight2"
+                            }
+                        ]
+                    },
+                    "id": "fld47Z6DQ9WX0Xsx0",
+                    "name": "STATUT PAIEMENT ",
+                    "description": "STATUT PAIEMENT"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selwPiqTGSzjyjAm2",
+                                "name": "RELANCE 1",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "selulox1WENCtHXWJ",
+                                "name": "RELANCE 2",
+                                "color": "orangeLight2"
+                            },
+                            {
+                                "id": "sel9lfjW8WL6q1j9Y",
+                                "name": "EN RÈGLE",
+                                "color": "greenLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldQRXcs04sR8JY0K",
+                    "name": "STATUT RELANCE AUTO"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selwPiqTGSzjyjAm2",
+                                "name": "RELANCE 1",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "selulox1WENCtHXWJ",
+                                "name": "RELANCE 2",
+                                "color": "orangeLight2"
+                            },
+                            {
+                                "id": "sel9lfjW8WL6q1j9Y",
+                                "name": "EN RÈGLE",
+                                "color": "greenLight2"
+                            }
+                        ]
+                    },
+                    "id": "fld8LWvEPESlmFy1q",
+                    "name": "STATUT RELANCE MANUELLE"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fldgf7CmEteL8V4VT",
+                    "name": "NOTE RELANCE",
+                    "description": "NOTE RELANCE"
+                },
+                {
+                    "type": "multipleSelects",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selcR8XbGcKwxHOVv",
+                                "name": "ALL IN ONE",
+                                "color": "yellowBright"
+                            },
+                            {
+                                "id": "selFw8DnxzxPiyv89",
+                                "name": "LIVE ET REDIFFUSIONS",
+                                "color": "redBright"
+                            },
+                            {
+                                "id": "selbMX1VT4B7aVaEr",
+                                "name": "NOTHING",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "sel5EPMeOmj1HdQCM",
+                                "name": "PRODUITS GAGNANTS",
+                                "color": "purpleBright"
+                            },
+                            {
+                                "id": "selXcCnm7e3Ved7L7",
+                                "name": "SUPPORT DIRECT",
+                                "color": "greenBright"
+                            },
+                            {
+                                "id": "selsVQEz6srBdyEsN",
+                                "name": "MEMBER",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selOzEQJY9e4ZqyUv",
+                                "name": "ADMIN / MODERATOR",
+                                "color": "tealLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldrVUH86dnp7vVsu",
+                    "name": "TAG"
+                },
+                {
+                    "type": "createdTime",
+                    "options": {
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "24hour",
+                                    "format": "HH:mm"
+                                },
+                                "timeZone": "client"
+                            }
+                        }
+                    },
+                    "id": "fldfJz8VXKhnNDDup",
+                    "name": "Date de création"
+                },
+                {
+                    "type": "lastModifiedTime",
+                    "options": {
+                        "isValid": true,
+                        "referencedFieldIds": [],
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "24hour",
+                                    "format": "HH:mm"
+                                },
+                                "timeZone": "client"
+                            }
+                        }
+                    },
+                    "id": "fldwO72s26D3iOIJ7",
+                    "name": "Dernière modification"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwidGvNVj30tVXm6",
+                    "name": "GLOBALE",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tblgQuCVqSEKxXqco",
+            "name": "DASHBOARD DAYLY",
+            "primaryFieldId": "fldQVhm2XvEjVKWo3",
+            "fields": [
+                {
+                    "type": "autoNumber",
+                    "id": "fldQVhm2XvEjVKWo3",
+                    "name": "Numero"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "friendly",
+                            "format": "LL"
+                        }
+                    },
+                    "id": "fldvuC0dVeXB5GUrT",
+                    "name": "DATE",
+                    "description": "DATE"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldLE97YJJ59uNQUv",
+                    "name": "NOMBRE DE VENTES",
+                    "description": "NOMBRE DE VENTES"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldSmy0TaYQ8iIhF7",
+                    "name": "PRODUITS VENDUS",
+                    "description": "PRODUITS VENDUS"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldph1npzzkFroT4v",
+                    "name": "PROSPECTS EN FOLLOW UP ",
+                    "description": "PROSPECTS EN FOLLOW UP "
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldkS8HxEr92qm7F5",
+                    "name": "NOMBRE DE RELANCE",
+                    "description": "NOMBRE DE RELANCE"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "flda9ctd76DnwlQmA",
+                    "name": "RÉSULTAT DES RELANCES",
+                    "description": "RÉSULTAT DES RELANCES"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldSZGFCZfwnJMGrk",
+                    "name": "CASH COLLECTÉ EN JOURNÉE",
+                    "description": "CASH COLLECTÉ EN JOURNÉE"
+                },
+                {
+                    "type": "currency",
+                    "options": {
+                        "precision": 2,
+                        "symbol": ""
+                    },
+                    "id": "fld4qYJeMuENa6tMQ",
+                    "name": "REVENU CONTRACTÉ",
+                    "description": "REVENU CONTRACTÉ"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldGokpXEZhgtHRVi",
+                    "name": "PROJECTIONS POUR LES 5 PROChains jours",
+                    "description": "PROJECTIONS POUR LES 5 PROChains jours"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viweHEFWeHsSnRgA2",
+                    "name": "Grid view",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tbl8Pw9AuWf0jRZh7",
+            "name": "BACKEND",
+            "primaryFieldId": "fldz7WQa14scBn4CJ",
+            "fields": [
+                {
+                    "type": "formula",
+                    "options": {
+                        "isValid": true,
+                        "formula": "REPT(\"0\", 5-LEN({fld2VITReqalZW9Mb} & \"\")) & {fld2VITReqalZW9Mb}",
+                        "referencedFieldIds": [
+                            "fld2VITReqalZW9Mb"
+                        ],
+                        "result": {
+                            "type": "singleLineText"
+                        }
+                    },
+                    "id": "fldz7WQa14scBn4CJ",
+                    "name": "ID"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldWOqYn5iwIrga59",
+                    "name": "Nom et Prénoms"
+                },
+                {
+                    "type": "email",
+                    "id": "fldFGs8YG0pQWrPVn",
+                    "name": "Email d'accès à la formation"
+                },
+                {
+                    "type": "phoneNumber",
+                    "id": "fld40SvHUgrvwKlCO",
+                    "name": "Numéro WhatsApp au format International(Ex : +229 66860045)"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selasAO11egPHkDTe",
+                                "name": "FACEBOOK",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selqAIVxHANLD0iL4",
+                                "name": "INSTAGRAM",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "sel9z2Y9IB0ibE2Fw",
+                                "name": "TIKTOK",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selu6d9Rk28y5CsR2",
+                                "name": "YOUTUBE",
+                                "color": "greenLight2"
+                            },
+                            {
+                                "id": "selOvxoE2uRLM0uME",
+                                "name": "RECOMMANDATIONS",
+                                "color": "yellowLight2"
+                            },
+                            {
+                                "id": "seltVR82cfktB89hC",
+                                "name": "Facebook",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selY4AZksHyLqWfWo",
+                                "name": "Instagram",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "seluStFaw834p4t38",
+                                "name": "YouTube",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selbMH2KFqM1AVfA6",
+                                "name": "Recommandations",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "seljzTm5QEYbwC7jN",
+                                "name": "TikTok",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selg54eit9w1NnpHj",
+                                "name": "Recommendations",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "sel9g9ym6MyQmyrBZ",
+                                "name": "LinkedIn",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldUWEFD7dlmcxwqU",
+                    "name": "Sur quelle plateforme avez vous découvert Myril pour la première fois ?"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldu5iVKWrOaCEMAH",
+                    "name": "Que faites-vous dans la vie ?"
+                },
+                {
+                    "type": "date",
+                    "options": {
+                        "dateFormat": {
+                            "name": "local",
+                            "format": "l"
+                        }
+                    },
+                    "id": "fldNj9HgdKFW1O7Qw",
+                    "name": "Votre âge (Ex: 21)"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selH4LBwMpWDIjsAS",
+                                "name": "ECOM AFRICA PRO",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selHhFY62w7SHUZUr",
+                                "name": "COACHING",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selOTfZD21XJHi0cR",
+                                "name": "",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selvnoJtkElMrVtYW",
+                                "name": "ECOM REVOLUTION",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldB0rS4zxEnnV1ok",
+                    "name": "Formation achetée"
+                },
+                {
+                    "type": "number",
+                    "options": {
+                        "precision": 0
+                    },
+                    "id": "fldYG0fogNJO8nVfL",
+                    "name": "Montant payé"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "sel8nHPR6U7Ro8qdu",
+                                "name": "F CFA",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "sel9q2A6yfgdbrLzT",
+                                "name": "USD",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selFARyOXJrXw4nl5",
+                                "name": "FCFA",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selZHTRIks20w13X0",
+                                "name": "EURO",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fld6ESgQkj5boO8sC",
+                    "name": "Devise dans laquelle vous avez payé"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selbKP9pwsuWZeAEO",
+                                "name": "FedaPay",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "seljKfeyefXBxZegk",
+                                "name": "Carte Bancaire",
+                                "color": "cyanLight2"
+                            },
+                            {
+                                "id": "selzwpLfZmvXleEov",
+                                "name": "Autres",
+                                "color": "tealLight2"
+                            },
+                            {
+                                "id": "selpeoAu6YC9iU9rJ",
+                                "name": "Carte Bancaire ",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "seljiMIixKoChAIQG",
+                                "name": "Fedapay",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selbYqBTcbhjTaY76",
+                                "name": "Autres (Paiement Cash, Western Union, MoneyGram, etc.)",
+                                "color": "blueLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldXsCAqjelcuaq9g",
+                    "name": "Moyen de Paiement"
+                },
+                {
+                    "type": "multipleAttachments",
+                    "options": {
+                        "isReversed": false
+                    },
+                    "id": "fldUZ1JztqCylmPnA",
+                    "name": "Preuves de paiement (Reçu de paiement / Western union / Capture Mobile Money)"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selttTYTgh6RhAS05",
+                                "name": "Partiel",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "seldW6uda8PW7ItqQ",
+                                "name": "Complet",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldR2vUnL9SjRc0x3",
+                    "name": "Modalité de Paiement"
+                },
+                {
+                    "type": "phoneNumber",
+                    "id": "flddjXf9Fb4VBqmbU",
+                    "name": "Numéro de Téléphone WhatsApp"
+                },
+                {
+                    "type": "createdTime",
+                    "options": {
+                        "result": {
+                            "type": "dateTime",
+                            "options": {
+                                "dateFormat": {
+                                    "name": "local",
+                                    "format": "l"
+                                },
+                                "timeFormat": {
+                                    "name": "24hour",
+                                    "format": "HH:mm"
+                                },
+                                "timeZone": "client"
+                            }
+                        }
+                    },
+                    "id": "fldUtang9jYOPQHXr",
+                    "name": "Created"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fld6NS8mfNn09v6TQ",
+                    "name": "Notes"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldGuIzJloseyofXe",
+                    "name": "ID du Paiement"
+                },
+                {
+                    "type": "autoNumber",
+                    "id": "fld2VITReqalZW9Mb",
+                    "name": "Sequence Number"
+                },
+                {
+                    "type": "singleLineText",
+                    "id": "fldpmHeRVEhZqmfbk",
+                    "name": "ETUDIANTS"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwwlbXaRlLzyMBQ3",
+                    "name": "Grid view",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tblpjSD81i6DdO4aW",
+            "name": "NOTIFICATIONS",
+            "description": "Centralizes system and user alerts for timely attention and tracking.",
+            "primaryFieldId": "fldhR4K18T1FUZZ0V",
+            "fields": [
+                {
+                    "type": "singleLineText",
+                    "id": "fldhR4K18T1FUZZ0V",
+                    "name": "TITLE"
+                },
+                {
+                    "type": "multilineText",
+                    "id": "fldzhPlXiCWdJSfvj",
+                    "name": "MESSAGE"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selVGvzLAbHib4ksi",
+                                "name": "NON ANNULE",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selRa549jdBSvHEdu",
+                                "name": "ANNULE",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fld49ENk1xpoCr8Bj",
+                    "name": "STATUS"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tblAivp3x8I2rB6gG",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldQ9wbOS1G2gpWmc"
+                    },
+                    "id": "fldJ31Z94PYlUlpPF",
+                    "name": "SENT TO ETUDIANT"
+                },
+                {
+                    "type": "dateTime",
+                    "options": {
+                        "dateFormat": {
+                            "name": "us",
+                            "format": "M/D/YYYY"
+                        },
+                        "timeFormat": {
+                            "name": "12hour",
+                            "format": "h:mma"
+                        },
+                        "timeZone": "utc"
+                    },
+                    "id": "fldSM7O37ic3wOINz",
+                    "name": "DATE SENT"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selHX3xafhdiC7gvM",
+                                "name": "SYSTEM",
+                                "color": "blueLight2"
+                            },
+                            {
+                                "id": "selaPQARQ1gj5mvy0",
+                                "name": "USER",
+                                "color": "cyanLight2"
+                            }
+                        ]
+                    },
+                    "id": "fldmjfUj9VCctoBqa",
+                    "name": "TYPE"
+                },
+                {
+                    "type": "multipleRecordLinks",
+                    "options": {
+                        "linkedTableId": "tbl28GhsfLRLdL33y",
+                        "isReversed": false,
+                        "prefersSingleRecordLink": false,
+                        "inverseLinkFieldId": "fldf2zJJB7HGBthjV"
+                    },
+                    "id": "fld72yugRZGMBBZmd",
+                    "name": "RELATED PAIEMENT"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwbpZNYOS3QXQsBU",
+                    "name": "Grid view",
+                    "type": "grid"
+                }
+            ]
+        },
+        {
+            "id": "tbl9nfoKmwM6ll5pm",
+            "name": "CHALLENGE 23 - 25",
+            "primaryFieldId": "fldjjygIl1Nnz7ikW",
+            "fields": [
+                {
+                    "type": "singleLineText",
+                    "id": "fldjjygIl1Nnz7ikW",
+                    "name": "NOM ET PRENOMS"
+                },
+                {
+                    "type": "email",
+                    "id": "fld9YodN9W7LYbRPX",
+                    "name": "EMAIL"
+                },
+                {
+                    "type": "phoneNumber",
+                    "id": "fldU21viBTohtwAYa",
+                    "name": "Téléphone"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selpdHP5T1luMUyZx",
+                                "name": "NON TRAITÉ",
+                                "color": "grayLight1"
+                            },
+                            {
+                                "id": "selBjr7VGLit7lAoB",
+                                "name": "REJETÉ",
+                                "color": "redDark1"
+                            },
+                            {
+                                "id": "selBg8VEfqt3Lm61q",
+                                "name": "TRAITÉ",
+                                "color": "greenBright"
+                            }
+                        ]
+                    },
+                    "id": "fldX1H3fSGdp6WWXl",
+                    "name": "Status"
+                },
+                {
+                    "type": "singleSelect",
+                    "options": {
+                        "choices": [
+                            {
+                                "id": "selIXm057x9qbAdNN",
+                                "name": "MODÉRÉ",
+                                "color": "greenBright"
+                            },
+                            {
+                                "id": "sellUVbU5BkJamrqW",
+                                "name": "EN ATTENTE",
+                                "color": "grayLight1"
+                            }
+                        ]
+                    },
+                    "id": "fldLVQCDx1TpMh4BJ",
+                    "name": "MODÉRATION"
+                }
+            ],
+            "views": [
+                {
+                    "id": "viwajbRxEpzXNpIWH",
+                    "name": "Grid view",
+                    "type": "grid"
+                }
+            ]
+        }
+    ]
+}
