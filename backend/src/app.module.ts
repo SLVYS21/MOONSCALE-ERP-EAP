@@ -27,7 +27,7 @@ import { SyncModule } from './modules/sync/sync.module'
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        uri: config.get<string>('MONGODB_URI', 'mongodb://localhost:27017/moonscale-erp'),
+        uri: config.get<string>('MONGODB_URI', 'mongodb+srv://sylvanusboni2005_db_user:kEGAPFKsN3ootOiK@firstcluster.4tpahxs.mongodb.net/?appName=FirstCluster'),
       }),
     }),
     AuthModule,
