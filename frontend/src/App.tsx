@@ -19,7 +19,7 @@ import { AutomationsPage } from '@/pages/automations/AutomationsPage'
 import { AutomationBuilderPage } from '@/pages/automations/AutomationBuilderPage'
 import { RemindersPage } from '@/pages/reminders/RemindersPage'
 import { SyncPage } from '@/pages/sync/SyncPage'
-import { PlaceholderPage } from '@/pages/PlaceholderPage';
+import { PlaceholderPage } from '@/pages/PlaceholderPage' ;
 
 export default function App() {
   return (
