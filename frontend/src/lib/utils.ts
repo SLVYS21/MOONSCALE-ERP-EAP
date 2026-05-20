@@ -23,7 +23,11 @@ export function getInitials(firstName: string, lastName: string) {
 
 export function formatAmount(amount: number | undefined, currency = 'EUR') {
   if (amount == null) return '—'
-  if (currency === 'F CFA') currency = 'XOF'
+  if (currency === 'F CFA' || currency === 'FCFA') currency = 'XOF'
   if (currency === 'EURO') currency = 'EUR'
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount)
+  try {
+    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount)
+  } catch {
+    return `${new Intl.NumberFormat('fr-FR').format(amount)} ${currency}`
+  }
 }

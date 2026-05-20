@@ -65,7 +65,7 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
   const [amount, setAmount] = useState(String(payment.amount ?? ''))
   const [currency, setCurrency] = useState(payment.currency ?? 'F CFA')
   const [product, setProduct] = useState(payment.product ?? 'ECOM AFRICA PRO')
-  const [gateway, setGateway] = useState(payment.gateway ?? 'VIREMENT')
+  const [gateway, setGateway] = useState(payment.gateway ?? '')
   const [plan, setPlan] = useState<string>(payment.plan ?? 'standard')
   const [notes, setNotes] = useState(payment.notes ?? '')
   const [error, setError] = useState('')
@@ -123,11 +123,12 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium text-gray-400">Gateway</label>
-            <select value={gateway} onChange={(e) => setGateway(e.target.value as import('@/types').PaymentGateway)} className={selectCls}>
-              {['STRIPE', 'PAYPAL', 'WAVE', 'ORANGE_MONEY', 'VIREMENT', 'AUTRE'].map((g) => (
-                <option key={g} value={g}>{g}</option>
-              ))}
-            </select>
+            <input
+              value={gateway}
+              onChange={(e) => setGateway(e.target.value)}
+              className={selectCls}
+              placeholder="FedaPay, Wave, Carte Bancaire…"
+            />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-medium text-gray-400">Plan Circle</label>
@@ -270,8 +271,8 @@ export function PaymentsPage() {
                     <tr key={p._id} className="transition-colors hover:bg-gray-800/20">
                       <td className="py-3 pr-4">
                         <button
-                          onClick={() => navigate(`/students/${p.studentId}`)}
-                          className="text-left hover:underline"
+                          onClick={() => p.studentId && navigate(`/students/${p.studentId}`)}
+                          className={`text-left ${p.studentId ? 'hover:underline' : 'cursor-default'}`}
                         >
                           <p className="font-medium text-gray-100">{p.studentName}</p>
                           <p className="text-xs text-gray-500">{p.studentEmail}</p>
@@ -294,7 +295,7 @@ export function PaymentsPage() {
                         <Badge variant="default">{SOURCE_LABELS[p.source] ?? p.source}</Badge>
                       </td>
                       <td className="py-3 pr-4 text-xs text-gray-400">
-                        {p.plan ? (CIRCLE_PLAN_LABELS[p.plan] ?? p.plan) : '—'}
+                        {p.plan ? (CIRCLE_PLAN_LABELS[p.plan.toLowerCase()] ?? p.plan) : '—'}
                       </td>
                       <td className="py-3 pr-4">
                         {p.proofImages.length > 0 ? (

@@ -21,6 +21,17 @@ export interface User {
   createdAt: string
 }
 
+export interface Invitation {
+  _id: string
+  email: string
+  role: 'admin' | 'member'
+  invitedBy: { _id: string; firstName: string; lastName: string; email: string }
+  expiresAt: string
+  used: boolean
+  status: 'pending' | 'accepted' | 'expired'
+  createdAt: string
+}
+
 export interface AuthTokens {
   accessToken: string
   refreshToken: string
@@ -57,6 +68,7 @@ export interface Student {
   circleTags?: { id: number; name: string }[]
   circleIsActive?: boolean
   circleLastSync?: string
+  circleProfile?: string
   debtStatus: DebtStatus
   debtSince?: string
   successProofs?: SuccessProof[]
@@ -96,6 +108,7 @@ export interface Payment {
   proofImages: string[]
   notes?: string
   source: 'tally' | 'chariow' | 'manual'
+  tallySubmissionId?: string | null
   processedBy?: string
   processedAt?: string
   createdAt: string
@@ -444,7 +457,15 @@ export interface SyncStatus {
   lastAirtableSync: string | null
   lastCircleSync: string | null
   lastDebtorDetection: string | null
+  lastTallySync: string | null
   circleApiCallsThisSession: number
+}
+
+export interface TallyImportResult {
+  imported: number
+  skipped: number
+  errors: number
+  durationMs: number
 }
 
 export interface AirtableSyncResult {

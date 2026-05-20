@@ -2,14 +2,14 @@ import { useState } from 'react'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import {
   RefreshCw, Database, AlertTriangle, CheckCircle2,
-  Clock, Zap, Activity, FileText,
+  Clock, Zap, Activity, FileText, Download,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { formatDate } from '@/lib/utils'
 import api from '@/services/api'
 import type {
-  SyncStatus, AirtableSyncResult, CircleSyncResult, DebtorResult,
+  SyncStatus, AirtableSyncResult, CircleSyncResult, DebtorResult, TallyImportResult,
 } from '@/types'
 
 // ── Result display ────────────────────────────────────────────────────────────
@@ -101,6 +101,7 @@ export function SyncPage() {
   const [circleResult, setCircleResult] = useState<CircleSyncResult | null>(null)
   const [debtorResult, setDebtorResult] = useState<DebtorResult | null>(null)
   const [tallyResult, setTallyResult] = useState<{ created: boolean; formId: string; slug: string } | null>(null)
+  const [tallyResponsesResult, setTallyResponsesResult] = useState<TallyImportResult | null>(null)
 
   const { data: status, refetch: refetchStatus } = useQuery({
     queryKey: ['sync-status'],
@@ -126,6 +127,11 @@ export function SyncPage() {
   const tallyMutation = useMutation({
     mutationFn: () => api.post<{ created: boolean; formId: string; slug: string }>('/sync/seed-tally-form').then((r) => r.data),
     onSuccess: (data) => setTallyResult(data),
+  })
+
+  const tallyResponsesMutation = useMutation({
+    mutationFn: () => api.post<TallyImportResult>('/sync/tally-responses').then((r) => r.data),
+    onSuccess: (data) => { setTallyResponsesResult(data); refetchStatus() },
   })
 
   const circleQuota = status?.circleApiCallsThisSession ?? 0
@@ -216,6 +222,18 @@ export function SyncPage() {
           isPending={tallyMutation.isPending}
           result={tallyResult}
           onTrigger={() => tallyMutation.mutate()}
+        />
+
+        <SyncCard
+          icon={Download}
+          iconColor="text-sky-400"
+          title="Importer réponses Tally"
+          description="Récupère toutes les soumissions historiques du formulaire Tally woB5oM et les attribue au formulaire local. Idempotent : ne recrée pas les doublons."
+          lastRun={status?.lastTallySync}
+          buttonLabel="Importer les réponses"
+          isPending={tallyResponsesMutation.isPending}
+          result={tallyResponsesResult}
+          onTrigger={() => tallyResponsesMutation.mutate()}
         />
 
         <Card className="p-5">

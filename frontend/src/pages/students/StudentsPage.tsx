@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
-import { Search, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react'
+import { Search, ChevronLeft, ChevronRight, AlertTriangle, Clock } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatAmount } from '@/lib/utils'
 import api from '@/services/api'
-import type { Student, FormationDashboard, PaginatedResponse, CirclePaymentStatus, DebtStatus } from '@/types'
+import type { Student, FormationDashboard, Payment, PaginatedResponse, CirclePaymentStatus, DebtStatus } from '@/types'
 
-type StudentRow = Student & { formation?: FormationDashboard }
+type StudentRow = Student & {
+  formation?: FormationDashboard
+  payments?: Payment[]
+}
 
 const STATUS_OPTIONS = [
   { value: '', label: 'Tous les statuts' },
@@ -22,6 +25,30 @@ const DEBT_OPTIONS = [
   { value: 'potential', label: 'Débiteurs potentiels' },
   { value: 'confirmed', label: 'Débiteurs confirmés' },
 ]
+
+// Circle tag → plan badge (priorité décroissante)
+const PLAN_PRIORITY = ['Elite', 'Premium', 'All-In-One', 'Standard', 'Produits Gagnants', 'Support Direct', 'Lives']
+const PLAN_BADGE: Record<string, { variant: 'info' | 'warning' | 'success' | 'default'; label: string }> = {
+  'Elite':           { variant: 'info',    label: 'Elite' },
+  'Premium':         { variant: 'success', label: 'Premium' },
+  'All-In-One':      { variant: 'warning', label: 'All-In-One' },
+  'Standard':        { variant: 'default', label: 'Standard' },
+  'Produits Gagnants':{ variant: 'default', label: 'Produits Gagnants' },
+  'Support Direct':  { variant: 'default', label: 'Support Direct' },
+  'Lives':           { variant: 'default', label: 'Lives' },
+}
+
+function planBadge(tags?: { id: number; name: string }[]) {
+  if (!tags || tags.length === 0) return null
+  for (const key of PLAN_PRIORITY) {
+    const found = tags.find((t) => t.name.toLowerCase().includes(key.toLowerCase()))
+    if (found) {
+      const cfg = PLAN_BADGE[key] ?? { variant: 'default' as const, label: found.name }
+      return <Badge variant={cfg.variant}>{cfg.label}</Badge>
+    }
+  }
+  return <Badge variant="default">{tags[0].name}</Badge>
+}
 
 function statusBadge(status?: CirclePaymentStatus) {
   if (status === 'EN RÈGLE') return <Badge variant="success">EN RÈGLE</Badge>
@@ -82,8 +109,8 @@ export function StudentsPage() {
       </div>
 
       {/* Search & filters */}
-      <div className="mb-4 flex gap-3">
-        <div className="relative flex-1 max-w-sm">
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
           <input
             type="text"
@@ -124,31 +151,61 @@ export function StudentsPage() {
               <thead>
                 <tr className="border-b border-gray-800 text-left text-xs text-gray-500">
                   <th className="pb-3 font-medium">Nom</th>
-                  <th className="pb-3 font-medium">WhatsApp</th>
-                  <th className="pb-3 font-medium">Source</th>
+                  <th className="pb-3 font-medium">Plan</th>
+                  <th className="pb-3 font-medium">Paiements</th>
                   <th className="pb-3 font-medium">Statut</th>
                   <th className="pb-3 font-medium">Dette</th>
+                  <th className="pb-3 font-medium">WhatsApp</th>
                   <th className="pb-3 font-medium">Inscrit le</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-800/60">
-                {students.map((s) => (
-                  <tr
-                    key={s._id}
-                    onClick={() => navigate(`/students/${s._id}`)}
-                    className="cursor-pointer transition-colors hover:bg-gray-800/40"
-                  >
-                    <td className="py-3 pr-4">
-                      <p className="font-medium text-gray-100">{s.name}</p>
-                      <p className="text-xs text-gray-500">{s.email}</p>
-                    </td>
-                    <td className="py-3 pr-4 text-gray-400">{s.whatsapp ?? '—'}</td>
-                    <td className="py-3 pr-4 text-gray-400">{s.source ?? '—'}</td>
-                    <td className="py-3 pr-4">{statusBadge(s.formation?.paymentStatus)}</td>
-                    <td className="py-3 pr-4">{debtBadge(s.debtStatus) ?? <span className="text-gray-600">—</span>}</td>
-                    <td className="py-3 text-gray-400">{formatDate(s.createdAt)}</td>
-                  </tr>
-                ))}
+                {students.map((s) => {
+                  const pending = s.payments?.filter((p) => p.status === 'NON TRAITÉ').length ?? 0
+                  const treated = s.payments?.filter((p) => p.status === 'TRAITÉ') ?? []
+                  const totalPaid = treated.reduce((acc, p) => acc + (p.amount ?? 0), 0)
+                  const mainCurrency = treated[0]?.currency ?? 'F CFA'
+
+                  return (
+                    <tr
+                      key={s._id}
+                      onClick={() => navigate(`/students/${s._id}`)}
+                      className="cursor-pointer transition-colors hover:bg-gray-800/40"
+                    >
+                      <td className="py-3 pr-4">
+                        <p className="font-medium text-gray-100">{s.name}</p>
+                        <p className="text-xs text-gray-500">{s.email}</p>
+                      </td>
+                      <td className="py-3 pr-4">
+                        {planBadge(s.circleTags) ?? <span className="text-gray-600">—</span>}
+                      </td>
+                      <td className="py-3 pr-4">
+                        {(s.payments?.length ?? 0) === 0 ? (
+                          <span className="text-gray-600">—</span>
+                        ) : (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-xs font-medium text-gray-200">
+                              {formatAmount(totalPaid, mainCurrency)}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs text-gray-500">{s.payments?.length} pmt</span>
+                              {pending > 0 && (
+                                <span className="flex items-center gap-0.5 rounded-full bg-amber-500/15 px-1.5 py-0.5 text-xs text-amber-400">
+                                  <Clock className="h-2.5 w-2.5" />
+                                  {pending}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3 pr-4">{statusBadge(s.formation?.paymentStatus)}</td>
+                      <td className="py-3 pr-4">{debtBadge(s.debtStatus) ?? <span className="text-gray-600">—</span>}</td>
+                      <td className="py-3 pr-4 text-gray-400 text-xs">{s.whatsapp ?? '—'}</td>
+                      <td className="py-3 text-xs text-gray-400">{formatDate(s.createdAt)}</td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -158,7 +215,7 @@ export function StudentsPage() {
         {totalPages > 1 && (
           <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-4">
             <p className="text-xs text-gray-500">
-              Page {page} / {totalPages}
+              Page {page} / {totalPages} — {total} étudiant{total > 1 ? 's' : ''}
             </p>
             <div className="flex gap-2">
               <button
