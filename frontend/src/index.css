@@ -1,0 +1,138 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  /* Light mode (default): invert Tailwind v4 gray scale so dark-designed components adapt automatically */
+  :root {
+    --color-gray-50:  #020617;
+    --color-gray-100: #0f172a;
+    --color-gray-200: #1e293b;
+    --color-gray-300: #334155;
+    --color-gray-400: #475569;
+    --color-gray-500: #64748b;
+    --color-gray-600: #94a3b8;
+    --color-gray-700: #cbd5e1;
+    --color-gray-800: #e2e8f0;
+    --color-gray-900: #f1f5f9;
+    --color-gray-950: #f8fafc;
+  }
+
+  /* Dark mode: restore Tailwind's original gray values */
+  .dark {
+    --color-gray-50:  #f9fafb;
+    --color-gray-100: #f3f4f6;
+    --color-gray-200: #e5e7eb;
+    --color-gray-300: #d1d5db;
+    --color-gray-400: #9ca3af;
+    --color-gray-500: #6b7280;
+    --color-gray-600: #4b5563;
+    --color-gray-700: #374151;
+    --color-gray-800: #1f2937;
+    --color-gray-900: #111827;
+    --color-gray-950: #030712;
+  }
+
+  body {
+    @apply bg-gray-950 text-gray-100 antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  * {
+    @apply border-gray-800;
+  }
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply rounded-full bg-gray-700; }
+::-webkit-scrollbar-thumb:hover { @apply bg-gray-600; }
+
+/* ── Wiki prose styles ───────────────────────────────────────────────────── */
+
+.wiki-prose {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+  line-height: 1.75;
+  max-width: none;
+}
+
+.wiki-prose h1 { font-size: 1.75rem; font-weight: 700; color: #f1f5f9; margin: 1.5rem 0 0.75rem; border-bottom: 1px solid #1e293b; padding-bottom: 0.4rem; }
+.wiki-prose h2 { font-size: 1.35rem; font-weight: 700; color: #f1f5f9; margin: 1.4rem 0 0.6rem; }
+.wiki-prose h3 { font-size: 1.1rem;  font-weight: 600; color: #e2e8f0; margin: 1.2rem 0 0.5rem; }
+.wiki-prose h4 { font-size: 0.95rem; font-weight: 600; color: #e2e8f0; margin: 1rem 0 0.4rem; }
+
+.wiki-prose p { margin: 0.6rem 0; }
+
+.wiki-prose a { color: #818cf8; text-decoration: underline; }
+.wiki-prose a:hover { color: #a5b4fc; }
+
+.wiki-prose strong { color: #f1f5f9; font-weight: 600; }
+.wiki-prose em { color: #cbd5e1; font-style: italic; }
+.wiki-prose code {
+  background: #1e293b;
+  color: #a5b4fc;
+  border-radius: 0.25rem;
+  padding: 0.1em 0.35em;
+  font-size: 0.85em;
+  font-family: 'Fira Code', 'Cascadia Code', monospace;
+}
+.wiki-prose pre {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 0.8rem 0;
+}
+.wiki-prose pre code {
+  background: none;
+  padding: 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.wiki-prose ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
+.wiki-prose ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
+.wiki-prose li { margin: 0.25rem 0; }
+
+.wiki-prose blockquote {
+  border-left: 3px solid #4f46e5;
+  margin: 0.75rem 0;
+  padding: 0.4rem 1rem;
+  color: #94a3b8;
+  background: #1e293b40;
+  border-radius: 0 0.25rem 0.25rem 0;
+}
+
+.wiki-prose hr { border: none; border-top: 1px solid #1e293b; margin: 1.25rem 0; }
+
+/* Tables */
+.wiki-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.85rem;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid #1e293b;
+}
+.wiki-prose thead {
+  background: #1e293b;
+}
+.wiki-prose th {
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  font-weight: 600;
+  color: #e2e8f0;
+  white-space: nowrap;
+  border-bottom: 1px solid #334155;
+}
+.wiki-prose td {
+  padding: 0.55rem 0.85rem;
+  color: #94a3b8;
+  border-bottom: 1px solid #1e293b;
+  vertical-align: top;
+}
+.wiki-prose tr:last-child td { border-bottom: none; }
+.wiki-prose tr:hover td { background: #1e293b40; }
