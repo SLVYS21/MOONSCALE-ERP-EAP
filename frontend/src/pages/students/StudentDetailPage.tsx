@@ -32,12 +32,12 @@ function StudentAvatar({ name, avatarUrl, size = 'md' }: {
         src={avatarUrl}
         alt={name}
         onError={() => setErr(true)}
-        className={`${dim} shrink-0 rounded-full object-cover ring-2 ring-gray-700`}
+        className={`${dim} shrink-0 rounded-full object-cover ring-2 ring-gray-800 shadow-sm`}
       />
     )
   }
   return (
-    <div className={`${dim} shrink-0 flex items-center justify-center rounded-full bg-indigo-600/20 font-bold text-indigo-400 ring-2 ring-gray-700`}>
+    <div className={`${dim} shrink-0 flex items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-600/20 font-bold text-indigo-600 dark:text-indigo-400 ring-2 ring-gray-800`}>
       {initials || <User className="h-5 w-5" />}
     </div>
   )
@@ -55,18 +55,18 @@ function ImageLightbox({ images, initialIndex = 0, onClose }: {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm"
       onClick={onClose}
     >
       <div className="relative max-h-[90vh] max-w-[90vw]" onClick={(e) => e.stopPropagation()}>
         {isPdf(images[idx]) ? (
-          <div className="flex flex-col items-center gap-4 rounded-xl border border-gray-700 bg-gray-900 p-8">
-            <p className="text-sm text-gray-300">Fichier PDF</p>
+          <div className="flex flex-col items-center gap-4 rounded-xl border border-gray-200 bg-white p-8 shadow-2xl">
+            <p className="text-sm font-medium text-gray-600">Fichier PDF</p>
             <a
               href={images[idx]}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-500"
+              className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
             >
               <ExternalLink className="h-4 w-4" />
               Ouvrir dans un nouvel onglet
@@ -76,7 +76,7 @@ function ImageLightbox({ images, initialIndex = 0, onClose }: {
           <img
             src={images[idx]}
             alt={`Preuve ${idx + 1}`}
-            className="max-h-[85vh] max-w-[85vw] rounded-lg object-contain shadow-2xl"
+            className="max-h-[85vh] max-w-[85vw] rounded-xl object-contain shadow-2xl"
           />
         )}
         {images.length > 1 && (
@@ -91,8 +91,9 @@ function ImageLightbox({ images, initialIndex = 0, onClose }: {
           </div>
         )}
         <button
+          aria-label="Fermer"
           onClick={onClose}
-          className="absolute -top-3 -right-3 flex h-7 w-7 items-center justify-center rounded-full bg-gray-800 text-gray-300 hover:bg-gray-700"
+          className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-md text-gray-500 hover:text-gray-900 transition-colors"
         >
           ✕
         </button>
@@ -126,8 +127,8 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
   const sel = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="w-full max-w-lg rounded-xl border border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-xl">
         <h2 className="mb-4 text-base font-semibold text-gray-100">Traiter le paiement</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -171,7 +172,7 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
           <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)}
             className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none" />
         </div>
-        {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+        {error && <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>}
         <div className="mt-5 flex justify-end gap-3">
           <Button variant="secondary" onClick={onClose}>Annuler</Button>
           <Button loading={isPending} onClick={() => mutate({ modality, amount: Number(amount), currency, product, gateway, plan, notes })}>
@@ -203,15 +204,17 @@ const PAYMENT_STATUS_BADGE = {
 }
 
 const SOURCE_LABELS: Record<string, { label: string; cls: string }> = {
-  tally:   { label: 'Tally',   cls: 'bg-violet-500/10 text-violet-400' },
-  chariow: { label: 'Chariow', cls: 'bg-sky-500/10 text-sky-400' },
-  manual:  { label: 'Manuel',  cls: 'bg-gray-700 text-gray-400' },
+  tally:   { label: 'Tally',   cls: 'bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400' },
+  chariow: { label: 'Chariow', cls: 'bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400' },
+  manual:  { label: 'Manuel',  cls: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' },
 }
 
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 py-2.5 border-b border-gray-800 last:border-0">
-      <div className="mt-0.5 shrink-0 text-gray-500">{icon}</div>
+    <div className="flex items-start gap-3 py-3 border-b border-gray-800/50 last:border-0">
+      <div className="mt-0.5 shrink-0 flex h-7 w-7 items-center justify-center rounded-lg bg-gray-900/20 dark:bg-gray-800/60 text-gray-500">
+        {icon}
+      </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-gray-500 mb-0.5">{label}</p>
         <div className="text-sm text-gray-200">{value}</div>
@@ -252,6 +255,12 @@ export function StudentDetailPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
   })
 
+  const formationStatusMutation = useMutation({
+    mutationFn: (paymentStatus: 'EN RÈGLE' | 'EN RETARD') =>
+      api.patch(`/students/${id}/formation-status`, { paymentStatus }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
+  })
+
   const rejectMutation = useMutation({
     mutationFn: (paymentId: string) => api.post(`/payments/${paymentId}/reject`),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
@@ -287,7 +296,7 @@ export function StudentDetailPage() {
     <div className="p-6">
       <button
         onClick={() => navigate('/students')}
-        className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+        className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-200 transition-colors cursor-pointer"
       >
         <ArrowLeft className="h-4 w-4" />
         Retour aux étudiants
@@ -347,7 +356,7 @@ export function StudentDetailPage() {
               {/* Circle tags */}
               {student.circleId && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <Zap className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                  <Zap className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
                   <Badge variant={student.circleIsActive ? 'success' : 'danger'}>
                     {student.circleIsActive ? 'Actif' : 'Inactif'}
                   </Badge>
@@ -359,7 +368,7 @@ export function StudentDetailPage() {
                       href={student.circleProfile}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+                      className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
                     >
                       <ExternalLink className="h-3 w-3" />
                       Circle
@@ -385,7 +394,7 @@ export function StudentDetailPage() {
         </div>
 
         {pendingPayments.length > 0 && (
-          <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 px-4 py-2.5 text-sm text-amber-400">
+          <div className="mt-4 flex items-center gap-2 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 px-4 py-2.5 text-sm text-amber-700 dark:text-amber-400">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             {pendingPayments.length} paiement{pendingPayments.length > 1 ? 's' : ''} en attente de traitement
           </div>
@@ -398,15 +407,21 @@ export function StudentDetailPage() {
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
-            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px cursor-pointer ${
               activeTab === t.key
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'border-transparent text-gray-500 hover:text-gray-200'
             }`}
           >
             {t.label}
             {t.count != null && (
-              <span className="rounded-full bg-gray-800 px-1.5 py-0.5 text-xs">{t.count}</span>
+              <span className={`rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
+                activeTab === t.key
+                  ? 'bg-indigo-100 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-400'
+                  : 'bg-gray-900/30 text-gray-500'
+              }`}>
+                {t.count}
+              </span>
             )}
           </button>
         ))}
@@ -418,12 +433,12 @@ export function StudentDetailPage() {
 
           {/* Infos personnelles */}
           <Card>
-            <h3 className="mb-3 text-sm font-semibold text-gray-200">Informations personnelles</h3>
-            <div className="divide-y divide-gray-800/60">
+            <h3 className="mb-3 text-sm font-semibold text-gray-100">Informations personnelles</h3>
+            <div>
               <InfoRow
                 icon={<Mail className="h-4 w-4" />}
                 label="Email"
-                value={<a href={`mailto:${student.email}`} className="text-indigo-400 hover:text-indigo-300">{student.email}</a>}
+                value={<a href={`mailto:${student.email}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">{student.email}</a>}
               />
               {student.whatsapp && (
                 <InfoRow
@@ -477,10 +492,10 @@ export function StudentDetailPage() {
 
           {/* Accès Circle */}
           <Card>
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-emerald-400" />
-                <h3 className="text-sm font-semibold text-gray-200">Accès Circle</h3>
+                <Zap className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
+                <h3 className="text-sm font-semibold text-gray-100">Accès Circle</h3>
                 {student.circleLastSync && (
                   <span className="text-xs text-gray-500">· synchro {formatDate(student.circleLastSync)}</span>
                 )}
@@ -510,29 +525,29 @@ export function StudentDetailPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <div className={`rounded-lg border px-4 py-3 flex items-center gap-3 ${
+                  <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${
                     student.circleIsActive
-                      ? 'border-emerald-500/20 bg-emerald-500/10'
-                      : 'border-gray-700 bg-gray-800/40'
+                      ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10'
+                      : 'border-gray-800 bg-gray-900/20 dark:border-gray-700 dark:bg-gray-800/40'
                   }`}>
                     {student.circleIsActive
-                      ? <Unlock className="h-4 w-4 text-emerald-400 shrink-0" />
-                      : <Lock className="h-4 w-4 text-gray-500 shrink-0" />}
+                      ? <Unlock className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      : <Lock className="h-4 w-4 text-gray-400 shrink-0" />}
                     <div>
-                      <p className="text-xs font-medium text-gray-300">Espaces généraux</p>
+                      <p className="text-xs font-semibold text-gray-200">Espaces généraux</p>
                       <p className="text-xs text-gray-500">18 espaces de formation</p>
                     </div>
                   </div>
-                  <div className={`rounded-lg border px-4 py-3 flex items-center gap-3 ${
+                  <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${
                     hasCoachingAccess(student.circleTags)
-                      ? 'border-indigo-500/20 bg-indigo-500/10'
-                      : 'border-gray-700 bg-gray-800/40'
+                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-500/20 dark:bg-indigo-500/10'
+                      : 'border-gray-800 bg-gray-900/20 dark:border-gray-700 dark:bg-gray-800/40'
                   }`}>
                     {hasCoachingAccess(student.circleTags)
-                      ? <Unlock className="h-4 w-4 text-indigo-400 shrink-0" />
-                      : <Lock className="h-4 w-4 text-gray-500 shrink-0" />}
+                      ? <Unlock className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                      : <Lock className="h-4 w-4 text-gray-400 shrink-0" />}
                     <div>
-                      <p className="text-xs font-medium text-gray-300">Espaces coaching</p>
+                      <p className="text-xs font-semibold text-gray-200">Espaces coaching</p>
                       <p className="text-xs text-gray-500">
                         {hasCoachingAccess(student.circleTags) ? '3 espaces privés' : 'Accès restreint'}
                       </p>
@@ -540,7 +555,7 @@ export function StudentDetailPage() {
                   </div>
                 </div>
 
-                <div className="divide-y divide-gray-800/60">
+                <div>
                   {student.circleJoinedAt && (
                     <InfoRow
                       icon={<CheckCircle2 className="h-4 w-4" />}
@@ -571,7 +586,7 @@ export function StudentDetailPage() {
                           href={student.circleProfile}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300"
+                          className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-500"
                         >
                           Voir sur Circle
                           <ExternalLink className="h-3 w-3" />
@@ -584,9 +599,42 @@ export function StudentDetailPage() {
             )}
           </Card>
 
+          {/* Statut formation */}
+          {(data.formation || isAdmin) && (
+            <Card>
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-100">Statut formation</h3>
+                  <p className="mt-0.5 text-xs text-gray-500">
+                    {data.formation?.paymentStatus ?? 'Non renseigné'}
+                    {data.formation?.action ? ` · ${data.formation.action}` : ''}
+                  </p>
+                </div>
+                {isAdmin && (
+                  <div className="flex gap-2 shrink-0">
+                    <button
+                      disabled={formationStatusMutation.isPending || data.formation?.paymentStatus === 'EN RÈGLE'}
+                      onClick={() => formationStatusMutation.mutate('EN RÈGLE')}
+                      className="rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
+                    >
+                      EN RÈGLE
+                    </button>
+                    <button
+                      disabled={formationStatusMutation.isPending || data.formation?.paymentStatus === 'EN RETARD'}
+                      onClick={() => formationStatusMutation.mutate('EN RETARD')}
+                      className="rounded-lg border border-red-200 bg-red-50 dark:border-red-500/30 dark:bg-red-500/10 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 disabled:opacity-40 transition-colors"
+                    >
+                      EN RETARD
+                    </button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
           {/* Notes */}
           <Card>
-            <h3 className="mb-3 text-sm font-semibold text-gray-200">Notes</h3>
+            <h3 className="mb-3 text-sm font-semibold text-gray-100">Notes</h3>
             {isAdmin && (
               <div className="mb-4">
                 <textarea
@@ -594,7 +642,7 @@ export function StudentDetailPage() {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Ajouter une note…"
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                  className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button size="sm" loading={addNoteMutation.isPending} disabled={!note.trim()} onClick={() => addNoteMutation.mutate(note.trim())}>
@@ -617,16 +665,16 @@ export function StudentDetailPage() {
         <div className="space-y-4">
           {payments.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-center">
-                <p className="text-lg font-bold text-emerald-400">{formatAmount(totalValidated, mainCurrency)}</p>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10 px-4 py-4 text-center">
+                <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{formatAmount(totalValidated, mainCurrency)}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Total validé</p>
               </div>
-              <div className="rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3 text-center">
-                <p className="text-lg font-bold text-gray-200">{payments.length}</p>
+              <div className="rounded-xl border border-gray-800 bg-gray-900/20 dark:bg-gray-800/40 px-4 py-4 text-center">
+                <p className="text-xl font-bold tabular-nums text-gray-100">{payments.length}</p>
                 <p className="text-xs text-gray-500 mt-0.5">paiement{payments.length > 1 ? 's' : ''}</p>
               </div>
-              <div className="rounded-xl border border-gray-700 bg-gray-800/50 px-4 py-3 text-center">
-                <div className="flex items-center justify-center gap-1.5">
+              <div className="rounded-xl border border-gray-800 bg-gray-900/20 dark:bg-gray-800/40 px-4 py-4 text-center">
+                <div className="flex items-center justify-center gap-1.5 mt-0.5">
                   {hasPartial
                     ? <Badge variant="warning">Partiel</Badge>
                     : <Badge variant="success">Complet</Badge>}
@@ -640,7 +688,7 @@ export function StudentDetailPage() {
             {payments.length === 0 ? (
               <div className="py-8 text-center text-sm text-gray-500">Aucun paiement enregistré.</div>
             ) : (
-              <div className="divide-y divide-gray-800">
+              <div className="divide-y divide-gray-800/50">
                 {payments.map((p) => {
                   const b = PAYMENT_STATUS_BADGE[p.status]
                   const src = SOURCE_LABELS[p.source] ?? SOURCE_LABELS.manual
@@ -671,12 +719,12 @@ export function StudentDetailPage() {
                       </div>
 
                       <div className="mt-2 flex items-baseline gap-4 flex-wrap">
-                        <span className="text-xl font-bold text-gray-100">
+                        <span className="text-2xl font-bold tabular-nums text-gray-100">
                           {formatAmount(p.amount, p.currency)}
                         </span>
-                        <span className="text-sm text-gray-400">{p.product ?? '—'}</span>
+                        <span className="text-sm font-medium text-gray-400">{p.product ?? '—'}</span>
                         {p.gateway && <span className="text-xs text-gray-500">{p.gateway}</span>}
-                        <span className="ml-auto flex items-center gap-1 text-xs text-gray-500">
+                        <span className="ml-auto flex items-center gap-1 text-xs text-gray-500 tabular-nums">
                           <Clock className="h-3 w-3" />
                           {p.paidAt ? formatDate(p.paidAt) : formatDate(p.createdAt)}
                         </span>
@@ -692,10 +740,11 @@ export function StudentDetailPage() {
                             <button
                               key={i}
                               onClick={() => setLightbox({ images: p.proofImages, idx: i })}
-                              className="group relative h-16 w-16 overflow-hidden rounded-lg border border-gray-700 bg-gray-800"
+                              className="group relative h-16 w-16 overflow-hidden rounded-xl border border-gray-800 shadow-sm cursor-pointer"
+                              aria-label={`Voir preuve ${i + 1}`}
                             >
                               {isPdf(url) ? (
-                                <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-400">PDF</div>
+                                <div className="flex h-full w-full items-center justify-center bg-gray-900/20 text-[10px] font-medium text-gray-500">PDF</div>
                               ) : (
                                 <img
                                   src={url}

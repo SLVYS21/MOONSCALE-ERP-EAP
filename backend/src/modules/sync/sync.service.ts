@@ -54,6 +54,20 @@ export interface TallyImportResult {
   durationMs: number
 }
 
+export interface PendingStudentsResult {
+  found: number
+  students: { email: string; name: string; paymentId: string; submittedAt: Date | null }[]
+  durationMs: number
+}
+
+export interface DebtorProofsResult {
+  processed: number
+  uploaded: number
+  skipped: number
+  errors: number
+  durationMs: number
+}
+
 // ── Service ───────────────────────────────────────────────────────────────────
 
 @Injectable()
@@ -369,9 +383,10 @@ export class SyncService {
     let flagged = 0
     let cleared = 0
 
-    // Phase 1 — Identifier les candidats (ont rejoint depuis > 30 jours)
+    // Phase 1 — Identifier les candidats (ont rejoint depuis > 30 jours, non admins)
     // On accepte circleJoinedAt, airtableCreatedAt ou createdAt comme date de référence
     const candidates = await this.studentModel.find({
+      isAdmin: { $ne: true },
       $or: [
         { circleJoinedAt:    { $lte: thirtyDaysAgo } },
         { airtableCreatedAt: { $lte: thirtyDaysAgo } },
@@ -951,6 +966,116 @@ export class SyncService {
         errors,
       },
     }
+  }
+
+  // ── Détection étudiants Tally sans Airtable ni Circle ────────────────────
+  // Ces étudiants ont répondu au formulaire mais ne sont pas encore régularisés.
+
+  async detectPendingStudents(): Promise<PendingStudentsResult> {
+    const start = Date.now()
+
+    // Paiements Tally dont l'étudiant n'a ni airtableId ni circleId
+    const tallyPayments = await this.paymentModel
+      .find({ source: 'tally' })
+      .select('studentEmail studentName studentId createdAt')
+      .lean<Array<{ studentEmail: string; studentName: string | null; studentId: Types.ObjectId | null; createdAt: Date; _id: Types.ObjectId }>>()
+
+    const result: PendingStudentsResult['students'] = []
+    const seen = new Set<string>()
+
+    for (const p of tallyPayments) {
+      if (seen.has(p.studentEmail)) continue
+      seen.add(p.studentEmail)
+
+      const student = await this.studentModel
+        .findOne({ email: p.studentEmail })
+        .select('airtableId circleId')
+        .lean<{ airtableId: string | null; circleId: number | null }>()
+
+      if (student && !student.airtableId && !student.circleId) {
+        result.push({
+          email: p.studentEmail,
+          name: p.studentName ?? p.studentEmail,
+          paymentId: String(p._id),
+          submittedAt: p.createdAt ?? null,
+        })
+      }
+    }
+
+    this.logger.log(`Pending students: ${result.length} trouvé(s) à régulariser`)
+    return { found: result.length, students: result, durationMs: Date.now() - start }
+  }
+
+  // ── Téléchargement des preuves des débiteurs confirmés ────────────────────
+  // Re-upload les URLs Tally/Airtable (temporaires) vers Cloudinary pour les garder définitivement.
+
+  async downloadDebtorProofs(): Promise<DebtorProofsResult> {
+    const start = Date.now()
+    let processed = 0
+    let uploaded = 0
+    let skipped = 0
+    let errors = 0
+
+    // Trouver tous les étudiants avec dette confirmée
+    const debtors = await this.studentModel
+      .find({ debtStatus: 'confirmed', isAdmin: { $ne: true } })
+      .select('email')
+      .lean<Array<{ email: string }>>()
+
+    const debtorEmails = debtors.map((d) => d.email)
+    if (debtorEmails.length === 0) {
+      return { processed: 0, uploaded: 0, skipped: 0, errors: 0, durationMs: Date.now() - start }
+    }
+
+    // Paiements de ces débiteurs ayant des preuves contenant des URLs non-Cloudinary
+    const payments = await this.paymentModel
+      .find({
+        studentEmail: { $in: debtorEmails },
+        proofImages: { $exists: true, $not: { $size: 0 } },
+      })
+      .select('_id studentEmail proofImages')
+      .lean<Array<{ _id: Types.ObjectId; studentEmail: string; proofImages: string[] }>>()
+
+    for (const payment of payments) {
+      processed++
+      const newUrls: string[] = []
+      let changed = false
+
+      for (const url of payment.proofImages) {
+        // Déjà sur Cloudinary → conserver tel quel
+        if (url.includes('cloudinary.com') || url.includes('res.cloudinary.com')) {
+          newUrls.push(url)
+          continue
+        }
+
+        try {
+          const response = await axios.get<ArrayBuffer>(url, {
+            responseType: 'arraybuffer',
+            timeout: 30_000,
+            headers: { 'User-Agent': 'Mozilla/5.0' },
+          })
+          const buffer = Buffer.from(response.data)
+          const cloudUrl = await this.cloudinaryService.upload(buffer, 'debtor-proofs')
+          newUrls.push(cloudUrl)
+          uploaded++
+          changed = true
+        } catch (err: unknown) {
+          this.logger.warn(`DebtorProofs: upload failed for ${url.slice(0, 60)}... — ${(err as Error).message}`)
+          newUrls.push(url) // Keep original URL on failure
+          errors++
+        }
+      }
+
+      if (changed) {
+        await this.paymentModel.updateOne({ _id: payment._id }, { $set: { proofImages: newUrls } })
+        this.logger.log(`DebtorProofs: ${payment.studentEmail} — ${uploaded} preuve(s) archivée(s)`)
+      } else {
+        skipped++
+      }
+    }
+
+    this.logger.log(`DebtorProofs terminé: ${processed} payments, ${uploaded} uploads, ${skipped} ignorés, ${errors} erreurs`)
+    return { processed, uploaded, skipped, errors, durationMs: Date.now() - start }
   }
 
   // ── Status ────────────────────────────────────────────────────────────────

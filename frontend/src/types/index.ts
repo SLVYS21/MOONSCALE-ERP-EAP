@@ -82,6 +82,8 @@ export interface Student {
   debtStatus: DebtStatus
   debtSince?: string
   successProofs?: SuccessProof[]
+  // Admin
+  isAdmin?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -514,6 +516,20 @@ export interface CircleSyncResult {
 export interface DebtorResult {
   flagged: number
   cleared: number
+  durationMs: number
+}
+
+export interface PendingStudentsResult {
+  found: number
+  students: { email: string; name: string; paymentId: string; submittedAt: string | null }[]
+  durationMs: number
+}
+
+export interface DebtorProofsResult {
+  processed: number
+  uploaded: number
+  skipped: number
+  errors: number
   durationMs: number
 }
 

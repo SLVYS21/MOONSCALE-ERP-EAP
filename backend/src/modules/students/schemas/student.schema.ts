@@ -96,6 +96,10 @@ export class Student {
 
   @Prop({ type: String, default: null })
   airtableEtudiantId: string | null
+
+  // ── Admin flag ────────────────────────────────────────────────────
+  @Prop({ type: Boolean, default: false })
+  isAdmin: boolean
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student)

@@ -93,13 +93,23 @@ export class StudentsService {
       query._id = { $in: ids }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pipeline: any[] = [
+      { $match: query },
+      {
+        $addFields: {
+          _sortDate: {
+            $ifNull: ['$airtableCreatedAt', { $ifNull: ['$circleJoinedAt', '$createdAt'] }],
+          },
+        },
+      },
+      { $sort: { _sortDate: -1 as const } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ]
+
     const [students, total] = await Promise.all([
-      this.studentModel
-        .find(query)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
+      this.studentModel.aggregate(pipeline).exec(),
       this.studentModel.countDocuments(query),
     ])
 
@@ -226,22 +236,47 @@ export class StudentsService {
     return student.save()
   }
 
+  async toggleStudentAdmin(studentId: string): Promise<{ isAdmin: boolean }> {
+    const student = await this.studentModel.findById(studentId)
+    if (!student) throw new NotFoundException('Étudiant introuvable')
+    student.isAdmin = !student.isAdmin
+    await student.save()
+    return { isAdmin: student.isAdmin }
+  }
+
+  async updateFormationStatus(studentId: string, paymentStatus: 'EN RÈGLE' | 'EN RETARD'): Promise<void> {
+    const student = await this.studentModel.findById(studentId)
+    if (!student) throw new NotFoundException('Étudiant introuvable')
+    await this.formationModel.findOneAndUpdate(
+      { studentId },
+      { $set: { paymentStatus, action: '✏️ MODIFIÉ MANUELLEMENT' } },
+      { upsert: true },
+    )
+  }
+
   // ── Paiements ────────────────────────────────────────────────────
 
   async listPayments(filters: {
     status?: string
     product?: string
     studentEmail?: string
+    search?: string
     dateFrom?: string
     dateTo?: string
     page?: number
     limit?: number
   }) {
-    const { status, product, studentEmail, dateFrom, dateTo, page = 1, limit = 50 } = filters
+    const { status, product, studentEmail, search, dateFrom, dateTo, page = 1, limit = 50 } = filters
     const query: Record<string, unknown> = {}
     if (status) query.status = status
     if (product) query.product = product
     if (studentEmail) query.studentEmail = studentEmail.toLowerCase()
+    if (search) {
+      query.$or = [
+        { studentName: { $regex: search, $options: 'i' } },
+        { studentEmail: { $regex: search, $options: 'i' } },
+      ]
+    }
     if (dateFrom || dateTo) {
       const range: Record<string, Date> = {}
       if (dateFrom) range.$gte = new Date(dateFrom)
@@ -253,13 +288,21 @@ export class StudentsService {
       query.createdAt = range
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pipeline: any[] = [
+      { $match: query },
+      {
+        $addFields: {
+          _sortDate: { $ifNull: ['$paidAt', '$createdAt'] },
+        },
+      },
+      { $sort: { _sortDate: -1 as const } },
+      { $skip: (page - 1) * limit },
+      { $limit: limit },
+    ]
+
     const [payments, total] = await Promise.all([
-      this.paymentModel
-        .find(query)
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
+      this.paymentModel.aggregate(pipeline).exec(),
       this.paymentModel.countDocuments(query),
     ])
 
@@ -269,11 +312,12 @@ export class StudentsService {
   async getStudentStats() {
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const nonAdmin = { isAdmin: { $ne: true } }
 
     const [total, withDebt, newThisMonth, formations] = await Promise.all([
-      this.studentModel.countDocuments(),
-      this.studentModel.countDocuments({ debtStatus: { $in: ['potential', 'confirmed'] } }),
-      this.studentModel.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      this.studentModel.countDocuments(nonAdmin),
+      this.studentModel.countDocuments({ ...nonAdmin, debtStatus: { $in: ['potential', 'confirmed'] } }),
+      this.studentModel.countDocuments({ ...nonAdmin, createdAt: { $gte: startOfMonth } }),
       this.formationModel.aggregate([
         { $group: { _id: '$paymentStatus', count: { $sum: 1 } } },
       ]),
@@ -517,8 +561,8 @@ export class StudentsService {
     const student = await this.studentModel.findById(studentId)
     if (!student) throw new NotFoundException('Étudiant introuvable')
 
-    await this.circleService.grantAccess(student.email, planKey)
-    await this.circleService.tagMember(student.email, planKey)
+    await this.circleService.grantAccess(student.email, planKey || 'Premium')
+    await this.circleService.tagMember(student.email, planKey || 'Premium')
 
     await Promise.all([
       this.formationModel.findOneAndUpdate(
@@ -706,8 +750,25 @@ export class StudentsService {
   // ── OCR des preuves de paiement ──────────────────────────────────
 
   async bulkAnalyzeProofs(): Promise<{ queued: number; alreadyDone: number }> {
+    return this.runAnalyzeProofs({})
+  }
+
+  async analyzeDebtorProofs(): Promise<{ queued: number; alreadyDone: number }> {
+    const debtors = await this.studentModel
+      .find({ debtStatus: 'confirmed', isAdmin: { $ne: true } })
+      .select('email')
+      .lean<Array<{ email: string }>>()
+
+    if (debtors.length === 0) return { queued: 0, alreadyDone: 0 }
+
+    const emails = debtors.map((d) => d.email)
+    return this.runAnalyzeProofs({ studentEmail: { $in: emails } })
+  }
+
+  private async runAnalyzeProofs(extraMatch: Record<string, unknown>): Promise<{ queued: number; alreadyDone: number }> {
     const payments = await this.paymentModel
       .find({
+        ...extraMatch,
         proofImages: { $exists: true, $not: { $size: 0 } },
         $or: [
           // Jamais analysé ou échec global
@@ -723,6 +784,7 @@ export class StudentsService {
       .lean()
 
     const alreadyDone = await this.paymentModel.countDocuments({
+      ...extraMatch,
       ocrStatus: 'done',
       ocrResults: { $elemMatch: { error: null } },
     })

@@ -47,6 +47,16 @@ export class SyncController {
     return this.syncService.backfillProofImages()
   }
 
+  @Post('pending-students')
+  detectPendingStudents() {
+    return this.syncService.detectPendingStudents()
+  }
+
+  @Post('debtor-proofs')
+  downloadDebtorProofs() {
+    return this.syncService.downloadDebtorProofs()
+  }
+
   @Post('students/:id/proofs')
   addProof(
     @Param('id') id: string,

@@ -28,6 +28,11 @@ class AddNoteDto {
   note: string
 }
 
+class UpdateFormationStatusDto {
+  @IsString() @IsIn(['EN RÈGLE', 'EN RETARD'])
+  paymentStatus: 'EN RÈGLE' | 'EN RETARD'
+}
+
 class ListQuery {
   @IsOptional() @IsString() search?: string
   @IsOptional() @IsString() status?: string
@@ -91,6 +96,22 @@ export class StudentsController {
     return this.studentsService.refreshCircleProfile(id)
   }
 
+  @Patch('students/:id/admin')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  toggleAdmin(@Param('id') id: string) {
+    return this.studentsService.toggleStudentAdmin(id)
+  }
+
+  @Patch('students/:id/formation-status')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  async updateFormationStatus(@Param('id') id: string, @Body() dto: UpdateFormationStatusDto) {
+    await this.studentsService.updateFormationStatus(id, dto.paymentStatus)
+    return { message: 'Statut formation mis à jour' }
+  }
+
   @Post('students/:id/remove-coaching')
   @UseGuards(RolesGuard)
   @Roles('superadmin', 'admin')
@@ -140,6 +161,14 @@ export class StudentsController {
   @HttpCode(HttpStatus.OK)
   bulkAnalyzeProofs() {
     return this.studentsService.bulkAnalyzeProofs()
+  }
+
+  @Post('payments/analyze-debtors')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  analyzeDebtorProofs() {
+    return this.studentsService.analyzeDebtorProofs()
   }
 
   @Post('payments/:id/analyze')
