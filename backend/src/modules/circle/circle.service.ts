@@ -10,6 +10,16 @@ export interface CircleMember {
   accepted_invitation: string
   active: boolean
   member_tags: { id: number; name: string }[]
+  profile_url: string | null
+  avatar_url: string | null
+  last_seen_at: string | null
+}
+
+export interface CircleTag {
+  id: number
+  name: string
+  is_public: boolean
+  color?: string | null
 }
 
 export interface CirclePlanConfig {
@@ -58,6 +68,8 @@ export class CircleService {
   private readonly logger = new Logger(CircleService.name)
   private readonly client: AxiosInstance
   private callCount = 0
+  private _tagsCache: { tags: CircleTag[]; fetchedAt: number } | null = null
+  private readonly TAG_CACHE_TTL = 5 * 60 * 1000 // 5 min
 
   constructor(private config: ConfigService) {
     this.client = axios.create({
@@ -235,6 +247,66 @@ export class CircleService {
     }
 
     return total
+  }
+
+  // ── Sample de membres (1 seul appel API) ─────────────────────────────────────
+  async getSampleMembers(limit = 5): Promise<Record<string, unknown>[]> {
+    try {
+      const res = await this.client.get('/community_members', {
+        params: { page: 1, per_page: limit },
+      })
+      const data = res.data as { records?: Record<string, unknown>[] }
+      return (data.records ?? []).slice(0, limit)
+    } catch (err: unknown) {
+      this.logger.warn(`getSampleMembers failed: ${(err as Error).message}`)
+      return []
+    }
+  }
+
+  // ── Lister tous les tags depuis l'API (avec cache 5 min) ────────────────────
+  async listTags(): Promise<CircleTag[]> {
+    if (this._tagsCache && Date.now() - this._tagsCache.fetchedAt < this.TAG_CACHE_TTL) {
+      return this._tagsCache.tags
+    }
+
+    const tags: CircleTag[] = []
+    let page = 1
+    let hasNext = true
+
+    while (hasNext) {
+      const res = await this.client.get('/member_tags', {
+        params: { page, per_page: 100, sort: 'alphabetical' },
+      })
+      const data = res.data as { records: CircleTag[]; has_next_page: boolean }
+      tags.push(...(data.records ?? []))
+      hasNext = data.has_next_page ?? false
+      page++
+    }
+
+    this._tagsCache = { tags, fetchedAt: Date.now() }
+    this.logger.log(`Circle tags chargés et mis en cache : ${tags.length} tags`)
+    return tags
+  }
+
+  // ── Taguer par ID direct ──────────────────────────────────────────────────────
+  async tagMemberById(email: string, tagId: number): Promise<void> {
+    await this.client.post('/tagged_members', {
+      user_email: email,
+      member_tag_id: tagId,
+    })
+    this.logger.log(`Tagged ${email} with tag ID ${tagId}`)
+  }
+
+  // ── Retirer un tag par ID direct ─────────────────────────────────────────────
+  async removeTagById(email: string, tagId: number): Promise<void> {
+    try {
+      await this.client.delete('/member_tags', {
+        params: { user_email: email, member_tag_id: tagId },
+      })
+      this.logger.log(`Removed tag ${tagId} from ${email}`)
+    } catch (err: unknown) {
+      this.logger.warn(`removeTagById failed: ${(err as Error).message}`)
+    }
   }
 
   getPlanConfig(planKey: string): CirclePlanConfig | null {

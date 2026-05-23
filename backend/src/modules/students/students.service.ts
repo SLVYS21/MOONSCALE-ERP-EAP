@@ -56,10 +56,12 @@ export class StudentsService {
     infoStatus?: string
     hasDebt?: boolean
     debtStatus?: string
+    dateFrom?: string
+    dateTo?: string
     page?: number
     limit?: number
   }) {
-    const { search, infoStatus, debtStatus, page = 1, limit = 50 } = filters
+    const { search, infoStatus, debtStatus, dateFrom, dateTo, page = 1, limit = 50 } = filters
     const query: Record<string, unknown> = {}
     if (search) {
       query.$or = [
@@ -69,6 +71,16 @@ export class StudentsService {
     }
     if (infoStatus) query.infoStatus = infoStatus
     if (debtStatus) query.debtStatus = debtStatus
+    if (dateFrom || dateTo) {
+      const range: Record<string, Date> = {}
+      if (dateFrom) range.$gte = new Date(dateFrom)
+      if (dateTo) {
+        const end = new Date(dateTo)
+        end.setHours(23, 59, 59, 999)
+        range.$lte = end
+      }
+      query.createdAt = range
+    }
 
     // Pré-filtre sur le statut formation (EN RÈGLE / EN RETARD)
     const statusFilter = (filters as Record<string, unknown>).status as string | undefined
@@ -141,8 +153,11 @@ export class StudentsService {
       {
         $set: {
           circleId: member.id,
+          circleProfile: member.profile_url ?? null,
+          circleAvatarUrl: member.avatar_url ?? null,
           circleJoinedAt: member.created_at ? new Date(member.created_at) : null,
           circleAcceptedAt: isNaN(acceptedAt?.getTime() ?? NaN) ? null : acceptedAt,
+          circleLastSeenAt: member.last_seen_at ? new Date(member.last_seen_at) : null,
           circleTags: member.member_tags ?? [],
           circleIsActive: member.active,
           circleLastSync: new Date(),
@@ -217,14 +232,26 @@ export class StudentsService {
     status?: string
     product?: string
     studentEmail?: string
+    dateFrom?: string
+    dateTo?: string
     page?: number
     limit?: number
   }) {
-    const { status, product, studentEmail, page = 1, limit = 50 } = filters
+    const { status, product, studentEmail, dateFrom, dateTo, page = 1, limit = 50 } = filters
     const query: Record<string, unknown> = {}
     if (status) query.status = status
     if (product) query.product = product
     if (studentEmail) query.studentEmail = studentEmail.toLowerCase()
+    if (dateFrom || dateTo) {
+      const range: Record<string, Date> = {}
+      if (dateFrom) range.$gte = new Date(dateFrom)
+      if (dateTo) {
+        const end = new Date(dateTo)
+        end.setHours(23, 59, 59, 999)
+        range.$lte = end
+      }
+      query.createdAt = range
+    }
 
     const [payments, total] = await Promise.all([
       this.paymentModel
@@ -237,6 +264,59 @@ export class StudentsService {
     ])
 
     return { data: payments, total, page, limit, totalPages: Math.ceil(total / limit) }
+  }
+
+  async getStudentStats() {
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const [total, withDebt, newThisMonth, formations] = await Promise.all([
+      this.studentModel.countDocuments(),
+      this.studentModel.countDocuments({ debtStatus: { $in: ['potential', 'confirmed'] } }),
+      this.studentModel.countDocuments({ createdAt: { $gte: startOfMonth } }),
+      this.formationModel.aggregate([
+        { $group: { _id: '$paymentStatus', count: { $sum: 1 } } },
+      ]),
+    ])
+
+    const enRegle = (formations.find((f: { _id: string; count: number }) => f._id === 'EN RÈGLE')?.count ?? 0) as number
+    const enRetard = (formations.find((f: { _id: string; count: number }) => f._id === 'EN RETARD')?.count ?? 0) as number
+
+    return { total, enRegle, enRetard, withDebt, newThisMonth }
+  }
+
+  async getPaymentStats() {
+    const now = new Date()
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const [statusCounts, todayAmounts, monthAmounts] = await Promise.all([
+      this.paymentModel.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
+      this.paymentModel.aggregate([
+        { $match: { status: 'TRAITÉ', processedAt: { $gte: startOfDay } } },
+        { $group: { _id: '$currency', total: { $sum: '$amount' } } },
+      ]),
+      this.paymentModel.aggregate([
+        { $match: { status: 'TRAITÉ', processedAt: { $gte: startOfMonth } } },
+        { $group: { _id: '$currency', total: { $sum: '$amount' } } },
+      ]),
+    ])
+
+    const byStatus = Object.fromEntries(
+      (statusCounts as { _id: string; count: number }[]).map((s) => [s._id, s.count]),
+    )
+    const total = Object.values(byStatus).reduce((a: number, b: unknown) => a + (b as number), 0)
+
+    return {
+      total,
+      nonTraite: byStatus['NON TRAITÉ'] ?? 0,
+      traite: byStatus['TRAITÉ'] ?? 0,
+      rejete: byStatus['REJETÉ'] ?? 0,
+      todayByAmount: (todayAmounts as { _id: string; total: number }[]).map((a) => ({ currency: a._id, total: a.total })),
+      monthByAmount: (monthAmounts as { _id: string; total: number }[]).map((a) => ({ currency: a._id, total: a.total })),
+    }
   }
 
   async createPayment(data: {
@@ -315,7 +395,7 @@ export class StudentsService {
       const raw = body.modality.trim()
       payment.modality = (raw === 'COMPLET' ? 'Complet' : raw === 'PARTIEL' ? 'Partiel' : raw) as import('./schemas/payment.schema').PaymentModality
     }
-    if (body?.amount !== undefined) payment.amount = body.amount
+    if (body?.amount !== undefined) payment.amount = body.amount;
     if (body?.currency) payment.currency = body.currency as import('./schemas/payment.schema').PaymentCurrency
     if (body?.product) payment.product = body.product as import('./schemas/payment.schema').PaymentProduct
     if (body?.gateway) payment.gateway = body.gateway

@@ -53,6 +53,10 @@ export class Payment {
   @Prop({ default: '' })
   notes: string
 
+  // Date réelle du paiement (depuis Airtable DATE DE PAIEMENT ou Tally submittedAt)
+  @Prop({ type: Date, default: null })
+  paidAt: Date | null
+
   // Qui a traité ce paiement
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   processedBy: Types.ObjectId | null

@@ -48,6 +48,16 @@ export class AirtableService {
     }
   }
 
+  async getSample(table: string, limit = 5): Promise<AirtableRecord[]> {
+    try {
+      const res = await this.client.get(table, { params: { maxRecords: limit } })
+      return res.data.records ?? []
+    } catch (err: unknown) {
+      this.logger.warn(`getSample(${table}): ${(err as Error).message}`)
+      return []
+    }
+  }
+
   async getAll(table: string): Promise<AirtableRecord[]> {
     const records: AirtableRecord[] = []
     let offset: string | undefined

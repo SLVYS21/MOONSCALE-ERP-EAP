@@ -2,6 +2,8 @@ import { Injectable, Logger, Optional } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import axios from 'axios'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { Student, StudentDocument } from '../students/schemas/student.schema'
 import { Payment, PaymentDocument } from '../students/schemas/payment.schema'
 import { FormationDashboard, FormationDashboardDocument } from '../students/schemas/formation-dashboard.schema'
@@ -124,6 +126,7 @@ export class SyncService {
       const infoStatus = ['EXACTE', 'ERRONÉE', 'NON VÉRIFIÉ'].includes(infoStatusRaw)
         ? infoStatusRaw : 'NON VÉRIFIÉ'
 
+      const ageDateRaw = f['AGE'] as string | undefined
       const update = {
         name,
         whatsapp: (f['WHATSAPP'] as string) ?? null,
@@ -131,6 +134,10 @@ export class SyncService {
         source: (f['OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?'] as string) ?? null,
         infoStatus,
         notes: (f['Notes'] as string) ?? '',
+        birthDate: ageDateRaw ? new Date(ageDateRaw) : null,
+        ageRange: (f["PLAGE D'AGE"] as string) ?? null,
+        nbPartialPayments: (f['NB PAIEMENTS PARTIEL'] as number) ?? 0,
+        airtableCreatedAt: f['Date de création'] ? new Date(f['Date de création'] as string) : null,
         airtableId: rec.id,
         airtableEtudiantId: rec.id,
       }
@@ -155,13 +162,19 @@ export class SyncService {
       const email = (Array.isArray(emailArr) ? emailArr[0] : emailArr)?.toLowerCase()?.trim()
       if (!email) { result.payments.skipped++; continue }
 
-      const student = await this.studentModel.findOne({ email }).select('_id').lean()
+      const student = await this.studentModel.findOne({ email }).select('_id name').lean<{ _id: Types.ObjectId; name: string }>()
       const modality = (f['MODALITE DE PAIEMENT'] as string) ?? 'Complet'
+
+      const airtableAttachments = (f['PREUVE DE PAIEMENT'] as Array<{ url: string }> | undefined) ?? []
+      const proofImages = airtableAttachments.map((a) => a.url).filter(Boolean)
+
+      const paidAtRaw = f['DATE DE PAIEMENT'] as string | undefined
+      const processedAtRaw = f['Modifié statut de traitement a'] as string | undefined
 
       const paymentData = {
         studentId: student?._id ?? null,
         studentEmail: email,
-        studentName: (f['NOM ET PRENOMS'] as string) ?? null,
+        studentName: student?.name ?? null,
         status: this.normalizePaymentStatus(f['STATUT DE TRAITEMENT'] as string),
         modality: (['Complet', 'Partiel'].includes(modality) ? modality : 'Complet') as 'Complet' | 'Partiel',
         amount: (f['MONTANT'] as number) ?? 0,
@@ -171,6 +184,9 @@ export class SyncService {
         plan: this.normalizePlan(f['Plan'] as string),
         validityMonths: (f['VALIDITÉ (en MOIS)'] as number) ?? 0,
         notes: (f['Notes'] as string) ?? '',
+        paidAt: paidAtRaw ? new Date(paidAtRaw) : null,
+        processedAt: processedAtRaw ? new Date(processedAtRaw) : null,
+        proofImages,
         source: 'manual' as const,
         airtableId: rec.id,
       }
@@ -236,7 +252,7 @@ export class SyncService {
       if (!student) continue
 
       const messagingRaw = (f['MESSAGERIE'] as string) ?? ''
-      const paymentStatus = (f['STATUT PAIEMENT'] as string) ?? 'EN REGLE'
+      const paymentStatus = (f['STATUT PAIEMENT '] as string) ?? 'EN REGLE'
       const tags = (f['TAG'] as string[] | undefined) ?? []
 
       await this.coachingModel.findOneAndUpdate(
@@ -282,6 +298,9 @@ export class SyncService {
       accepted_invitation: string
       active: boolean
       member_tags: { id: number; name: string }[]
+      profile_url: string | null
+      avatar_url: string | null
+      last_seen_at: string | null
     }>()
 
     const totalCircle = await this.circleService.listAllMembers(async (batch) => {
@@ -311,9 +330,11 @@ export class SyncService {
           update: {
             $set: {
               circleId: cm.id,
-              circleProfile: cm.profile_url,
+              circleProfile: cm.profile_url ?? null,
+              circleAvatarUrl: cm.avatar_url ?? null,
               circleJoinedAt: new Date(cm.created_at),
               circleAcceptedAt: isNaN(acceptedAt?.getTime() ?? NaN) ? null : acceptedAt,
+              circleLastSeenAt: cm.last_seen_at ? new Date(cm.last_seen_at) : null,
               circleTags: cm.member_tags ?? [],
               circleIsActive: cm.active,
               circleLastSync: new Date(),
@@ -339,6 +360,8 @@ export class SyncService {
   }
 
   // ── Debt detection ────────────────────────────────────────────────────────
+  // Critère : a rejoint il y a > 30 jours + a des paiements partiels TRAITÉS
+  //           + aucun paiement complet TRAITÉ = débiteur confirmé.
 
   async detectDebtors(): Promise<DebtorResult> {
     const start = Date.now()
@@ -346,30 +369,45 @@ export class SyncService {
     let flagged = 0
     let cleared = 0
 
-    // Students with Partiel TRAITÉ older than 30 days
-    const partialGroups = await this.paymentModel.aggregate<{
-      _id: string
-      firstPartialDate: Date
-    }>([
-      { $match: { status: 'TRAITÉ', modality: 'Partiel', createdAt: { $lte: thirtyDaysAgo } } },
-      { $group: { _id: '$studentEmail', firstPartialDate: { $min: '$createdAt' } } },
-    ])
+    // Phase 1 — Identifier les candidats (ont rejoint depuis > 30 jours)
+    // On accepte circleJoinedAt, airtableCreatedAt ou createdAt comme date de référence
+    const candidates = await this.studentModel.find({
+      $or: [
+        { circleJoinedAt:    { $lte: thirtyDaysAgo } },
+        { airtableCreatedAt: { $lte: thirtyDaysAgo } },
+        { createdAt:         { $lte: thirtyDaysAgo } },
+      ],
+    }).select('_id email name debtStatus').lean<Array<{
+      _id: Types.ObjectId; email: string; name: string; debtStatus: string
+    }>>()
 
-    for (const { _id: email, firstPartialDate } of partialGroups) {
-      const hasFullPayment = await this.paymentModel.exists({
-        studentEmail: email,
-        modality: 'Complet',
+    for (const student of candidates) {
+      const hasPartialPaid = await this.paymentModel.exists({
+        studentEmail: student.email,
         status: 'TRAITÉ',
+        modality: 'Partiel',
+      })
+      if (!hasPartialPaid) continue // Pas de paiement partiel → hors scope
+
+      const hasCompletePaid = await this.paymentModel.exists({
+        studentEmail: student.email,
+        status: 'TRAITÉ',
+        modality: 'Complet',
       })
 
-      const student = await this.studentModel.findOne({ email })
-      if (!student) continue
+      if (!hasCompletePaid) {
+        // Débiteur : trouver la date du premier partiel pour debtSince
+        const firstPartial = await this.paymentModel
+          .findOne({ studentEmail: student.email, status: 'TRAITÉ', modality: 'Partiel' })
+          .sort({ createdAt: 1 })
+          .select('createdAt')
+          .lean<{ createdAt: Date }>()
+        const debtSince = firstPartial?.createdAt ?? new Date()
 
-      if (!hasFullPayment) {
         const wasOk = student.debtStatus === 'ok'
         await this.studentModel.updateOne(
-          { email },
-          { $set: { debtStatus: 'potential', debtSince: firstPartialDate } },
+          { email: student.email },
+          { $set: { debtStatus: 'confirmed', debtSince } },
         )
         await this.formationModel.findOneAndUpdate(
           { studentId: student._id },
@@ -379,12 +417,13 @@ export class SyncService {
           flagged++
           this.automationsService?.triggerEvent?.('debt_detected', {
             student: { _id: String(student._id), email: student.email, name: student.name },
-            debtSince: firstPartialDate.toISOString(),
+            debtSince: debtSince.toISOString(),
           })
         }
       } else if (student.debtStatus !== 'ok') {
+        // A soldé depuis → retirer le flag
         await this.studentModel.updateOne(
-          { email },
+          { email: student.email },
           { $set: { debtStatus: 'ok', debtSince: null } },
         )
         await this.formationModel.findOneAndUpdate(
@@ -395,9 +434,35 @@ export class SyncService {
       }
     }
 
+    // Phase 2 — Nettoyer les anciens débiteurs qui ont maintenant soldé
+    // (cas où le paiement complet a été traité entre deux runs de détection)
+    const remainingDebtors = await this.studentModel.find({
+      debtStatus: { $in: ['potential', 'confirmed'] },
+      email: { $nin: candidates.map((c) => c.email) },
+    }).select('_id email debtStatus').lean<Array<{ _id: Types.ObjectId; email: string; debtStatus: string }>>()
+
+    for (const debtor of remainingDebtors) {
+      const hasCompletePaid = await this.paymentModel.exists({
+        studentEmail: debtor.email,
+        status: 'TRAITÉ',
+        modality: 'Complet',
+      })
+      if (hasCompletePaid) {
+        await this.studentModel.updateOne(
+          { email: debtor.email },
+          { $set: { debtStatus: 'ok', debtSince: null } },
+        )
+        await this.formationModel.findOneAndUpdate(
+          { studentId: debtor._id },
+          { $set: { paymentStatus: 'EN RÈGLE' } },
+        )
+        cleared++
+      }
+    }
+
     const result: DebtorResult = { flagged, cleared, durationMs: Date.now() - start }
     this.lastDebtorDetection = new Date()
-    this.logger.log(`Debt detection: ${flagged} flagged, ${cleared} cleared`)
+    this.logger.log(`Debt detection: ${flagged} new debtors, ${cleared} cleared`)
     return result
   }
 
@@ -585,6 +650,24 @@ export class SyncService {
               const modality: 'Complet' | 'Partiel' = (modalityRaw.includes('pas encore') || modalityRaw.includes('caution')) ? 'Partiel' : 'Complet'
               const proofImageUrls = proofFiles.map((f) => f.url).filter(Boolean)
 
+              const tallyBirthRaw = answerMap.get('f03') as string | undefined
+              const tallyWhatsapp = (answerMap.get('f05') as string | undefined)?.trim() || null
+              const tallySource = (answerMap.get('f06') as string | undefined)?.trim() || null
+              const tallyOccupation = (answerMap.get('f07') as string | undefined)?.trim() || null
+
+              // Upsert student — $ifNull préserve les valeurs existantes, ne remplace que les nulls
+              await this.studentModel.findOneAndUpdate(
+                { email: tallyEmail },
+                [{ $set: {
+                  name:       { $ifNull: ['$name', tallyName] },
+                  birthDate:  tallyBirthRaw   ? { $ifNull: ['$birthDate',  new Date(tallyBirthRaw)] } : '$birthDate',
+                  whatsapp:   tallyWhatsapp   ? { $ifNull: ['$whatsapp',   tallyWhatsapp] }           : '$whatsapp',
+                  source:     tallySource     ? { $ifNull: ['$source',     tallySource] }              : '$source',
+                  occupation: tallyOccupation ? { $ifNull: ['$occupation', tallyOccupation] }         : '$occupation',
+                } }],
+                { upsert: true },
+              )
+
               const student = await this.studentModel.findOne({ email: tallyEmail }).select('_id').lean<{ _id: Types.ObjectId }>()
 
               // Enrichir un paiement Airtable existant sans preuves plutôt que créer un doublon
@@ -744,6 +827,112 @@ export class SyncService {
 
     this.logger.log(`Backfill terminé en ${Date.now() - start}ms — ${updated} mis à jour, ${skipped} ignorés, ${noPayment} sans payment`)
     return { updated, skipped, noPayment }
+  }
+
+  // ── Samples (exploration des sources) ────────────────────────────────────
+
+  async getSamples(limit = 5): Promise<any> {
+    const errors: Record<string, string> = {}
+
+    // ── Airtable (4 tables, maxRecords=limit, 0 quota Circle) ─────────────────
+    const [atStudents, atPayments, atFormation, atCoaching] = await Promise.all([
+      this.airtableService.getSample(this.airtableService.TABLES.STUDENTS, limit),
+      this.airtableService.getSample(this.airtableService.TABLES.PAYMENTS, limit),
+      this.airtableService.getSample(this.airtableService.TABLES.FORMATION, limit),
+      this.airtableService.getSample(this.airtableService.TABLES.COACHING, limit),
+    ])
+
+    const airtable = {
+      students:  { fields: Object.keys(atStudents[0]?.fields  ?? {}), records: atStudents },
+      payments:  { fields: Object.keys(atPayments[0]?.fields  ?? {}), records: atPayments },
+      formation: { fields: Object.keys(atFormation[0]?.fields ?? {}), records: atFormation },
+      coaching:  { fields: Object.keys(atCoaching[0]?.fields  ?? {}), records: atCoaching },
+    }
+
+    // ── Circle (1 appel API = 1 quota) ────────────────────────────────────────
+    let circleMembers: Record<string, unknown>[] = []
+    try {
+      circleMembers = await this.circleService.getSampleMembers(limit)
+    } catch (err: unknown) {
+      errors.circle = (err as Error).message
+    }
+    const circle = {
+      fields: Object.keys(circleMembers[0] ?? {}),
+      members: circleMembers,
+    }
+
+    // ── Tally (1 appel API, 0 quota Circle) ───────────────────────────────────
+    interface TallyResponse {
+      questionId: string
+      key: string
+      label: string
+      type: string
+      value: unknown
+      options?: { id: string; text: string }[]
+    }
+
+    interface TallySubmission {
+      id: string
+      submittedAt: string
+      isCompleted: boolean
+      responses: TallyResponse[]
+    }
+
+    let tallySubmissions: TallySubmission[] = []
+    try {
+      const apiKey = process.env.TALLY_API_KEY
+      if (!apiKey) throw new Error('TALLY_API_KEY non configurée')
+      const res = await axios.get<{ submissions: TallySubmission[] }>(
+        `https://api.tally.so/forms/${this.TALLY_FORM_ID}/submissions`,
+        {
+          headers: { Authorization: `Bearer ${apiKey}` },
+          params: { page: 1, limit },
+        },
+      )
+      tallySubmissions = res.data.submissions ?? []
+    } catch (err: unknown) {
+      errors.tally = (err as Error).message
+    }
+
+    // Champs Tally déduits du premier sample
+    const tallyFieldMap = this.TALLY_TO_FIELD
+    const tallyFields = tallySubmissions[0]?.responses.map((r) => ({
+      questionId: r.questionId,
+      label: r.label ?? r.key ?? r.questionId,
+      type: r.type,
+      localField: tallyFieldMap[r.questionId] ?? null,
+    })) ?? []
+
+    const tally = { fields: tallyFields, submissions: tallySubmissions }
+
+    const payload = {
+      fetchedAt: new Date().toISOString(),
+      airtable,
+      circle,
+      tally,
+      errors,
+    }
+
+    // Écriture dans un fichier lisible par l'assistant
+    const outPath = path.join(process.cwd(), 'samples-result.json')
+    fs.writeFileSync(outPath, JSON.stringify(payload, null, 2), 'utf8')
+    this.logger.log(`Samples écrits dans ${outPath}`)
+
+    return {
+      written: true,
+      path: outPath,
+      summary: {
+        airtable: {
+          students:  atStudents.length,
+          payments:  atPayments.length,
+          formation: atFormation.length,
+          coaching:  atCoaching.length,
+        },
+        circle:  { members: circleMembers.length, fields: circle.fields.length },
+        tally:   { submissions: tallySubmissions.length, questions: tallyFields.length },
+        errors,
+      },
+    }
   }
 
   // ── Status ────────────────────────────────────────────────────────────────

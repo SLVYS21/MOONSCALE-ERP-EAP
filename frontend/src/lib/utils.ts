@@ -13,6 +13,16 @@ export function formatDate(date: string | Date, locale = 'fr-FR') {
   })
 }
 
+export function formatDateTime(date: string | Date, locale = 'fr-FR') {
+  return new Date(date).toLocaleString(locale, {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 export function formatCurrency(amount: number, currency = 'EUR', locale = 'fr-FR') {
   return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount)
 }

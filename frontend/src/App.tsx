@@ -17,7 +17,6 @@ import { FormBuilderPage } from '@/pages/forms/FormBuilderPage'
 import { PublicFormPage } from '@/pages/forms/PublicFormPage'
 import { AutomationsPage } from '@/pages/automations/AutomationsPage'
 import { AutomationBuilderPage } from '@/pages/automations/AutomationBuilderPage'
-import { RemindersPage } from '@/pages/reminders/RemindersPage'
 import { SyncPage } from '@/pages/sync/SyncPage'
 import { PlaceholderPage } from '@/pages/PlaceholderPage'
 import { LeadsPage } from '@/pages/leads/LeadsPage'
@@ -47,7 +46,6 @@ export default function App() {
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
-          <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/sync" element={<SyncPage />} />
           <Route path="/wiki" element={<WikiPage />} />
           <Route path="/wiki/:slug" element={<WikiPage />} />

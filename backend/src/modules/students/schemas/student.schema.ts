@@ -57,8 +57,27 @@ export class Student {
   @Prop({ type: Date, default: null })
   circleLastSync: Date | null
 
-  @Prop({type: String, default: ''})
+  @Prop({ type: String, default: null })
   circleProfile: string | null
+
+  @Prop({ type: String, default: null })
+  circleAvatarUrl: string | null
+
+  @Prop({ type: Date, default: null })
+  circleLastSeenAt: Date | null
+
+  // ── Airtable enrichment ───────────────────────────────────────────
+  @Prop({ type: Date, default: null })
+  birthDate: Date | null
+
+  @Prop({ type: String, default: null })
+  ageRange: string | null
+
+  @Prop({ type: Number, default: 0 })
+  nbPartialPayments: number
+
+  @Prop({ type: Date, default: null })
+  airtableCreatedAt: Date | null
 
   // ── Debt tracking ─────────────────────────────────────────────────
   @Prop({ type: String, enum: ['ok', 'potential', 'confirmed'], default: 'ok' })

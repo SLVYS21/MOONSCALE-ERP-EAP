@@ -62,17 +62,26 @@ export interface Student {
   source?: string
   infoStatus: InfoStatus
   notes: string
+  // Enrichissement Airtable
+  birthDate?: string | null
+  ageRange?: string | null
+  nbPartialPayments?: number
+  airtableCreatedAt?: string | null
+  airtableId?: string
+  // Circle
   circleId?: number
   circleJoinedAt?: string
   circleAcceptedAt?: string
+  circleLastSeenAt?: string | null
   circleTags?: { id: number; name: string }[]
   circleIsActive?: boolean
   circleLastSync?: string
   circleProfile?: string
+  circleAvatarUrl?: string | null
+  // Debt
   debtStatus: DebtStatus
   debtSince?: string
   successProofs?: SuccessProof[]
-  airtableId?: string
   createdAt: string
   updatedAt: string
 }
@@ -109,6 +118,7 @@ export interface Payment {
   notes?: string
   source: 'tally' | 'chariow' | 'manual'
   tallySubmissionId?: string | null
+  paidAt?: string | null
   processedBy?: string
   processedAt?: string
   createdAt: string
@@ -358,6 +368,7 @@ export type TriggerType =
   | 'student_created' | 'manual' | 'incoming_webhook'
   | 'reminder_due' | 'debt_detected'
   | 'lead_created' | 'lead_stage_changed' | 'lead_won' | 'call_completed'
+  | 'cron_schedule'
 
 export type StepType =
   | 'send_email'
@@ -368,12 +379,18 @@ export type StepType =
   | 'add_note'
   | 'update_student'
   | 'create_task'
+  | 'create_payment'
+  | 'create_student'
+  | 'circle_invite'
+  | 'circle_tag_add'
+  | 'circle_tag_remove'
 
 export interface AutomationTrigger {
   type: TriggerType
   config: {
     formId?: string
     webhookKey?: string
+    schedulePreset?: string
   }
 }
 
@@ -394,17 +411,26 @@ export interface AutomationStep {
     field?: string
     operator?: string
     value?: string
-    // notify_team
     recipients?: string
-    // add_note
     note?: string
-    // update_student
     studentField?: string
     studentValue?: string
-    // create_task
     taskTitle?: string
     taskDescription?: string
     taskPriority?: string
+    // create_payment / create_student / circle_*
+    emailExpr?: string
+    nameExpr?: string
+    whatsappExpr?: string
+    amountExpr?: string
+    currency?: string
+    product?: string
+    modality?: string
+    gateway?: string
+    plan?: string
+    circleTagId?: number
+    circleTagName?: string
+    circlePlanKey?: string
   }
 }
 

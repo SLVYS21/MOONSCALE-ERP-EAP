@@ -38,6 +38,11 @@ class ListRunsDto {
 export class AutomationsController {
   constructor(private automationsService: AutomationsService) {}
 
+  @Get('circle-plans')
+  async listCirclePlans() {
+    return this.automationsService.listCirclePlans()
+  }
+
   @Get()
   list(@CurrentUser() user: UserDocument) {
     return this.automationsService.listAutomations(

@@ -7,7 +7,7 @@ import {
   ClipboardList, CheckCircle2, GraduationCap, CreditCard, Link2,
   Mail, Globe, Timer, GitBranch, Bell, FileText, Pencil, CheckSquare,
   Sparkles, Layers, RefreshCw, AlarmClock, MessageSquare, Circle, AlertTriangle,
-  Crosshair, TrendingUp, Trophy, Phone,
+  Crosshair, TrendingUp, Trophy, Phone, CalendarClock, UserPlus, Send, Tag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
@@ -43,28 +43,39 @@ const TRIGGER_META: Record<TriggerType, { label: string; Icon: LucideIcon; color
   lead_stage_changed: { label: 'Étape lead changée', Icon: TrendingUp,    color: 'text-cyan-400 bg-cyan-500/15' },
   lead_won:         { label: 'Lead converti (Won)',  Icon: Trophy,         color: 'text-yellow-400 bg-yellow-500/15' },
   call_completed:   { label: 'Appel terminé',        Icon: Phone,          color: 'text-indigo-400 bg-indigo-500/15' },
+  cron_schedule:    { label: 'Planification',         Icon: CalendarClock,  color: 'text-violet-400 bg-violet-500/15' },
 }
 
 const STEP_ICONS: Record<StepType, LucideIcon> = {
-  send_email:     Mail,
-  http_request:   Globe,
-  wait:           Timer,
-  condition:      GitBranch,
-  notify_team:    Bell,
-  add_note:       FileText,
-  update_student: Pencil,
-  create_task:    CheckSquare,
+  send_email:        Mail,
+  http_request:      Globe,
+  wait:              Timer,
+  condition:         GitBranch,
+  notify_team:       Bell,
+  add_note:          FileText,
+  update_student:    Pencil,
+  create_task:       CheckSquare,
+  create_payment:    CreditCard,
+  create_student:    UserPlus,
+  circle_invite:     Send,
+  circle_tag_add:    Tag,
+  circle_tag_remove: X,
 }
 
 const STEP_LABELS: Record<StepType, string> = {
-  send_email:     'Envoyer un email',
-  http_request:   'Requête HTTP',
-  wait:           'Attente',
-  condition:      'Condition',
-  notify_team:    "Notifier l'équipe",
-  add_note:       'Ajouter une note',
-  update_student: "Mettre à jour l'étudiant",
-  create_task:    'Créer une tâche',
+  send_email:        'Envoyer un email',
+  http_request:      'Requête HTTP',
+  wait:              'Attente',
+  condition:         'Condition',
+  notify_team:       "Notifier l'équipe",
+  add_note:          'Ajouter une note',
+  update_student:    "Mettre à jour l'étudiant",
+  create_task:       'Créer une tâche',
+  create_payment:    'Créer un paiement',
+  create_student:    'Créer un étudiant',
+  circle_invite:     'Inviter dans Circle',
+  circle_tag_add:    'Ajouter un tag Circle',
+  circle_tag_remove: 'Retirer un tag Circle',
 }
 
 // ── Template definitions ──────────────────────────────────────────────────────

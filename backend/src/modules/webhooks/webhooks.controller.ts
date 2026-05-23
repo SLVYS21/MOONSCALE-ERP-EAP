@@ -136,8 +136,10 @@ export class WebhooksController {
   async handleChariow(
     @Body() body: Record<string, unknown>,
     @Query('tag') tag: string,
+    @Query() query: any
   ) {
     try {
+      console.log('Chariow webhook: ', body, JSON.stringify(query, null, 2));
       const customer = body.customer as Record<string, unknown>
       const email  = customer?.email as string
       const name   = customer?.name as string
@@ -365,6 +367,7 @@ export class WebhooksController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-fedapay-signature') sigHeader: string,
   ) {
+    console.log(req.body);
     const secret = process.env.FEDAPAY_WEBHOOK_SECRET
     if (secret && sigHeader && req.rawBody) {
       if (!verifyHmacHeader(req.rawBody, sigHeader, secret)) {
@@ -430,7 +433,6 @@ export class WebhooksController {
   }
 
   // ── Typebot → nouveau lead ────────────────────────────────────────────────
-
   @Post('typebot')
   @HttpCode(HttpStatus.OK)
   async handleTypebot(
@@ -461,7 +463,6 @@ export class WebhooksController {
   }
 
   // ── Utility ───────────────────────────────────────────────────────────────
-
   private normalizeCurrency(raw: string): string {
     const map: Record<string, string> = {
       'F CFA': 'XOF', 'FCFA': 'XOF', 'CFA': 'XOF', 'XOF': 'XOF',

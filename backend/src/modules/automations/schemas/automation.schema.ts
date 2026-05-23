@@ -14,6 +14,7 @@ export type TriggerType =
   | 'lead_stage_changed'
   | 'lead_won'
   | 'call_completed'
+  | 'cron_schedule'
 
 export type StepType =
   | 'send_email'
@@ -24,12 +25,18 @@ export type StepType =
   | 'add_note'
   | 'update_student'
   | 'create_task'
+  | 'create_payment'
+  | 'create_student'
+  | 'circle_invite'
+  | 'circle_tag_add'
+  | 'circle_tag_remove'
 
 export interface AutomationTrigger {
   type: TriggerType
   config: {
-    formId?: string      // for form_submitted
-    webhookKey?: string  // for incoming_webhook (auto-generated UUID)
+    formId?: string        // for form_submitted
+    webhookKey?: string    // for incoming_webhook (auto-generated UUID)
+    schedulePreset?: string // for cron_schedule
   }
 }
 
@@ -41,30 +48,45 @@ export interface AutomationStep {
     // send_email
     to?: string
     subject?: string
-    body?: string       // HTML, supports {{variable}} interpolation
+    body?: string
     // http_request
     url?: string
     method?: string
     headers?: { key: string; value: string }[]
-    requestBody?: string  // JSON template
+    requestBody?: string
     // wait
     duration?: number
     unit?: 'seconds' | 'minutes' | 'hours'
-    // condition (gate — stops execution if condition is false)
-    field?: string      // dot-path e.g. "student.email"
+    // condition
+    field?: string
     operator?: string
     value?: string
     // notify_team
-    recipients?: string     // 'all_admins' or comma-separated emails
+    recipients?: string
     // add_note
-    note?: string           // note content, supports {{interpolation}}
+    note?: string
     // update_student
-    studentField?: string   // field name to update (e.g. 'infoStatus')
-    studentValue?: string   // new value, supports interpolation
+    studentField?: string
+    studentValue?: string
     // create_task
     taskTitle?: string
     taskDescription?: string
-    taskPriority?: string   // 'low' | 'medium' | 'high' | 'urgent'
+    taskPriority?: string
+    // create_payment / create_student / circle_*
+    // Expressions : valeurs statiques ou {{interpolation}}
+    emailExpr?: string
+    nameExpr?: string
+    whatsappExpr?: string
+    amountExpr?: string
+    currency?: string
+    product?: string
+    modality?: string
+    gateway?: string
+    plan?: string
+    // circle_tag_add / circle_tag_remove
+    circleTagId?: number    // ID du tag Circle (depuis l'API — stable)
+    circleTagName?: string  // Nom affiché (peut changer)
+    circlePlanKey?: string  // Legacy — clé CIRCLE_PLANS hardcodée
   }
 }
 

@@ -1,0 +1,4841 @@
+{
+  "fetchedAt": "2026-05-23T08:56:38.497Z",
+  "airtable": {
+    "students": {
+      "fields": [
+        "Date de création",
+        "Dernière modification",
+        "NB PAIEMENTS PARTIEL",
+        "OCCUPATION",
+        "WHATSAPP",
+        "AGE EN CHIFFRE",
+        "Croisé",
+        "DASHBOARD COACHING",
+        "DASHBOARD FORMATION",
+        "PLAGE D'AGE",
+        "NOM ET PRENOMS",
+        "PAIEMENTS",
+        "EMAIL",
+        "AGE",
+        "OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?"
+      ],
+      "records": [
+        {
+          "id": "rec01CxT4ND87M3Ed",
+          "createdTime": "2024-09-11T06:17:06.000Z",
+          "fields": {
+            "Date de création": "2024-09-11T06:17:06.000Z",
+            "Dernière modification": "2026-02-17T14:03:16.000Z",
+            "NB PAIEMENTS PARTIEL": 2,
+            "OCCUPATION": "Développeur",
+            "WHATSAPP": "+22997848979",
+            "AGE EN CHIFFRE": 35,
+            "Croisé": "Oui",
+            "DASHBOARD COACHING": [
+              "recorZXuUebGv0Vg6"
+            ],
+            "DASHBOARD FORMATION": [
+              "recrpZhzrQEDXUAuL"
+            ],
+            "PLAGE D'AGE": "30 à 35",
+            "NOM ET PRENOMS": "VIGAN NOE NOEL",
+            "PAIEMENTS": [
+              "recmlObNESE1hDXTQ",
+              "recPQasZ3TaPQarSw",
+              "recmAycSRb9XnvVAX",
+              "recBjHH4CbIhG1zs0"
+            ],
+            "EMAIL": "vigannoejoel@gmail.com",
+            "AGE": "1991-01-16",
+            "OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?": "YOUTUBE"
+          }
+        },
+        {
+          "id": "rec01kdLdR7zhpX1z",
+          "createdTime": "2024-07-14T22:23:58.000Z",
+          "fields": {
+            "Date de création": "2024-07-14T22:23:58.000Z",
+            "Dernière modification": "2026-02-17T14:03:17.000Z",
+            "NB PAIEMENTS PARTIEL": 0,
+            "OCCUPATION": "Salarié",
+            "WHATSAPP": "+33605564896",
+            "AGE EN CHIFFRE": 28,
+            "Croisé": "Oui",
+            "DASHBOARD COACHING": [
+              "reckzMs10w8hdwgn3"
+            ],
+            "DASHBOARD FORMATION": [
+              "reckOsr2HOFvIvNfj"
+            ],
+            "PLAGE D'AGE": "25 à 30",
+            "NOM ET PRENOMS": "Afshata Couliblay",
+            "PAIEMENTS": [
+              "recFX6k0KnRTQYb4j"
+            ],
+            "EMAIL": "immo.afshata@gmail.com",
+            "AGE": "1997-08-11",
+            "OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?": "YOUTUBE"
+          }
+        },
+        {
+          "id": "rec01ns2mgohxq9t2",
+          "createdTime": "2025-02-06T10:13:00.000Z",
+          "fields": {
+            "Date de création": "2025-02-06T10:13:00.000Z",
+            "Dernière modification": "2026-02-17T14:03:18.000Z",
+            "NB PAIEMENTS PARTIEL": 0,
+            "OCCUPATION": "COMMERCANT",
+            "WHATSAPP": "+22390734623",
+            "AGE EN CHIFFRE": 20,
+            "Croisé": "Oui",
+            "DASHBOARD COACHING": [
+              "recKLPa9tnGUMOOLC"
+            ],
+            "DASHBOARD FORMATION": [
+              "reczEfPhrJUrwlN6P"
+            ],
+            "PLAGE D'AGE": "15 à 20",
+            "NOM ET PRENOMS": "Saturnin Diallo",
+            "PAIEMENTS": [
+              "recsGiI8X2bb2eKfy"
+            ],
+            "EMAIL": "kaazavickto@gmail.com",
+            "AGE": "2005-12-04",
+            "OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?": "YOUTUBE"
+          }
+        },
+        {
+          "id": "rec0733B9rlhcEKfK",
+          "createdTime": "2026-01-26T12:27:50.000Z",
+          "fields": {
+            "Date de création": "2026-01-26T12:27:50.000Z",
+            "Dernière modification": "2026-02-17T14:03:19.000Z",
+            "NB PAIEMENTS PARTIEL": 0,
+            "OCCUPATION": "Je travail comme encadrant dans une école",
+            "WHATSAPP": "+2250757036394",
+            "AGE EN CHIFFRE": 43,
+            "Croisé": "Oui",
+            "DASHBOARD COACHING": [
+              "recEElAYTkVO3wh4Y"
+            ],
+            "DASHBOARD FORMATION": [
+              "rec3HLgiRKx7TrgWh"
+            ],
+            "PLAGE D'AGE": "40 à 45",
+            "NOM ET PRENOMS": "N'GUESSAN YABA DANIELLE EDWIGE",
+            "PAIEMENTS": [
+              "recDl1xp1MyVdP3oD"
+            ],
+            "EMAIL": "danielle.nguessan@inphb.ci",
+            "AGE": "1982-10-25",
+            "OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?": "Facebook",
+            "Plan": [
+              "Premium"
+            ]
+          }
+        },
+        {
+          "id": "rec07eUFKPyjloKEK",
+          "createdTime": "2024-07-02T17:23:58.000Z",
+          "fields": {
+            "Date de création": "2024-07-02T17:23:58.000Z",
+            "Dernière modification": "2026-02-17T14:03:20.000Z",
+            "NB PAIEMENTS PARTIEL": 1,
+            "OCCUPATION": "Je suis enseignant au lycée ",
+            "WHATSAPP": "+22890345893",
+            "AGE EN CHIFFRE": 41,
+            "Croisé": "Oui",
+            "DASHBOARD COACHING": [
+              "recEFmrQYsFK8VpSF"
+            ],
+            "DASHBOARD FORMATION": [
+              "recvMag9kCQrZkHId"
+            ],
+            "PLAGE D'AGE": "40 à 45",
+            "NOM ET PRENOMS": "OURAGUI  Alassani ",
+            "PAIEMENTS": [
+              "recxC7I7mNj1vp8FB",
+              "rec2CJLr2dPXSSfZ5",
+              "recMECjz6Hp1irtiU"
+            ],
+            "EMAIL": "ouraguia22@gmail.com",
+            "AGE": "1984-12-31",
+            "OU AVEZ VOUS ENTENDU PARLE DE MYRIL LA PREMEIERE FOIS ?": "YOUTUBE"
+          }
+        }
+      ]
+    },
+    "payments": {
+      "fields": [
+        "EMAIL",
+        "DEVISE",
+        "ETUDIANT",
+        "ID backend",
+        "ID",
+        "Sequence Number",
+        "WhatsApp",
+        "PRODUIT",
+        "MOYEN DE PAIEMENT",
+        "STATUT DE TRAITEMENT",
+        "DASHBOARD FORMATION",
+        "MONTANT",
+        "Le Client a un Paiement Partiel ?",
+        "MODALITE DE PAIEMENT",
+        "Modifié statut de traitement a",
+        "DATE DE PAIEMENT",
+        "PREUVE DE PAIEMENT"
+      ],
+      "records": [
+        {
+          "id": "rec01LReKulm3wPUc",
+          "createdTime": "2025-01-27T12:13:05.000Z",
+          "fields": {
+            "EMAIL": [
+              "fbshop7621@gmail.com"
+            ],
+            "DEVISE": "F CFA",
+            "ETUDIANT": [
+              "reclQE8kU7kKYfdYj"
+            ],
+            "ID backend": "reces3LoLzYpg0WOs",
+            "ID": "01743",
+            "Sequence Number": 1743,
+            "WhatsApp": [
+              "+22676212968"
+            ],
+            "PRODUIT": "ECOM AFRICA PRO",
+            "MOYEN DE PAIEMENT": "Autres (Paiement Cash, Western Union, MoneyGram, etc.)",
+            "STATUT DE TRAITEMENT": "TRAITÉ",
+            "DASHBOARD FORMATION": [
+              "rec5btsQgPjIEF0p0"
+            ],
+            "MONTANT": 200000,
+            "Le Client a un Paiement Partiel ?": [
+              0
+            ],
+            "MODALITE DE PAIEMENT": "Complet",
+            "Modifié statut de traitement a": "2025-01-27T19:40:24.000Z",
+            "DATE DE PAIEMENT": "2025-01-27",
+            "PREUVE DE PAIEMENT": [
+              {
+                "id": "attIYiLFWRyXSFdBl",
+                "width": 1080,
+                "height": 2220,
+                "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/D9FdOb1ilyJOBRcFPGqajw/6DvzefYPHwDibJ1E442GVqMQB8JdHB6WXfMfIP6UKJ77QjD0EWOXMYvm_qr0BQjGnx7WhG8aLfftK38JHo5ADoSRW5ZDHk4pEa5U8HllTESEtSULsjTWjNPB5iIkg0ufdJwaNW1mDE2RXfYL5brtkhiibEHG46s3gjn9ZvxUfXMlyFWmisdHwe_wN2Ma6TxR/6Wo_GqhHpnbnilK0mm9qOA0n7lYGJxD01QmnRkDxEMo",
+                "filename": "Screenshot_20250127-114129_One Read.jpg",
+                "size": 116290,
+                "type": "image/jpeg",
+                "thumbnails": {
+                  "small": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/a6M7LR0XO2w2heRtJAr9yQ/BGjZ7aK_V52de4Xq2uVugNRDum2ko3eSXa5DPneS68qmeHMNAOvUBmeJw52F-WhSV_QGpdtro95DPbXf4AFaD5TggEwxm6a_XPWkALVxW6PBdmUo-s4IEhpJWYaR7eDx1pgR955eczmprk2igiJhJA/MHAN0-lVTvgncw0cx3sS-NCWo_rTn7cRCkhL27tm3jo",
+                    "width": 17,
+                    "height": 36
+                  },
+                  "large": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/joJVhc8k4YtZRnYAHh4Rww/Da4HhCbk-CFePescrWxx2z3XmDIWUC-xyi_9LLOZfEepstdrjvQIgTgpwgicndKdIUZZ85S0HoxzLaHQi5Nsb19sMpCs3ouRVq3y99baICy5eWUPlphkSsPG3B6M5Rd7dlvhhFOXMFkrAhkZPH1VMg/zClpOrXhfQp3L0XbeFWc6B1btP-PaHTicr-esiChncg",
+                    "width": 512,
+                    "height": 1052
+                  },
+                  "full": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/sNFIiBWmLGApjYk7PaXFcQ/z1Dkp9fSWJH_Sh5v5N_nnVHJv9ZSF8aDOr_JIttBZEWBlk4UZu1TdLp_Y5MIBe-747ojjqxhGmg6Cp5Mkeu040oc_YvuX_i7iAXrF-LxIXN6Yaseirym_0StLidtZR-ULkP9aMaviLr9MPfVgtDddg/ESDt-XUbhe8RYo1ZMfo_rfjifrU29qrhSl7iz5Il1pc",
+                    "width": 1080,
+                    "height": 2220
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "rec01NSWqXCXqS04X",
+          "createdTime": "2025-07-18T18:13:08.000Z",
+          "fields": {
+            "EMAIL": [
+              "faltasdeme@icloud.com"
+            ],
+            "DEVISE": "F CFA",
+            "ETUDIANT": [
+              "recK6onVEReqDqzPZ"
+            ],
+            "ID backend": "recrQdGdRe8XW0aKC",
+            "ID": "02132",
+            "Sequence Number": 2132,
+            "WhatsApp": [
+              "+22601090000"
+            ],
+            "PRODUIT": "ECOM AFRICA PRO",
+            "MOYEN DE PAIEMENT": "Carte Bancaire ",
+            "STATUT DE TRAITEMENT": "TRAITÉ",
+            "DASHBOARD FORMATION": [
+              "recf3OCba3ncD5N0p"
+            ],
+            "MONTANT": 303000,
+            "Le Client a un Paiement Partiel ?": [
+              0
+            ],
+            "MODALITE DE PAIEMENT": "Complet",
+            "Modifié statut de traitement a": "2025-07-19T09:39:29.000Z",
+            "DATE DE PAIEMENT": "2025-07-18",
+            "PREUVE DE PAIEMENT": [
+              {
+                "id": "attzmHSJNQyuTpLlH",
+                "width": 1170,
+                "height": 2532,
+                "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/FZnrgkXopPr53I9JWd2J1w/RPMFyWT8n0Nb--JtSzzVV-e0OzevyOaoc3oGQ8IgmosD8h6_ZLDzRn3zgb0DR6IZmfOrxiTkHMMJ8qwPYsV2Adk3xYaVSbXLy2hduwzxQK3rZAhw9kKpcbmzp3wuFWA8DdRbihsw9x3Qg9aTYmIzpEaLaJ7szmzIiTd_CN1EhEY/nLBONV83YqKcvu0DIvZdv5rtqoY0qwT1vHWm_fhG0_k",
+                "filename": "IMG_0435.png",
+                "size": 579810,
+                "type": "image/png",
+                "thumbnails": {
+                  "small": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/Rlrggj6Ln36fWrR8zVNhpw/GLmhDBN172pw6rh_4pygGMo4XJTEkPIBwtaNHu26gsfPjdIcEyqeNQ-bNa0ZElfQ2m-8HVGldZp9cqoEmNRAUAYHUA-c8Lwv9x81s-MSnteSWnB3Ct5foMFOhu8_UgzxDeHyMWSIX4d5PDoIXvtFng/XXJ9tlA_FUp_1uDYRv3ZBk4QMK70mIntO78NizsrPTU",
+                    "width": 17,
+                    "height": 36
+                  },
+                  "large": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/0uAtUXel4sHHeJjtp9xj5A/G2-pgD7iTMLxF3plz1rKUDwUeWmNRrbHZg1w1sVdWoNDLXFvd3KM0ksBVVjCSGb-CH6WkZ17dxaVhZDazWgkRKS8j9tmhXRFYiAk7jtM0WvvYubtHtQwiXhEyw2lI_neD7SGOF3O9GiZr4AAJ4rq8w/qajAzfnUqtTN3BqjjmeGvdQpYkK8_q45-lnkLrOYfK4",
+                    "width": 512,
+                    "height": 1108
+                  },
+                  "full": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/QZ51WBeBh3BR-m0Pg282qA/xkg2Ne_Y8BWEFQoHWU6TbAf_dHpji34ChdmNKJ0Bd67mvSN4eWuQMl3k0KnX0MPmCalNPoRhIt9Nz-cXKAI1C_xdX0_38W9hziIL3rUEk4A-6fEpNlz8bIaIEKZNWHujb3lGxf9aeNAf1TOQPatsLg/L7CARR2TFdH9mXxtibdvUTj361CmFOBg2iCP1fHShtI",
+                    "width": 1170,
+                    "height": 2532
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "rec05TsgWdKcZ2tWx",
+          "createdTime": "2025-04-20T14:13:06.000Z",
+          "fields": {
+            "EMAIL": [
+              "famirbtk9@gmail.com"
+            ],
+            "DEVISE": "F CFA",
+            "ETUDIANT": [
+              "recqyLRNITsUlJUJI"
+            ],
+            "ID backend": "recY4lummEqKTLF83",
+            "ID": "01948",
+            "Sequence Number": 1948,
+            "WhatsApp": [
+              "+2290167331810"
+            ],
+            "PRODUIT": "ECOM AFRICA PRO",
+            "MOYEN DE PAIEMENT": "Autres (Paiement Cash, Western Union, MoneyGram, etc.)",
+            "STATUT DE TRAITEMENT": "TRAITÉ",
+            "DASHBOARD FORMATION": [
+              "recS7lq4s8DMCyw1G"
+            ],
+            "MONTANT": 200000,
+            "Le Client a un Paiement Partiel ?": [
+              0
+            ],
+            "MODALITE DE PAIEMENT": "Complet",
+            "Modifié statut de traitement a": "2025-04-21T08:55:09.000Z",
+            "DATE DE PAIEMENT": "2025-04-20",
+            "PREUVE DE PAIEMENT": [
+              {
+                "id": "attXaBGVoX3XlnaVa",
+                "width": 1284,
+                "height": 2778,
+                "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/dKLSqdHL9eKgb_ttxvC4Pw/TQyVoC_DMOsCtvtMz1hy1wbNbgJxb-oqZrXfAx_p-qsTZ-6XA68js3QlWSHpZ-cYWQB3K38tAV2vzVfMjDJiTFcoM921jof2ktkKSMzkpGjUfmGkNgysFYM1-GWEKpvuHPmGz8Q7E6Vir5VVKqDaBU32vzJKkr_hx1jkG1Y2QjA/cnfOhA2y7r2usCoChqDoVxlsJ_YI1i2RgG_Suc_af9g",
+                "filename": "IMG_0757.png",
+                "size": 533193,
+                "type": "image/png",
+                "thumbnails": {
+                  "small": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/sJQx8gNqQl-YgGk1cnvvog/PXhRHOV_1Ns4CEi6FwsKmZEBGinyA0GWH2Cjmp8wx9Mk77i3MazoM1qDWVM4LpDx8Z41nzGUGxGKzVngr2h3Hsts-Ht2tnqtBGzzw8mXKP9wdpC58PoJ17xjYzCFqpja41NHi3JwPyvEiOmEM_wSCA/GPXRklzB97zX4i8XRmcVi0_rQ5qayaaQCGGg84XnyK8",
+                    "width": 17,
+                    "height": 36
+                  },
+                  "large": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/u1QPd3otWm6w13n8BbLGJQ/fxfKmrNeq958yk_NLVhlHptQ4Yzc1QhEL6Uxl55r0rjTCJUnl5Sgb6li4YeF6ghLaCNZJ4FpB9elPlNwxYHsCsfpfDGjcLQRF4PAej5rhFb-AW2TC1E7AKOmc-DTNdtRZYSVtTWfHnyXu86KFskYMg/pgPQ1dDukgmTQbMiGSq8PfseGjMuOZ3NN06pKukLLXM",
+                    "width": 512,
+                    "height": 1108
+                  },
+                  "full": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/0TFlzDNLzcu7zHK1QEv3_g/MqR-kSocvwEcYjH3OjeTvSXYpEkOv3F-ti_SgsDpUQKpz2M59VlioV2OI39wQDyIwFa3WUlPVJU7lQ9L8au2a0ujQmBV8s_m9LixjURfUIrRRkbDf9SzNeBRbMQ6-8jvT_dIRLliBr_yIkA0Bgyj_Q/HdzGyl8rGYN3-lKjmGb9nkybtUlEukynzNh4k8rvDa4",
+                    "width": 1284,
+                    "height": 2778
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "rec07yBIv52AkDEZg",
+          "createdTime": "2024-06-11T22:25:29.000Z",
+          "fields": {
+            "EMAIL": [
+              "be.winner.team@gmail.com"
+            ],
+            "DEVISE": "USD",
+            "ETUDIANT": [
+              "rec4pj3Y6tjh0Ocda"
+            ],
+            "ID": "00043",
+            "Sequence Number": 43,
+            "WhatsApp": [
+              "+22967406217"
+            ],
+            "PRODUIT": "ECOM AFRICA PRO",
+            "MOYEN DE PAIEMENT": "Carte Bancaire ",
+            "STATUT DE TRAITEMENT": "TRAITÉ",
+            "DASHBOARD FORMATION": [
+              "recnQ8gwzxBXkSAzq"
+            ],
+            "MONTANT": 297,
+            "Le Client a un Paiement Partiel ?": [
+              0
+            ],
+            "MODALITE DE PAIEMENT": "Complet",
+            "Modifié statut de traitement a": "2024-06-12T13:20:04.000Z",
+            "DATE DE PAIEMENT": "2024-06-11",
+            "PREUVE DE PAIEMENT": [
+              {
+                "id": "attkWV6lhUX7OOwFY",
+                "width": 1348,
+                "height": 692,
+                "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/1pNn9pDr6TuMNgIK9CaRDw/uMNUCeNSprThDmcWDBjxM4F6OMZgEslOk6pm6uA053X6eamQfenEf4GqX0WMo5FHBCF7_RvtFGrOY2g9Zyl_GT2mFWX982KqN155Ikg1T4qFZV4i4KanAmjuwwba0C749Ro4yURsLSOviw89Xj2QQED_PVfx7-qP7CHI4kBQjXSPMfpgZVYOhIneTibgTs5L/NoiwKq_1LuZCj2GsGLj-tUErq4Ki1eFA6J5EqtMky2A",
+                "filename": "Screenshot 2024-06-11 190932.png",
+                "size": 46946,
+                "type": "image/png",
+                "thumbnails": {
+                  "small": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/Y3en5NiovhFQkPjLzgjzGA/CRx9F7MiiqnaYCBhwoW6T2syQePzT9j02j9X3Dt0CwXvDxm_kQPRFagDBPzOcI1BLxkrJqH-QhNgT68oM1fCV302gFoJINIW0XV3vybOSV6So-6WmDobbQemB5pPFsgTEIbAitJS3uqKs8yYChEhpQ/xx5u2lgYN_sUhAASlw5_HHL6_CrQfGSkMl47ALn73WE",
+                    "width": 70,
+                    "height": 36
+                  },
+                  "large": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/uKKl3Q_x-rMwGE9z5QYeZw/--q2u39SvhDWCD2PWXZRjJf2pBjwFy2epc5TyyG66V-MiIjkBGZ6ndZ7sx0E2TssN3T9iJw-SmdZ3eUw0ajsjSsmqASseNpIvCeUWdvFoTbqvZGgwPCj6Tu66Jx8p9zFJyIUa5nVzQjSDzrl4zyI_w/Fqf0Bim9sv7yy6PyVC458x3rXZsuXQBrw-tGdKQp6S4",
+                    "width": 997,
+                    "height": 512
+                  },
+                  "full": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/e_R3n8VNmZIvP1ntN0yIgw/CtQuKua7T7OBkY4A3_saMXuJAXiWK-6lQloi7nfRnv11fH8ESnJ4_UmAB7Cj1LxlikSHnNzsIguzLgFPoE69R9P7R2ml7Pb9YNVEp-Y3Cg3T32MR8TwVCOr5w50h-uM4sB3kOsOQmP-fslXGCw_7bQ/v6_WtMUJVoLX8HlkUy_9TwQGJMhjW6TuukFh_r31q_o",
+                    "width": 1348,
+                    "height": 692
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "rec09nXtjn5IOX3nl",
+          "createdTime": "2024-09-19T15:17:06.000Z",
+          "fields": {
+            "EMAIL": [
+              "sanogoibra879@gmail.com"
+            ],
+            "DEVISE": "F CFA",
+            "ETUDIANT": [
+              "recRiXLmxjPJUHChw"
+            ],
+            "ID backend": "rec5dF9zXH8SXEcsj",
+            "ID": "01503",
+            "Sequence Number": 1503,
+            "WhatsApp": [
+              "+2250769648540"
+            ],
+            "PRODUIT": "ECOM AFRICA PRO",
+            "MOYEN DE PAIEMENT": "Fedapay",
+            "STATUT DE TRAITEMENT": "TRAITÉ",
+            "DASHBOARD FORMATION": [
+              "recyFcH6ezMmQqRiP"
+            ],
+            "MONTANT": 200000,
+            "Le Client a un Paiement Partiel ?": [
+              0
+            ],
+            "MODALITE DE PAIEMENT": "Complet",
+            "Modifié statut de traitement a": "2024-09-19T20:33:00.000Z",
+            "DATE DE PAIEMENT": "2024-09-19",
+            "PREUVE DE PAIEMENT": [
+              {
+                "id": "atttet0aU8ZgqSWBX",
+                "width": 1242,
+                "height": 2688,
+                "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/TC9BrBQDYsjCBbuCAc13bg/K4not8he-HAX0zHt8K3pnW04_JrMMBxUUjrS4z4JgGW70oSNsdN8c5lm3t2WByqHdVX_VnblCTJyahoqMB_rA6orbxYb-ZolqxmqkfCBbmqI4F4Ong5Saou4TDfQzxvpQdT61f3DNq0NBSw-kY2qQjjf4UG0YLDsqlpLXfshHYQ/LWTzyPJPdEcZh1tjRekhWatbPdZ2z5ZiGPh8pKk8bRQ",
+                "filename": "IMG_2356.png",
+                "size": 346061,
+                "type": "image/png",
+                "thumbnails": {
+                  "small": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/LxSkS9Tzp2R3j_WXfaFJtg/u2mJXCdC0QoQMI0jy5Y8f6eQJKg167vCs1jMKNaxUKcGlDsDambFz0P-4xA6s9dVh5Abwo_1mrx2kE7-WUWmvXc3eDM3j9KmCURWfD9TpKSS2qeC1Wzd_-gobfIgAepDV1LNcRDrYUG10oHqZbIEyA/17CmJjXUy6DKpBzkBln70J4-ag-xxBRQDh6-QYXs63Y",
+                    "width": 17,
+                    "height": 36
+                  },
+                  "large": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/Vb8aiHjB5RiMhJhadIjNww/PdynvOsnekzkr1nhVt3Ho1qLH20LXJDTpOkGGlT88W8RKg0ASZYvTCU29mOBeiH1tPxv_khKAjMH1y6BmzXiqwAMkkQ23qVHKTfrn6GfIcvm8cQS56YljWmdxbrPfBXnhRnG8DJiPA-tVRdm85cteQ/nWD-vPQvqIbZeQVi486u0Nv_KwkIiRANPV4HC59Wfvs",
+                    "width": 512,
+                    "height": 1108
+                  },
+                  "full": {
+                    "url": "https://v5.airtableusercontent.com/v3/u/53/53/1779537600000/QK1COIjMGG61GncY4k_H1Q/TOxw5hYHzri39apZYxML-0cFzNQM8Bj4LqNQ5zFldlFDcitt-xAdHjMwBxGFo54q5B_94zIgZeRezL-NQ2R1slcYSYh_2nMS80iWE_wG7pjAfOC4jZbJkCVL60hdvxFaK2NMZdkBeOshL-X2pJpWGg/cOu4tSJMgPOpoTLOfE9kqJVcWcRgl935pi3MJjC17ZI",
+                    "width": 1242,
+                    "height": 2688
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "formation": {
+      "fields": [
+        "NB PAIEMENTS PARTIEL (à partir de ETUDIANT)",
+        "CREATION",
+        "STATUT DE PAIEMENT",
+        "MODALITE DE PAIEMENT",
+        "MODIFICATION",
+        "STATUT RELANCE AUTO",
+        "ETUDIANT",
+        "STATUT RELANCE MANUELLE",
+        "PAIEMENTS",
+        "ACTIONS",
+        "EMAIL",
+        "WHATSAPP"
+      ],
+      "records": [
+        {
+          "id": "rec01Dn8F43zvCuPq",
+          "createdTime": "2025-09-05T11:30:34.000Z",
+          "fields": {
+            "NB PAIEMENTS PARTIEL (à partir de ETUDIANT)": [
+              0
+            ],
+            "CREATION": "2025-09-05T11:30:34.000Z",
+            "STATUT DE PAIEMENT": "EN RÈGLE",
+            "MODALITE DE PAIEMENT": "Complet",
+            "MODIFICATION": "2025-09-05T11:30:34.000Z",
+            "STATUT RELANCE AUTO": "EN RÈGLE",
+            "ETUDIANT": [
+              "recUKMmMIkzTGclsu"
+            ],
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "PAIEMENTS": [
+              "recYJ9ov10LlcK9d3"
+            ],
+            "ACTIONS": "🤖 INTÉGRÉ",
+            "EMAIL": [
+              "bachirahouanto603@gmail.com"
+            ],
+            "WHATSAPP": [
+              "+2290166560164"
+            ]
+          }
+        },
+        {
+          "id": "rec03gePICW88BSWH",
+          "createdTime": "2024-06-20T14:50:09.000Z",
+          "fields": {
+            "NB PAIEMENTS PARTIEL (à partir de ETUDIANT)": [
+              0
+            ],
+            "CREATION": "2024-06-20T14:50:09.000Z",
+            "STATUT DE PAIEMENT": "EN RÈGLE",
+            "MODALITE DE PAIEMENT": "Complet",
+            "MODIFICATION": "2025-02-10T12:13:01.000Z",
+            "STATUT RELANCE AUTO": "EN RÈGLE",
+            "ETUDIANT": [
+              "recIpqu8eguFci7gy"
+            ],
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "PAIEMENTS": [
+              "recubIRMYBGcPsJkX"
+            ],
+            "ACTIONS": "🤖 INTÉGRÉ",
+            "EMAIL": [
+              "agadjam28@gmail.com"
+            ],
+            "WHATSAPP": [
+              "+22893095149"
+            ],
+            "ID CIRCLE": 24809677
+          }
+        },
+        {
+          "id": "rec04JiSo5ph5UFvL",
+          "createdTime": "2024-09-16T09:14:52.000Z",
+          "fields": {
+            "NB PAIEMENTS PARTIEL (à partir de ETUDIANT)": [
+              0
+            ],
+            "CREATION": "2024-09-16T09:14:52.000Z",
+            "STATUT DE PAIEMENT": "EN RÈGLE",
+            "MODALITE DE PAIEMENT": "Complet",
+            "MODIFICATION": "2024-11-22T14:56:58.000Z",
+            "STATUT RELANCE AUTO": "EN RÈGLE",
+            "ETUDIANT": [
+              "recSUFhExIRvs3izs"
+            ],
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "PAIEMENTS": [
+              "recknfWpZUl6r3heD"
+            ],
+            "ACTIONS": "🤖 INTÉGRÉ",
+            "EMAIL": [
+              "mbodjif0@gmail.com"
+            ],
+            "WHATSAPP": [
+              "+221778678497"
+            ],
+            "ID CIRCLE": 27009194
+          }
+        },
+        {
+          "id": "rec07ZhVsz474qd15",
+          "createdTime": "2026-01-03T11:46:09.000Z",
+          "fields": {
+            "NB PAIEMENTS PARTIEL (à partir de ETUDIANT)": [
+              0
+            ],
+            "CREATION": "2026-01-03T11:46:09.000Z",
+            "STATUT DE PAIEMENT": "EN RÈGLE",
+            "MODALITE DE PAIEMENT": "Complet",
+            "MODIFICATION": "2026-01-03T11:46:09.000Z",
+            "STATUT RELANCE AUTO": "EN RÈGLE",
+            "ETUDIANT": [
+              "rec266UHoanP0di6Q"
+            ],
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "PAIEMENTS": [
+              "recO5Tuuk9KflnAnN"
+            ],
+            "ACTIONS": "🤖 INTÉGRÉ",
+            "EMAIL": [
+              "diomande.mamadou220@gmail.com"
+            ],
+            "WHATSAPP": [
+              "+2250584211043"
+            ]
+          }
+        },
+        {
+          "id": "rec09YnRwqI3O60a1",
+          "createdTime": "2024-09-02T15:17:16.000Z",
+          "fields": {
+            "DATE DU PROCHAIN PAIEMENT": "2024-10-02",
+            "NB PAIEMENTS PARTIEL (à partir de ETUDIANT)": [
+              1
+            ],
+            "Notes": "Onboarding done",
+            "CREATION": "2024-09-02T15:17:16.000Z",
+            "STATUT DE PAIEMENT": "EN RETARD",
+            "MODALITE DE PAIEMENT": "Partiel",
+            "MODIFICATION": "2024-10-24T08:00:14.000Z",
+            "STATUT RELANCE AUTO": "RELANCE 3",
+            "ETUDIANT": [
+              "recu92sCtkgDfqg2E"
+            ],
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "PAIEMENTS": [
+              "recSElOqWQKtVneyW"
+            ],
+            "ACTIONS": "🤖 RETRAIT EFFECTUÉ",
+            "EMAIL": [
+              "tokanousiwanou@gmail.com"
+            ],
+            "WHATSAPP": [
+              "+22871636838"
+            ],
+            "ID CIRCLE": 26573257
+          }
+        }
+      ]
+    },
+    "coaching": {
+      "fields": [
+        "STATUT PAIEMENT ",
+        "STATUT RELANCE MANUELLE",
+        "STATUT RELANCE AUTO",
+        "EMAIL",
+        "ACTIONS",
+        "Date de création",
+        "PROCHAIN PAIEMENT COACHING",
+        "NOM ET PRÉNOMS",
+        "TAG",
+        "WHATSAPP",
+        "Dernière modification"
+      ],
+      "records": [
+        {
+          "id": "rec00CK93ArcXfBvj",
+          "createdTime": "2025-11-14T10:38:07.000Z",
+          "fields": {
+            "STATUT PAIEMENT ": "EN RETARD",
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "STATUT RELANCE AUTO": "RELANCE 2",
+            "EMAIL": [
+              "okefifameflorence@gmail.com"
+            ],
+            "ACTIONS": "🤖 RETRAIT EFFECTUÉ",
+            "Date de création": "2025-11-14T10:38:07.000Z",
+            "PROCHAIN PAIEMENT COACHING": "2026-01-14",
+            "NOM ET PRÉNOMS": [
+              "recoEXapM0li84kbK"
+            ],
+            "TAG": [
+              "ALL IN ONE"
+            ],
+            "WHATSAPP": [
+              "+22996464057"
+            ],
+            "Dernière modification": "2026-01-22T06:30:31.000Z"
+          }
+        },
+        {
+          "id": "rec03gfy85p89nrOo",
+          "createdTime": "2024-08-13T20:17:08.000Z",
+          "fields": {
+            "STATUT PAIEMENT ": "EN RETARD",
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "STATUT RELANCE AUTO": "RELANCE 2",
+            "EMAIL": [
+              "c.mohamed7476@gmail.com"
+            ],
+            "ACTIONS": "🤖 RETRAIT EFFECTUÉ",
+            "Date de création": "2024-08-13T20:17:08.000Z",
+            "PROCHAIN PAIEMENT COACHING": "2024-10-13",
+            "NOM ET PRÉNOMS": [
+              "recjNAtctS6hNAFk6"
+            ],
+            "TAG": [
+              "MEMBER"
+            ],
+            "WHATSAPP": [
+              "+2250574768520"
+            ],
+            "Dernière modification": "2025-11-12T02:01:04.000Z",
+            "ID CIRCLE": 26056740
+          }
+        },
+        {
+          "id": "rec06dStcnU8tRSMZ",
+          "createdTime": "2025-10-10T13:21:50.000Z",
+          "fields": {
+            "STATUT PAIEMENT ": "EN RETARD",
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "STATUT RELANCE AUTO": "RELANCE 2",
+            "EMAIL": [
+              "lessoychristlevi@gmail.com"
+            ],
+            "ACTIONS": "🤖 RETRAIT EFFECTUÉ",
+            "Date de création": "2025-10-10T13:21:50.000Z",
+            "PROCHAIN PAIEMENT COACHING": "2025-07-13",
+            "NOM ET PRÉNOMS": [
+              "recWTHBjun7oDIG2p"
+            ],
+            "TAG": [
+              "MEMBER"
+            ],
+            "WHATSAPP": [
+              "+2250150492659"
+            ],
+            "Dernière modification": "2025-11-12T01:52:41.000Z",
+            "ID CIRCLE": 38747194
+          }
+        },
+        {
+          "id": "rec08PH1BlJMBIHu5",
+          "createdTime": "2024-07-20T00:26:09.000Z",
+          "fields": {
+            "STATUT PAIEMENT ": "EN RETARD",
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "STATUT RELANCE AUTO": "RELANCE 2",
+            "EMAIL": [
+              "imanefagbemi@gmail.com"
+            ],
+            "ACTIONS": "🤖 RETRAIT EFFECTUÉ",
+            "Date de création": "2024-07-20T00:26:09.000Z",
+            "PROCHAIN PAIEMENT COACHING": "2024-09-17",
+            "NOM ET PRÉNOMS": [
+              "recXNdhTNWA1WCzn4"
+            ],
+            "TAG": [
+              "MEMBER"
+            ],
+            "WHATSAPP": [
+              "+22964335944"
+            ],
+            "Dernière modification": "2025-11-12T02:02:34.000Z",
+            "ID CIRCLE": 25455213
+          }
+        },
+        {
+          "id": "rec08uT0tHb4S7pdd",
+          "createdTime": "2026-01-28T10:57:27.000Z",
+          "fields": {
+            "STATUT PAIEMENT ": "EN RETARD",
+            "STATUT RELANCE MANUELLE": "EN RÈGLE",
+            "STATUT RELANCE AUTO": "RELANCE 2",
+            "EMAIL": [
+              "maikplen@gmail.com"
+            ],
+            "ACTIONS": "🤖 RETRAIT EFFECTUÉ",
+            "Date de création": "2026-01-28T10:57:27.000Z",
+            "PROCHAIN PAIEMENT COACHING": "2026-05-13",
+            "NOM ET PRÉNOMS": [
+              "recesR2JIYEZmU5pj"
+            ],
+            "TAG": [
+              "ALL IN ONE"
+            ],
+            "WHATSAPP": [
+              "+2290162372296"
+            ],
+            "Dernière modification": "2026-05-21T06:30:37.000Z"
+          }
+        }
+      ]
+    }
+  },
+  "circle": {
+    "fields": [
+      "first_name",
+      "last_name",
+      "headline",
+      "created_at",
+      "updated_at",
+      "community_id",
+      "last_seen_at",
+      "profile_confirmed_at",
+      "id",
+      "profile_url",
+      "public_uid",
+      "profile_fields",
+      "flattened_profile_fields",
+      "avatar_url",
+      "user_id",
+      "name",
+      "email",
+      "accepted_invitation",
+      "active",
+      "sso_provider_user_id",
+      "posts_count",
+      "comments_count",
+      "gamification_stats",
+      "member_tags"
+    ],
+    "members": [
+      {
+        "first_name": "TOSSE",
+        "last_name": "Naresh",
+        "headline": "",
+        "created_at": "2026-05-18T14:39:28.639Z",
+        "updated_at": "2026-05-23T00:53:38.733Z",
+        "community_id": 162629,
+        "last_seen_at": "2026-05-23T00:53:38.000Z",
+        "profile_confirmed_at": "2026-05-18T15:04:48.000Z",
+        "id": 81825240,
+        "profile_url": "https://eaprovip.circle.so/u/a7c0d62a",
+        "public_uid": "a7c0d62a",
+        "profile_fields": [
+          {
+            "id": 1718824,
+            "label": "Bio",
+            "key": "bio",
+            "placeholder": "Tell us a bit about yourself",
+            "description": "A short bio about yourself",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.674Z",
+            "updated_at": "2024-03-26T14:42:39.674Z",
+            "field_type": "textarea",
+            "community_member_profile_field": {
+              "id": 149535542,
+              "text": null,
+              "textarea": "",
+              "created_at": "2026-05-18T14:40:28.802Z",
+              "updated_at": "2026-05-18T14:40:28.802Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139596,
+                "name": "edit_profile",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.678Z",
+                "updated_at": "2025-02-09T13:52:34.414Z"
+              },
+              {
+                "id": 5139597,
+                "name": "profile_view",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.681Z",
+                "updated_at": "2025-02-09T13:52:34.494Z"
+              },
+              {
+                "id": 5139595,
+                "name": "signup",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.677Z",
+                "updated_at": "2025-02-09T13:52:34.333Z"
+              }
+            ]
+          },
+          {
+            "id": 1718825,
+            "label": "Location",
+            "key": "location",
+            "placeholder": "Add your location",
+            "description": "Your location",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.694Z",
+            "updated_at": "2024-03-26T14:42:39.694Z",
+            "field_type": "location",
+            "community_member_profile_field": {
+              "id": 149535543,
+              "text": null,
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.820Z",
+              "updated_at": "2026-05-18T14:40:28.820Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139599,
+                "name": "edit_profile",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.697Z",
+                "updated_at": "2025-02-09T13:52:34.426Z"
+              },
+              {
+                "id": 5139600,
+                "name": "profile_view",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.698Z",
+                "updated_at": "2025-02-09T13:52:34.501Z"
+              },
+              {
+                "id": 5139598,
+                "name": "signup",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.696Z",
+                "updated_at": "2025-02-09T13:52:34.339Z"
+              }
+            ]
+          },
+          {
+            "id": 1718826,
+            "label": "Website",
+            "key": "website",
+            "placeholder": "Add your website",
+            "description": "Your website URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.713Z",
+            "updated_at": "2024-03-26T14:42:39.713Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535544,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.821Z",
+              "updated_at": "2026-05-18T14:40:28.821Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139602,
+                "name": "edit_profile",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.717Z",
+                "updated_at": "2025-02-09T13:52:34.431Z"
+              },
+              {
+                "id": 5139603,
+                "name": "profile_view",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.719Z",
+                "updated_at": "2025-02-09T13:52:34.507Z"
+              },
+              {
+                "id": 5139601,
+                "name": "signup",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.715Z",
+                "updated_at": "2025-02-09T13:52:34.346Z"
+              }
+            ]
+          },
+          {
+            "id": 1718827,
+            "label": "Twitter URL",
+            "key": "twitter_url",
+            "placeholder": "Add your Twitter URL",
+            "description": "Your Twitter URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.751Z",
+            "updated_at": "2024-03-26T14:42:39.751Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535545,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.836Z",
+              "updated_at": "2026-05-18T14:40:28.836Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139605,
+                "name": "edit_profile",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.755Z",
+                "updated_at": "2025-02-09T13:52:34.437Z"
+              },
+              {
+                "id": 5139606,
+                "name": "profile_view",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.773Z",
+                "updated_at": "2025-02-09T13:52:34.514Z"
+              },
+              {
+                "id": 5139604,
+                "name": "signup",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.753Z",
+                "updated_at": "2025-02-09T13:52:34.352Z"
+              }
+            ]
+          },
+          {
+            "id": 1718828,
+            "label": "Facebook URL",
+            "key": "facebook_url",
+            "placeholder": "Add your Facebook URL",
+            "description": "Your Facebook URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.807Z",
+            "updated_at": "2024-03-26T14:42:39.807Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535546,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.849Z",
+              "updated_at": "2026-05-18T14:40:28.849Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139608,
+                "name": "edit_profile",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.827Z",
+                "updated_at": "2025-02-09T13:52:34.444Z"
+              },
+              {
+                "id": 5139609,
+                "name": "profile_view",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.830Z",
+                "updated_at": "2025-02-09T13:52:34.521Z"
+              },
+              {
+                "id": 5139607,
+                "name": "signup",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.814Z",
+                "updated_at": "2025-02-09T13:52:34.358Z"
+              }
+            ]
+          },
+          {
+            "id": 1718829,
+            "label": "Instagram URL",
+            "key": "instagram_url",
+            "placeholder": "Add your Instagram URL",
+            "description": "Your Instagram URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.908Z",
+            "updated_at": "2024-03-26T14:42:39.908Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535547,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.860Z",
+              "updated_at": "2026-05-18T14:40:28.860Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139611,
+                "name": "edit_profile",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.922Z",
+                "updated_at": "2025-02-09T13:52:34.451Z"
+              },
+              {
+                "id": 5139612,
+                "name": "profile_view",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.940Z",
+                "updated_at": "2025-02-09T13:52:34.527Z"
+              },
+              {
+                "id": 5139610,
+                "name": "signup",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.919Z",
+                "updated_at": "2025-02-09T13:52:34.365Z"
+              }
+            ]
+          },
+          {
+            "id": 1718830,
+            "label": "Linkedin URL",
+            "key": "linkedin_url",
+            "placeholder": "Add your LinkedIn URL",
+            "description": "Your LinkedIn URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.992Z",
+            "updated_at": "2024-03-26T14:42:39.992Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535548,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.871Z",
+              "updated_at": "2026-05-18T14:40:28.871Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139614,
+                "name": "edit_profile",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.033Z",
+                "updated_at": "2025-02-09T13:52:34.458Z"
+              },
+              {
+                "id": 5139615,
+                "name": "profile_view",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.038Z",
+                "updated_at": "2025-02-09T13:52:34.533Z"
+              },
+              {
+                "id": 5139613,
+                "name": "signup",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.003Z",
+                "updated_at": "2025-02-09T13:52:34.371Z"
+              }
+            ]
+          },
+          {
+            "id": 1718831,
+            "label": "Profession",
+            "key": "profession",
+            "placeholder": "Add your profession",
+            "description": "Your profession",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.089Z",
+            "updated_at": "2024-03-26T14:42:40.089Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535549,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.880Z",
+              "updated_at": "2026-05-18T14:40:28.880Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139617,
+                "name": "edit_profile",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.102Z",
+                "updated_at": "2025-02-09T13:52:34.464Z"
+              },
+              {
+                "id": 5139618,
+                "name": "profile_view",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.105Z",
+                "updated_at": "2025-02-09T13:52:34.541Z"
+              },
+              {
+                "id": 5139616,
+                "name": "signup",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.091Z",
+                "updated_at": "2025-02-09T13:52:34.377Z"
+              }
+            ]
+          },
+          {
+            "id": 1718832,
+            "label": "Birthday",
+            "key": "birthday",
+            "placeholder": "Add your birthday",
+            "description": "Your birthday",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.160Z",
+            "updated_at": "2024-03-26T14:42:40.160Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535550,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.881Z",
+              "updated_at": "2026-05-18T14:40:28.881Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139620,
+                "name": "edit_profile",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.175Z",
+                "updated_at": "2025-02-09T13:52:34.470Z"
+              },
+              {
+                "id": 5139621,
+                "name": "profile_view",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.178Z",
+                "updated_at": "2025-02-09T13:52:34.547Z"
+              },
+              {
+                "id": 5139619,
+                "name": "signup",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.170Z",
+                "updated_at": "2025-02-09T13:52:34.392Z"
+              }
+            ]
+          },
+          {
+            "id": 1718833,
+            "label": "Company",
+            "key": "company",
+            "placeholder": "Add your company",
+            "description": "Your company",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.227Z",
+            "updated_at": "2024-03-26T14:42:40.227Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535551,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.881Z",
+              "updated_at": "2026-05-18T14:40:28.881Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139623,
+                "name": "edit_profile",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.238Z",
+                "updated_at": "2025-02-09T13:52:34.478Z"
+              },
+              {
+                "id": 5139624,
+                "name": "profile_view",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.241Z",
+                "updated_at": "2025-02-09T13:52:34.555Z"
+              },
+              {
+                "id": 5139622,
+                "name": "signup",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.237Z",
+                "updated_at": "2025-02-09T13:52:34.399Z"
+              }
+            ]
+          },
+          {
+            "id": 3249158,
+            "label": "Headline",
+            "key": "headline",
+            "placeholder": "Add your headline",
+            "description": "Your headline",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2025-02-09T13:52:34.313Z",
+            "updated_at": "2025-02-09T13:52:34.313Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535541,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:28.782Z",
+              "updated_at": "2026-05-18T14:40:28.782Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 9888424,
+                "name": "community_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.318Z",
+                "updated_at": "2025-02-09T13:52:34.564Z"
+              },
+              {
+                "id": 9888422,
+                "name": "edit_profile",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.316Z",
+                "updated_at": "2025-02-09T13:52:34.407Z"
+              },
+              {
+                "id": 9888423,
+                "name": "profile_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.317Z",
+                "updated_at": "2025-02-09T13:52:34.487Z"
+              },
+              {
+                "id": 9888421,
+                "name": "signup",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.315Z",
+                "updated_at": "2025-02-09T13:52:34.327Z"
+              }
+            ]
+          }
+        ],
+        "flattened_profile_fields": {
+          "bio": "",
+          "location": "",
+          "website": "",
+          "twitter_url": "",
+          "facebook_url": "",
+          "instagram_url": "",
+          "linkedin_url": "",
+          "profession": "",
+          "birthday": "",
+          "company": "",
+          "headline": ""
+        },
+        "avatar_url": null,
+        "user_id": 56950605,
+        "name": "TOSSE Naresh",
+        "email": "tossinonaresh@gmail.com",
+        "accepted_invitation": "2026-05-18 15:03:27 UTC",
+        "active": true,
+        "sso_provider_user_id": null,
+        "posts_count": 0,
+        "comments_count": 1,
+        "gamification_stats": {
+          "community_member_id": 81825240,
+          "total_points": 0,
+          "current_level": 1,
+          "current_level_name": "Level 1",
+          "points_to_next_level": 10,
+          "level_progress": 0
+        },
+        "member_tags": [
+          {
+            "id": 231357,
+            "name": "Elite"
+          }
+        ]
+      },
+      {
+        "first_name": "GAZARD",
+        "last_name": "Judiric",
+        "headline": "",
+        "created_at": "2026-05-18T14:39:28.344Z",
+        "updated_at": "2026-05-23T08:54:10.542Z",
+        "community_id": 162629,
+        "last_seen_at": "2026-05-23T08:54:10.000Z",
+        "profile_confirmed_at": "2026-05-19T08:32:09.000Z",
+        "id": 81825239,
+        "profile_url": "https://eaprovip.circle.so/u/ea72bdde",
+        "public_uid": "ea72bdde",
+        "profile_fields": [
+          {
+            "id": 1718824,
+            "label": "Bio",
+            "key": "bio",
+            "placeholder": "Tell us a bit about yourself",
+            "description": "A short bio about yourself",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.674Z",
+            "updated_at": "2024-03-26T14:42:39.674Z",
+            "field_type": "textarea",
+            "community_member_profile_field": {
+              "id": 149535638,
+              "text": null,
+              "textarea": "",
+              "created_at": "2026-05-18T14:40:47.353Z",
+              "updated_at": "2026-05-18T14:40:47.353Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139596,
+                "name": "edit_profile",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.678Z",
+                "updated_at": "2025-02-09T13:52:34.414Z"
+              },
+              {
+                "id": 5139597,
+                "name": "profile_view",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.681Z",
+                "updated_at": "2025-02-09T13:52:34.494Z"
+              },
+              {
+                "id": 5139595,
+                "name": "signup",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.677Z",
+                "updated_at": "2025-02-09T13:52:34.333Z"
+              }
+            ]
+          },
+          {
+            "id": 1718825,
+            "label": "Location",
+            "key": "location",
+            "placeholder": "Add your location",
+            "description": "Your location",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.694Z",
+            "updated_at": "2024-03-26T14:42:39.694Z",
+            "field_type": "location",
+            "community_member_profile_field": {
+              "id": 149535639,
+              "text": "Cotonou, Littoral, Benin",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.372Z",
+              "updated_at": "2026-05-19T08:32:09.503Z",
+              "display_value": "Cotonou, Littoral, Benin",
+              "community_member_choices": [],
+              "location_connections": [
+                {
+                  "id": 20685093,
+                  "set_by_platform": false,
+                  "location_entity": {
+                    "id": 2169,
+                    "entity_type": "country",
+                    "source": "mapbox_v6",
+                    "source_id": "dXJuOm1ieHBsYzpJaG8",
+                    "name": "Benin",
+                    "name_preferred": null,
+                    "language": "en"
+                  }
+                },
+                {
+                  "id": 20685094,
+                  "set_by_platform": false,
+                  "location_entity": {
+                    "id": 2214,
+                    "entity_type": "region",
+                    "source": "mapbox_v6",
+                    "source_id": "dXJuOm1ieHBsYzp4Qm8",
+                    "name": "Littoral",
+                    "name_preferred": null,
+                    "language": "en"
+                  }
+                },
+                {
+                  "id": 20685095,
+                  "set_by_platform": false,
+                  "location_entity": {
+                    "id": 2215,
+                    "entity_type": "place",
+                    "source": "mapbox_v6",
+                    "source_id": "dXJuOm1ieHBsYzp1K2dh",
+                    "name": "Cotonou",
+                    "name_preferred": null,
+                    "language": "en"
+                  }
+                }
+              ]
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139599,
+                "name": "edit_profile",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.697Z",
+                "updated_at": "2025-02-09T13:52:34.426Z"
+              },
+              {
+                "id": 5139600,
+                "name": "profile_view",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.698Z",
+                "updated_at": "2025-02-09T13:52:34.501Z"
+              },
+              {
+                "id": 5139598,
+                "name": "signup",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.696Z",
+                "updated_at": "2025-02-09T13:52:34.339Z"
+              }
+            ]
+          },
+          {
+            "id": 1718826,
+            "label": "Website",
+            "key": "website",
+            "placeholder": "Add your website",
+            "description": "Your website URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.713Z",
+            "updated_at": "2024-03-26T14:42:39.713Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535640,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.373Z",
+              "updated_at": "2026-05-18T14:40:47.373Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139602,
+                "name": "edit_profile",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.717Z",
+                "updated_at": "2025-02-09T13:52:34.431Z"
+              },
+              {
+                "id": 5139603,
+                "name": "profile_view",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.719Z",
+                "updated_at": "2025-02-09T13:52:34.507Z"
+              },
+              {
+                "id": 5139601,
+                "name": "signup",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.715Z",
+                "updated_at": "2025-02-09T13:52:34.346Z"
+              }
+            ]
+          },
+          {
+            "id": 1718827,
+            "label": "Twitter URL",
+            "key": "twitter_url",
+            "placeholder": "Add your Twitter URL",
+            "description": "Your Twitter URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.751Z",
+            "updated_at": "2024-03-26T14:42:39.751Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535641,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.388Z",
+              "updated_at": "2026-05-18T14:40:47.388Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139605,
+                "name": "edit_profile",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.755Z",
+                "updated_at": "2025-02-09T13:52:34.437Z"
+              },
+              {
+                "id": 5139606,
+                "name": "profile_view",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.773Z",
+                "updated_at": "2025-02-09T13:52:34.514Z"
+              },
+              {
+                "id": 5139604,
+                "name": "signup",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.753Z",
+                "updated_at": "2025-02-09T13:52:34.352Z"
+              }
+            ]
+          },
+          {
+            "id": 1718828,
+            "label": "Facebook URL",
+            "key": "facebook_url",
+            "placeholder": "Add your Facebook URL",
+            "description": "Your Facebook URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.807Z",
+            "updated_at": "2024-03-26T14:42:39.807Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535642,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.404Z",
+              "updated_at": "2026-05-18T14:40:47.404Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139608,
+                "name": "edit_profile",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.827Z",
+                "updated_at": "2025-02-09T13:52:34.444Z"
+              },
+              {
+                "id": 5139609,
+                "name": "profile_view",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.830Z",
+                "updated_at": "2025-02-09T13:52:34.521Z"
+              },
+              {
+                "id": 5139607,
+                "name": "signup",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.814Z",
+                "updated_at": "2025-02-09T13:52:34.358Z"
+              }
+            ]
+          },
+          {
+            "id": 1718829,
+            "label": "Instagram URL",
+            "key": "instagram_url",
+            "placeholder": "Add your Instagram URL",
+            "description": "Your Instagram URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.908Z",
+            "updated_at": "2024-03-26T14:42:39.908Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535643,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.416Z",
+              "updated_at": "2026-05-18T14:40:47.416Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139611,
+                "name": "edit_profile",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.922Z",
+                "updated_at": "2025-02-09T13:52:34.451Z"
+              },
+              {
+                "id": 5139612,
+                "name": "profile_view",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.940Z",
+                "updated_at": "2025-02-09T13:52:34.527Z"
+              },
+              {
+                "id": 5139610,
+                "name": "signup",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.919Z",
+                "updated_at": "2025-02-09T13:52:34.365Z"
+              }
+            ]
+          },
+          {
+            "id": 1718830,
+            "label": "Linkedin URL",
+            "key": "linkedin_url",
+            "placeholder": "Add your LinkedIn URL",
+            "description": "Your LinkedIn URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.992Z",
+            "updated_at": "2024-03-26T14:42:39.992Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149535644,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.429Z",
+              "updated_at": "2026-05-18T14:40:47.429Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139614,
+                "name": "edit_profile",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.033Z",
+                "updated_at": "2025-02-09T13:52:34.458Z"
+              },
+              {
+                "id": 5139615,
+                "name": "profile_view",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.038Z",
+                "updated_at": "2025-02-09T13:52:34.533Z"
+              },
+              {
+                "id": 5139613,
+                "name": "signup",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.003Z",
+                "updated_at": "2025-02-09T13:52:34.371Z"
+              }
+            ]
+          },
+          {
+            "id": 1718831,
+            "label": "Profession",
+            "key": "profession",
+            "placeholder": "Add your profession",
+            "description": "Your profession",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.089Z",
+            "updated_at": "2024-03-26T14:42:40.089Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535645,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.438Z",
+              "updated_at": "2026-05-18T14:40:47.438Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139617,
+                "name": "edit_profile",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.102Z",
+                "updated_at": "2025-02-09T13:52:34.464Z"
+              },
+              {
+                "id": 5139618,
+                "name": "profile_view",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.105Z",
+                "updated_at": "2025-02-09T13:52:34.541Z"
+              },
+              {
+                "id": 5139616,
+                "name": "signup",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.091Z",
+                "updated_at": "2025-02-09T13:52:34.377Z"
+              }
+            ]
+          },
+          {
+            "id": 1718832,
+            "label": "Birthday",
+            "key": "birthday",
+            "placeholder": "Add your birthday",
+            "description": "Your birthday",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.160Z",
+            "updated_at": "2024-03-26T14:42:40.160Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535646,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.439Z",
+              "updated_at": "2026-05-18T14:40:47.439Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139620,
+                "name": "edit_profile",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.175Z",
+                "updated_at": "2025-02-09T13:52:34.470Z"
+              },
+              {
+                "id": 5139621,
+                "name": "profile_view",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.178Z",
+                "updated_at": "2025-02-09T13:52:34.547Z"
+              },
+              {
+                "id": 5139619,
+                "name": "signup",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.170Z",
+                "updated_at": "2025-02-09T13:52:34.392Z"
+              }
+            ]
+          },
+          {
+            "id": 1718833,
+            "label": "Company",
+            "key": "company",
+            "placeholder": "Add your company",
+            "description": "Your company",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.227Z",
+            "updated_at": "2024-03-26T14:42:40.227Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535647,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.439Z",
+              "updated_at": "2026-05-18T14:40:47.439Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139623,
+                "name": "edit_profile",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.238Z",
+                "updated_at": "2025-02-09T13:52:34.478Z"
+              },
+              {
+                "id": 5139624,
+                "name": "profile_view",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.241Z",
+                "updated_at": "2025-02-09T13:52:34.555Z"
+              },
+              {
+                "id": 5139622,
+                "name": "signup",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.237Z",
+                "updated_at": "2025-02-09T13:52:34.399Z"
+              }
+            ]
+          },
+          {
+            "id": 3249158,
+            "label": "Headline",
+            "key": "headline",
+            "placeholder": "Add your headline",
+            "description": "Your headline",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2025-02-09T13:52:34.313Z",
+            "updated_at": "2025-02-09T13:52:34.313Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149535637,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-18T14:40:47.334Z",
+              "updated_at": "2026-05-18T14:40:47.334Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 9888424,
+                "name": "community_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.318Z",
+                "updated_at": "2025-02-09T13:52:34.564Z"
+              },
+              {
+                "id": 9888422,
+                "name": "edit_profile",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.316Z",
+                "updated_at": "2025-02-09T13:52:34.407Z"
+              },
+              {
+                "id": 9888423,
+                "name": "profile_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.317Z",
+                "updated_at": "2025-02-09T13:52:34.487Z"
+              },
+              {
+                "id": 9888421,
+                "name": "signup",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.315Z",
+                "updated_at": "2025-02-09T13:52:34.327Z"
+              }
+            ]
+          }
+        ],
+        "flattened_profile_fields": {
+          "bio": "",
+          "location": "Cotonou, Littoral, Benin",
+          "website": "",
+          "twitter_url": "",
+          "facebook_url": "",
+          "instagram_url": "",
+          "linkedin_url": "",
+          "profession": "",
+          "birthday": "",
+          "company": "",
+          "headline": ""
+        },
+        "avatar_url": null,
+        "user_id": 3930874,
+        "name": "GAZARD Judiric",
+        "email": "gazardjudiric@gmail.com",
+        "accepted_invitation": "2026-05-18 15:56:35 UTC",
+        "active": true,
+        "sso_provider_user_id": null,
+        "posts_count": 0,
+        "comments_count": 0,
+        "gamification_stats": {
+          "community_member_id": 81825239,
+          "total_points": 0,
+          "current_level": 1,
+          "current_level_name": "Level 1",
+          "points_to_next_level": 10,
+          "level_progress": 0
+        },
+        "member_tags": [
+          {
+            "id": 231356,
+            "name": "Premium"
+          }
+        ]
+      },
+      {
+        "first_name": "AMADOU",
+        "last_name": "Ahrid",
+        "headline": "Digital Hustler",
+        "created_at": "2026-05-17T18:49:47.294Z",
+        "updated_at": "2026-05-23T08:54:17.274Z",
+        "community_id": 162629,
+        "last_seen_at": "2026-05-23T08:54:17.000Z",
+        "profile_confirmed_at": "2026-05-17T19:17:21.000Z",
+        "id": 81789544,
+        "profile_url": "https://eaprovip.circle.so/u/4f8a734b",
+        "public_uid": "4f8a734b",
+        "profile_fields": [
+          {
+            "id": 1718824,
+            "label": "Bio",
+            "key": "bio",
+            "placeholder": "Tell us a bit about yourself",
+            "description": "A short bio about yourself",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.674Z",
+            "updated_at": "2024-03-26T14:42:39.674Z",
+            "field_type": "textarea",
+            "community_member_profile_field": {
+              "id": 149409920,
+              "text": null,
+              "textarea": "Born ready",
+              "created_at": "2026-05-17T19:17:21.485Z",
+              "updated_at": "2026-05-17T19:17:21.485Z",
+              "display_value": "Born ready",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139596,
+                "name": "edit_profile",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.678Z",
+                "updated_at": "2025-02-09T13:52:34.414Z"
+              },
+              {
+                "id": 5139597,
+                "name": "profile_view",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.681Z",
+                "updated_at": "2025-02-09T13:52:34.494Z"
+              },
+              {
+                "id": 5139595,
+                "name": "signup",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.677Z",
+                "updated_at": "2025-02-09T13:52:34.333Z"
+              }
+            ]
+          },
+          {
+            "id": 1718825,
+            "label": "Location",
+            "key": "location",
+            "placeholder": "Add your location",
+            "description": "Your location",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.694Z",
+            "updated_at": "2024-03-26T14:42:39.694Z",
+            "field_type": "location",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139599,
+                "name": "edit_profile",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.697Z",
+                "updated_at": "2025-02-09T13:52:34.426Z"
+              },
+              {
+                "id": 5139600,
+                "name": "profile_view",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.698Z",
+                "updated_at": "2025-02-09T13:52:34.501Z"
+              },
+              {
+                "id": 5139598,
+                "name": "signup",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.696Z",
+                "updated_at": "2025-02-09T13:52:34.339Z"
+              }
+            ]
+          },
+          {
+            "id": 1718826,
+            "label": "Website",
+            "key": "website",
+            "placeholder": "Add your website",
+            "description": "Your website URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.713Z",
+            "updated_at": "2024-03-26T14:42:39.713Z",
+            "field_type": "link",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139602,
+                "name": "edit_profile",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.717Z",
+                "updated_at": "2025-02-09T13:52:34.431Z"
+              },
+              {
+                "id": 5139603,
+                "name": "profile_view",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.719Z",
+                "updated_at": "2025-02-09T13:52:34.507Z"
+              },
+              {
+                "id": 5139601,
+                "name": "signup",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.715Z",
+                "updated_at": "2025-02-09T13:52:34.346Z"
+              }
+            ]
+          },
+          {
+            "id": 1718827,
+            "label": "Twitter URL",
+            "key": "twitter_url",
+            "placeholder": "Add your Twitter URL",
+            "description": "Your Twitter URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.751Z",
+            "updated_at": "2024-03-26T14:42:39.751Z",
+            "field_type": "link",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139605,
+                "name": "edit_profile",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.755Z",
+                "updated_at": "2025-02-09T13:52:34.437Z"
+              },
+              {
+                "id": 5139606,
+                "name": "profile_view",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.773Z",
+                "updated_at": "2025-02-09T13:52:34.514Z"
+              },
+              {
+                "id": 5139604,
+                "name": "signup",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.753Z",
+                "updated_at": "2025-02-09T13:52:34.352Z"
+              }
+            ]
+          },
+          {
+            "id": 1718828,
+            "label": "Facebook URL",
+            "key": "facebook_url",
+            "placeholder": "Add your Facebook URL",
+            "description": "Your Facebook URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.807Z",
+            "updated_at": "2024-03-26T14:42:39.807Z",
+            "field_type": "link",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139608,
+                "name": "edit_profile",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.827Z",
+                "updated_at": "2025-02-09T13:52:34.444Z"
+              },
+              {
+                "id": 5139609,
+                "name": "profile_view",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.830Z",
+                "updated_at": "2025-02-09T13:52:34.521Z"
+              },
+              {
+                "id": 5139607,
+                "name": "signup",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.814Z",
+                "updated_at": "2025-02-09T13:52:34.358Z"
+              }
+            ]
+          },
+          {
+            "id": 1718829,
+            "label": "Instagram URL",
+            "key": "instagram_url",
+            "placeholder": "Add your Instagram URL",
+            "description": "Your Instagram URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.908Z",
+            "updated_at": "2024-03-26T14:42:39.908Z",
+            "field_type": "link",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139611,
+                "name": "edit_profile",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.922Z",
+                "updated_at": "2025-02-09T13:52:34.451Z"
+              },
+              {
+                "id": 5139612,
+                "name": "profile_view",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.940Z",
+                "updated_at": "2025-02-09T13:52:34.527Z"
+              },
+              {
+                "id": 5139610,
+                "name": "signup",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.919Z",
+                "updated_at": "2025-02-09T13:52:34.365Z"
+              }
+            ]
+          },
+          {
+            "id": 1718830,
+            "label": "Linkedin URL",
+            "key": "linkedin_url",
+            "placeholder": "Add your LinkedIn URL",
+            "description": "Your LinkedIn URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.992Z",
+            "updated_at": "2024-03-26T14:42:39.992Z",
+            "field_type": "link",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139614,
+                "name": "edit_profile",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.033Z",
+                "updated_at": "2025-02-09T13:52:34.458Z"
+              },
+              {
+                "id": 5139615,
+                "name": "profile_view",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.038Z",
+                "updated_at": "2025-02-09T13:52:34.533Z"
+              },
+              {
+                "id": 5139613,
+                "name": "signup",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.003Z",
+                "updated_at": "2025-02-09T13:52:34.371Z"
+              }
+            ]
+          },
+          {
+            "id": 1718831,
+            "label": "Profession",
+            "key": "profession",
+            "placeholder": "Add your profession",
+            "description": "Your profession",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.089Z",
+            "updated_at": "2024-03-26T14:42:40.089Z",
+            "field_type": "text",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139617,
+                "name": "edit_profile",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.102Z",
+                "updated_at": "2025-02-09T13:52:34.464Z"
+              },
+              {
+                "id": 5139618,
+                "name": "profile_view",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.105Z",
+                "updated_at": "2025-02-09T13:52:34.541Z"
+              },
+              {
+                "id": 5139616,
+                "name": "signup",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.091Z",
+                "updated_at": "2025-02-09T13:52:34.377Z"
+              }
+            ]
+          },
+          {
+            "id": 1718832,
+            "label": "Birthday",
+            "key": "birthday",
+            "placeholder": "Add your birthday",
+            "description": "Your birthday",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.160Z",
+            "updated_at": "2024-03-26T14:42:40.160Z",
+            "field_type": "text",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139620,
+                "name": "edit_profile",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.175Z",
+                "updated_at": "2025-02-09T13:52:34.470Z"
+              },
+              {
+                "id": 5139621,
+                "name": "profile_view",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.178Z",
+                "updated_at": "2025-02-09T13:52:34.547Z"
+              },
+              {
+                "id": 5139619,
+                "name": "signup",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.170Z",
+                "updated_at": "2025-02-09T13:52:34.392Z"
+              }
+            ]
+          },
+          {
+            "id": 1718833,
+            "label": "Company",
+            "key": "company",
+            "placeholder": "Add your company",
+            "description": "Your company",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.227Z",
+            "updated_at": "2024-03-26T14:42:40.227Z",
+            "field_type": "text",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139623,
+                "name": "edit_profile",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.238Z",
+                "updated_at": "2025-02-09T13:52:34.478Z"
+              },
+              {
+                "id": 5139624,
+                "name": "profile_view",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.241Z",
+                "updated_at": "2025-02-09T13:52:34.555Z"
+              },
+              {
+                "id": 5139622,
+                "name": "signup",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.237Z",
+                "updated_at": "2025-02-09T13:52:34.399Z"
+              }
+            ]
+          },
+          {
+            "id": 3249158,
+            "label": "Headline",
+            "key": "headline",
+            "placeholder": "Add your headline",
+            "description": "Your headline",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2025-02-09T13:52:34.313Z",
+            "updated_at": "2025-02-09T13:52:34.313Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149409921,
+              "text": "Digital Hustler",
+              "textarea": null,
+              "created_at": "2026-05-17T19:17:21.495Z",
+              "updated_at": "2026-05-17T19:17:21.495Z",
+              "display_value": "Digital Hustler",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 9888424,
+                "name": "community_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.318Z",
+                "updated_at": "2025-02-09T13:52:34.564Z"
+              },
+              {
+                "id": 9888422,
+                "name": "edit_profile",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.316Z",
+                "updated_at": "2025-02-09T13:52:34.407Z"
+              },
+              {
+                "id": 9888423,
+                "name": "profile_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.317Z",
+                "updated_at": "2025-02-09T13:52:34.487Z"
+              },
+              {
+                "id": 9888421,
+                "name": "signup",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.315Z",
+                "updated_at": "2025-02-09T13:52:34.327Z"
+              }
+            ]
+          }
+        ],
+        "flattened_profile_fields": {
+          "bio": "Born ready",
+          "location": null,
+          "website": null,
+          "twitter_url": null,
+          "facebook_url": null,
+          "instagram_url": null,
+          "linkedin_url": null,
+          "profession": null,
+          "birthday": null,
+          "company": null,
+          "headline": "Digital Hustler"
+        },
+        "avatar_url": null,
+        "user_id": 56922278,
+        "name": "AMADOU Ahrid",
+        "email": "ahrid80@gmail.com",
+        "accepted_invitation": "2026-05-17 19:10:07 UTC",
+        "active": true,
+        "sso_provider_user_id": null,
+        "posts_count": 0,
+        "comments_count": 0,
+        "gamification_stats": {
+          "community_member_id": 81789544,
+          "total_points": 0,
+          "current_level": 1,
+          "current_level_name": "Level 1",
+          "points_to_next_level": 10,
+          "level_progress": 0
+        },
+        "member_tags": [
+          {
+            "id": 231356,
+            "name": "Premium"
+          }
+        ]
+      },
+      {
+        "first_name": "kinsiclounou",
+        "last_name": "Medeweve Gedeon",
+        "headline": "",
+        "created_at": "2026-05-17T17:28:07.895Z",
+        "updated_at": "2026-05-23T08:56:04.518Z",
+        "community_id": 162629,
+        "last_seen_at": "2026-05-23T08:56:04.000Z",
+        "profile_confirmed_at": "2026-05-17T18:04:08.000Z",
+        "id": 81787113,
+        "profile_url": "https://eaprovip.circle.so/u/b0b8a447",
+        "public_uid": "b0b8a447",
+        "profile_fields": [
+          {
+            "id": 1718824,
+            "label": "Bio",
+            "key": "bio",
+            "placeholder": "Tell us a bit about yourself",
+            "description": "A short bio about yourself",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.674Z",
+            "updated_at": "2024-03-26T14:42:39.674Z",
+            "field_type": "textarea",
+            "community_member_profile_field": {
+              "id": 149401829,
+              "text": null,
+              "textarea": "",
+              "created_at": "2026-05-17T18:04:08.167Z",
+              "updated_at": "2026-05-17T18:04:08.167Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139596,
+                "name": "edit_profile",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.678Z",
+                "updated_at": "2025-02-09T13:52:34.414Z"
+              },
+              {
+                "id": 5139597,
+                "name": "profile_view",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.681Z",
+                "updated_at": "2025-02-09T13:52:34.494Z"
+              },
+              {
+                "id": 5139595,
+                "name": "signup",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.677Z",
+                "updated_at": "2025-02-09T13:52:34.333Z"
+              }
+            ]
+          },
+          {
+            "id": 1718825,
+            "label": "Location",
+            "key": "location",
+            "placeholder": "Add your location",
+            "description": "Your location",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.694Z",
+            "updated_at": "2024-03-26T14:42:39.694Z",
+            "field_type": "location",
+            "community_member_profile_field": {
+              "id": 149401830,
+              "text": "Abomey-Calavi, Atlantique, Benin",
+              "textarea": null,
+              "created_at": "2026-05-17T18:04:08.191Z",
+              "updated_at": "2026-05-17T18:04:08.191Z",
+              "display_value": "Abomey-Calavi, Atlantique, Benin",
+              "community_member_choices": [],
+              "location_connections": [
+                {
+                  "id": 20637391,
+                  "set_by_platform": false,
+                  "location_entity": {
+                    "id": 2169,
+                    "entity_type": "country",
+                    "source": "mapbox_v6",
+                    "source_id": "dXJuOm1ieHBsYzpJaG8",
+                    "name": "Benin",
+                    "name_preferred": null,
+                    "language": "en"
+                  }
+                },
+                {
+                  "id": 20637392,
+                  "set_by_platform": false,
+                  "location_entity": {
+                    "id": 13865,
+                    "entity_type": "region",
+                    "source": "mapbox_v6",
+                    "source_id": "dXJuOm1ieHBsYzpoQm8",
+                    "name": "Atlantique",
+                    "name_preferred": null,
+                    "language": "en"
+                  }
+                },
+                {
+                  "id": 20637393,
+                  "set_by_platform": false,
+                  "location_entity": {
+                    "id": 117618,
+                    "entity_type": "place",
+                    "source": "mapbox_v6",
+                    "source_id": "dXJuOm1ieHBsYzpxQm8",
+                    "name": "Abomey-Calavi",
+                    "name_preferred": null,
+                    "language": "en"
+                  }
+                }
+              ]
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139599,
+                "name": "edit_profile",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.697Z",
+                "updated_at": "2025-02-09T13:52:34.426Z"
+              },
+              {
+                "id": 5139600,
+                "name": "profile_view",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.698Z",
+                "updated_at": "2025-02-09T13:52:34.501Z"
+              },
+              {
+                "id": 5139598,
+                "name": "signup",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.696Z",
+                "updated_at": "2025-02-09T13:52:34.339Z"
+              }
+            ]
+          },
+          {
+            "id": 1718826,
+            "label": "Website",
+            "key": "website",
+            "placeholder": "Add your website",
+            "description": "Your website URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.713Z",
+            "updated_at": "2024-03-26T14:42:39.713Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149401831,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-17T18:04:08.211Z",
+              "updated_at": "2026-05-17T18:04:08.211Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139602,
+                "name": "edit_profile",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.717Z",
+                "updated_at": "2025-02-09T13:52:34.431Z"
+              },
+              {
+                "id": 5139603,
+                "name": "profile_view",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.719Z",
+                "updated_at": "2025-02-09T13:52:34.507Z"
+              },
+              {
+                "id": 5139601,
+                "name": "signup",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.715Z",
+                "updated_at": "2025-02-09T13:52:34.346Z"
+              }
+            ]
+          },
+          {
+            "id": 1718827,
+            "label": "Twitter URL",
+            "key": "twitter_url",
+            "placeholder": "Add your Twitter URL",
+            "description": "Your Twitter URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.751Z",
+            "updated_at": "2024-03-26T14:42:39.751Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149401832,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-17T18:04:08.228Z",
+              "updated_at": "2026-05-17T18:04:08.228Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139605,
+                "name": "edit_profile",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.755Z",
+                "updated_at": "2025-02-09T13:52:34.437Z"
+              },
+              {
+                "id": 5139606,
+                "name": "profile_view",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.773Z",
+                "updated_at": "2025-02-09T13:52:34.514Z"
+              },
+              {
+                "id": 5139604,
+                "name": "signup",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.753Z",
+                "updated_at": "2025-02-09T13:52:34.352Z"
+              }
+            ]
+          },
+          {
+            "id": 1718828,
+            "label": "Facebook URL",
+            "key": "facebook_url",
+            "placeholder": "Add your Facebook URL",
+            "description": "Your Facebook URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.807Z",
+            "updated_at": "2024-03-26T14:42:39.807Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149401833,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-17T18:04:08.244Z",
+              "updated_at": "2026-05-17T18:04:08.244Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139608,
+                "name": "edit_profile",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.827Z",
+                "updated_at": "2025-02-09T13:52:34.444Z"
+              },
+              {
+                "id": 5139609,
+                "name": "profile_view",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.830Z",
+                "updated_at": "2025-02-09T13:52:34.521Z"
+              },
+              {
+                "id": 5139607,
+                "name": "signup",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.814Z",
+                "updated_at": "2025-02-09T13:52:34.358Z"
+              }
+            ]
+          },
+          {
+            "id": 1718829,
+            "label": "Instagram URL",
+            "key": "instagram_url",
+            "placeholder": "Add your Instagram URL",
+            "description": "Your Instagram URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.908Z",
+            "updated_at": "2024-03-26T14:42:39.908Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149401834,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-17T18:04:08.259Z",
+              "updated_at": "2026-05-17T18:04:08.259Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139611,
+                "name": "edit_profile",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.922Z",
+                "updated_at": "2025-02-09T13:52:34.451Z"
+              },
+              {
+                "id": 5139612,
+                "name": "profile_view",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.940Z",
+                "updated_at": "2025-02-09T13:52:34.527Z"
+              },
+              {
+                "id": 5139610,
+                "name": "signup",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.919Z",
+                "updated_at": "2025-02-09T13:52:34.365Z"
+              }
+            ]
+          },
+          {
+            "id": 1718830,
+            "label": "Linkedin URL",
+            "key": "linkedin_url",
+            "placeholder": "Add your LinkedIn URL",
+            "description": "Your LinkedIn URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.992Z",
+            "updated_at": "2024-03-26T14:42:39.992Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149401835,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-17T18:04:08.272Z",
+              "updated_at": "2026-05-17T18:04:08.272Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139614,
+                "name": "edit_profile",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.033Z",
+                "updated_at": "2025-02-09T13:52:34.458Z"
+              },
+              {
+                "id": 5139615,
+                "name": "profile_view",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.038Z",
+                "updated_at": "2025-02-09T13:52:34.533Z"
+              },
+              {
+                "id": 5139613,
+                "name": "signup",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.003Z",
+                "updated_at": "2025-02-09T13:52:34.371Z"
+              }
+            ]
+          },
+          {
+            "id": 1718831,
+            "label": "Profession",
+            "key": "profession",
+            "placeholder": "Add your profession",
+            "description": "Your profession",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.089Z",
+            "updated_at": "2024-03-26T14:42:40.089Z",
+            "field_type": "text",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139617,
+                "name": "edit_profile",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.102Z",
+                "updated_at": "2025-02-09T13:52:34.464Z"
+              },
+              {
+                "id": 5139618,
+                "name": "profile_view",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.105Z",
+                "updated_at": "2025-02-09T13:52:34.541Z"
+              },
+              {
+                "id": 5139616,
+                "name": "signup",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.091Z",
+                "updated_at": "2025-02-09T13:52:34.377Z"
+              }
+            ]
+          },
+          {
+            "id": 1718832,
+            "label": "Birthday",
+            "key": "birthday",
+            "placeholder": "Add your birthday",
+            "description": "Your birthday",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.160Z",
+            "updated_at": "2024-03-26T14:42:40.160Z",
+            "field_type": "text",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139620,
+                "name": "edit_profile",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.175Z",
+                "updated_at": "2025-02-09T13:52:34.470Z"
+              },
+              {
+                "id": 5139621,
+                "name": "profile_view",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.178Z",
+                "updated_at": "2025-02-09T13:52:34.547Z"
+              },
+              {
+                "id": 5139619,
+                "name": "signup",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.170Z",
+                "updated_at": "2025-02-09T13:52:34.392Z"
+              }
+            ]
+          },
+          {
+            "id": 1718833,
+            "label": "Company",
+            "key": "company",
+            "placeholder": "Add your company",
+            "description": "Your company",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.227Z",
+            "updated_at": "2024-03-26T14:42:40.227Z",
+            "field_type": "text",
+            "community_member_profile_field": null,
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139623,
+                "name": "edit_profile",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.238Z",
+                "updated_at": "2025-02-09T13:52:34.478Z"
+              },
+              {
+                "id": 5139624,
+                "name": "profile_view",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.241Z",
+                "updated_at": "2025-02-09T13:52:34.555Z"
+              },
+              {
+                "id": 5139622,
+                "name": "signup",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.237Z",
+                "updated_at": "2025-02-09T13:52:34.399Z"
+              }
+            ]
+          },
+          {
+            "id": 3249158,
+            "label": "Headline",
+            "key": "headline",
+            "placeholder": "Add your headline",
+            "description": "Your headline",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2025-02-09T13:52:34.313Z",
+            "updated_at": "2025-02-09T13:52:34.313Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149401828,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-17T18:04:08.139Z",
+              "updated_at": "2026-05-17T18:04:08.139Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 9888424,
+                "name": "community_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.318Z",
+                "updated_at": "2025-02-09T13:52:34.564Z"
+              },
+              {
+                "id": 9888422,
+                "name": "edit_profile",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.316Z",
+                "updated_at": "2025-02-09T13:52:34.407Z"
+              },
+              {
+                "id": 9888423,
+                "name": "profile_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.317Z",
+                "updated_at": "2025-02-09T13:52:34.487Z"
+              },
+              {
+                "id": 9888421,
+                "name": "signup",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.315Z",
+                "updated_at": "2025-02-09T13:52:34.327Z"
+              }
+            ]
+          }
+        ],
+        "flattened_profile_fields": {
+          "bio": "",
+          "location": "Abomey-Calavi, Atlantique, Benin",
+          "website": "",
+          "twitter_url": "",
+          "facebook_url": "",
+          "instagram_url": "",
+          "linkedin_url": "",
+          "profession": null,
+          "birthday": null,
+          "company": null,
+          "headline": ""
+        },
+        "avatar_url": null,
+        "user_id": 56920266,
+        "name": "kinsiclounou Medeweve Gedeon",
+        "email": "kinsiclounongedeon9@gmail.com",
+        "accepted_invitation": "2026-05-17 18:01:42 UTC",
+        "active": true,
+        "sso_provider_user_id": null,
+        "posts_count": 0,
+        "comments_count": 0,
+        "gamification_stats": {
+          "community_member_id": 81787113,
+          "total_points": 0,
+          "current_level": 1,
+          "current_level_name": "Level 1",
+          "points_to_next_level": 10,
+          "level_progress": 0
+        },
+        "member_tags": [
+          {
+            "id": 231356,
+            "name": "Premium"
+          }
+        ]
+      },
+      {
+        "first_name": "Boulaye",
+        "last_name": null,
+        "headline": "",
+        "created_at": "2026-05-16T18:04:20.932Z",
+        "updated_at": "2026-05-22T23:14:32.692Z",
+        "community_id": 162629,
+        "last_seen_at": "2026-05-22T23:14:32.000Z",
+        "profile_confirmed_at": "2026-05-16T18:29:41.000Z",
+        "id": 81760980,
+        "profile_url": "https://eaprovip.circle.so/u/9d572193",
+        "public_uid": "9d572193",
+        "profile_fields": [
+          {
+            "id": 1718824,
+            "label": "Bio",
+            "key": "bio",
+            "placeholder": "Tell us a bit about yourself",
+            "description": "A short bio about yourself",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.674Z",
+            "updated_at": "2024-03-26T14:42:39.674Z",
+            "field_type": "textarea",
+            "community_member_profile_field": {
+              "id": 149296771,
+              "text": null,
+              "textarea": "",
+              "created_at": "2026-05-16T18:09:12.115Z",
+              "updated_at": "2026-05-16T18:09:12.115Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139596,
+                "name": "edit_profile",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.678Z",
+                "updated_at": "2025-02-09T13:52:34.414Z"
+              },
+              {
+                "id": 5139597,
+                "name": "profile_view",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.681Z",
+                "updated_at": "2025-02-09T13:52:34.494Z"
+              },
+              {
+                "id": 5139595,
+                "name": "signup",
+                "position": 2,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.677Z",
+                "updated_at": "2025-02-09T13:52:34.333Z"
+              }
+            ]
+          },
+          {
+            "id": 1718825,
+            "label": "Location",
+            "key": "location",
+            "placeholder": "Add your location",
+            "description": "Your location",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.694Z",
+            "updated_at": "2024-03-26T14:42:39.694Z",
+            "field_type": "location",
+            "community_member_profile_field": {
+              "id": 149296772,
+              "text": null,
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.138Z",
+              "updated_at": "2026-05-16T18:09:12.138Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139599,
+                "name": "edit_profile",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.697Z",
+                "updated_at": "2025-02-09T13:52:34.426Z"
+              },
+              {
+                "id": 5139600,
+                "name": "profile_view",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.698Z",
+                "updated_at": "2025-02-09T13:52:34.501Z"
+              },
+              {
+                "id": 5139598,
+                "name": "signup",
+                "position": 3,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.696Z",
+                "updated_at": "2025-02-09T13:52:34.339Z"
+              }
+            ]
+          },
+          {
+            "id": 1718826,
+            "label": "Website",
+            "key": "website",
+            "placeholder": "Add your website",
+            "description": "Your website URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.713Z",
+            "updated_at": "2024-03-26T14:42:39.713Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149296773,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.139Z",
+              "updated_at": "2026-05-16T18:09:12.139Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139602,
+                "name": "edit_profile",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.717Z",
+                "updated_at": "2025-02-09T13:52:34.431Z"
+              },
+              {
+                "id": 5139603,
+                "name": "profile_view",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.719Z",
+                "updated_at": "2025-02-09T13:52:34.507Z"
+              },
+              {
+                "id": 5139601,
+                "name": "signup",
+                "position": 4,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.715Z",
+                "updated_at": "2025-02-09T13:52:34.346Z"
+              }
+            ]
+          },
+          {
+            "id": 1718827,
+            "label": "Twitter URL",
+            "key": "twitter_url",
+            "placeholder": "Add your Twitter URL",
+            "description": "Your Twitter URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.751Z",
+            "updated_at": "2024-03-26T14:42:39.751Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149296774,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.158Z",
+              "updated_at": "2026-05-16T18:09:12.158Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139605,
+                "name": "edit_profile",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.755Z",
+                "updated_at": "2025-02-09T13:52:34.437Z"
+              },
+              {
+                "id": 5139606,
+                "name": "profile_view",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.773Z",
+                "updated_at": "2025-02-09T13:52:34.514Z"
+              },
+              {
+                "id": 5139604,
+                "name": "signup",
+                "position": 5,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.753Z",
+                "updated_at": "2025-02-09T13:52:34.352Z"
+              }
+            ]
+          },
+          {
+            "id": 1718828,
+            "label": "Facebook URL",
+            "key": "facebook_url",
+            "placeholder": "Add your Facebook URL",
+            "description": "Your Facebook URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.807Z",
+            "updated_at": "2024-03-26T14:42:39.807Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149296775,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.176Z",
+              "updated_at": "2026-05-16T18:09:12.176Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139608,
+                "name": "edit_profile",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.827Z",
+                "updated_at": "2025-02-09T13:52:34.444Z"
+              },
+              {
+                "id": 5139609,
+                "name": "profile_view",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.830Z",
+                "updated_at": "2025-02-09T13:52:34.521Z"
+              },
+              {
+                "id": 5139607,
+                "name": "signup",
+                "position": 6,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.814Z",
+                "updated_at": "2025-02-09T13:52:34.358Z"
+              }
+            ]
+          },
+          {
+            "id": 1718829,
+            "label": "Instagram URL",
+            "key": "instagram_url",
+            "placeholder": "Add your Instagram URL",
+            "description": "Your Instagram URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.908Z",
+            "updated_at": "2024-03-26T14:42:39.908Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149296776,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.191Z",
+              "updated_at": "2026-05-16T18:09:12.191Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139611,
+                "name": "edit_profile",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.922Z",
+                "updated_at": "2025-02-09T13:52:34.451Z"
+              },
+              {
+                "id": 5139612,
+                "name": "profile_view",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.940Z",
+                "updated_at": "2025-02-09T13:52:34.527Z"
+              },
+              {
+                "id": 5139610,
+                "name": "signup",
+                "position": 7,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:39.919Z",
+                "updated_at": "2025-02-09T13:52:34.365Z"
+              }
+            ]
+          },
+          {
+            "id": 1718830,
+            "label": "Linkedin URL",
+            "key": "linkedin_url",
+            "placeholder": "Add your LinkedIn URL",
+            "description": "Your LinkedIn URL",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2024-03-26T14:42:39.992Z",
+            "updated_at": "2024-03-26T14:42:39.992Z",
+            "field_type": "link",
+            "community_member_profile_field": {
+              "id": 149296777,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.208Z",
+              "updated_at": "2026-05-16T18:09:12.208Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139614,
+                "name": "edit_profile",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.033Z",
+                "updated_at": "2025-02-09T13:52:34.458Z"
+              },
+              {
+                "id": 5139615,
+                "name": "profile_view",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.038Z",
+                "updated_at": "2025-02-09T13:52:34.533Z"
+              },
+              {
+                "id": 5139613,
+                "name": "signup",
+                "position": 8,
+                "visible": true,
+                "created_at": "2024-03-26T14:42:40.003Z",
+                "updated_at": "2025-02-09T13:52:34.371Z"
+              }
+            ]
+          },
+          {
+            "id": 1718831,
+            "label": "Profession",
+            "key": "profession",
+            "placeholder": "Add your profession",
+            "description": "Your profession",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.089Z",
+            "updated_at": "2024-03-26T14:42:40.089Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149296778,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.220Z",
+              "updated_at": "2026-05-16T18:09:12.220Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139617,
+                "name": "edit_profile",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.102Z",
+                "updated_at": "2025-02-09T13:52:34.464Z"
+              },
+              {
+                "id": 5139618,
+                "name": "profile_view",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.105Z",
+                "updated_at": "2025-02-09T13:52:34.541Z"
+              },
+              {
+                "id": 5139616,
+                "name": "signup",
+                "position": 9,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.091Z",
+                "updated_at": "2025-02-09T13:52:34.377Z"
+              }
+            ]
+          },
+          {
+            "id": 1718832,
+            "label": "Birthday",
+            "key": "birthday",
+            "placeholder": "Add your birthday",
+            "description": "Your birthday",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.160Z",
+            "updated_at": "2024-03-26T14:42:40.160Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149296779,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.230Z",
+              "updated_at": "2026-05-16T18:09:12.230Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139620,
+                "name": "edit_profile",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.175Z",
+                "updated_at": "2025-02-09T13:52:34.470Z"
+              },
+              {
+                "id": 5139621,
+                "name": "profile_view",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.178Z",
+                "updated_at": "2025-02-09T13:52:34.547Z"
+              },
+              {
+                "id": 5139619,
+                "name": "signup",
+                "position": 10,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.170Z",
+                "updated_at": "2025-02-09T13:52:34.392Z"
+              }
+            ]
+          },
+          {
+            "id": 1718833,
+            "label": "Company",
+            "key": "company",
+            "placeholder": "Add your company",
+            "description": "Your company",
+            "required": false,
+            "platform_field": false,
+            "created_at": "2024-03-26T14:42:40.227Z",
+            "updated_at": "2024-03-26T14:42:40.227Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149296780,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.232Z",
+              "updated_at": "2026-05-16T18:09:12.232Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 5139623,
+                "name": "edit_profile",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.238Z",
+                "updated_at": "2025-02-09T13:52:34.478Z"
+              },
+              {
+                "id": 5139624,
+                "name": "profile_view",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.241Z",
+                "updated_at": "2025-02-09T13:52:34.555Z"
+              },
+              {
+                "id": 5139622,
+                "name": "signup",
+                "position": 11,
+                "visible": false,
+                "created_at": "2024-03-26T14:42:40.237Z",
+                "updated_at": "2025-02-09T13:52:34.399Z"
+              }
+            ]
+          },
+          {
+            "id": 3249158,
+            "label": "Headline",
+            "key": "headline",
+            "placeholder": "Add your headline",
+            "description": "Your headline",
+            "required": false,
+            "platform_field": true,
+            "created_at": "2025-02-09T13:52:34.313Z",
+            "updated_at": "2025-02-09T13:52:34.313Z",
+            "field_type": "text",
+            "community_member_profile_field": {
+              "id": 149296770,
+              "text": "",
+              "textarea": null,
+              "created_at": "2026-05-16T18:09:12.090Z",
+              "updated_at": "2026-05-16T18:09:12.090Z",
+              "display_value": "",
+              "community_member_choices": [],
+              "location_connections": []
+            },
+            "number_options": null,
+            "choices": [],
+            "pages": [
+              {
+                "id": 9888424,
+                "name": "community_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.318Z",
+                "updated_at": "2025-02-09T13:52:34.564Z"
+              },
+              {
+                "id": 9888422,
+                "name": "edit_profile",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.316Z",
+                "updated_at": "2025-02-09T13:52:34.407Z"
+              },
+              {
+                "id": 9888423,
+                "name": "profile_view",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.317Z",
+                "updated_at": "2025-02-09T13:52:34.487Z"
+              },
+              {
+                "id": 9888421,
+                "name": "signup",
+                "position": 1,
+                "visible": true,
+                "created_at": "2025-02-09T13:52:34.315Z",
+                "updated_at": "2025-02-09T13:52:34.327Z"
+              }
+            ]
+          }
+        ],
+        "flattened_profile_fields": {
+          "bio": "",
+          "location": "",
+          "website": "",
+          "twitter_url": "",
+          "facebook_url": "",
+          "instagram_url": "",
+          "linkedin_url": "",
+          "profession": "",
+          "birthday": "",
+          "company": "",
+          "headline": ""
+        },
+        "avatar_url": null,
+        "user_id": 56895231,
+        "name": "Boulaye",
+        "email": "conforti030@gmail.com",
+        "accepted_invitation": "2026-05-16 18:15:56 UTC",
+        "active": true,
+        "sso_provider_user_id": null,
+        "posts_count": 0,
+        "comments_count": 0,
+        "gamification_stats": {
+          "community_member_id": 81760980,
+          "total_points": 0,
+          "current_level": 1,
+          "current_level_name": "Level 1",
+          "points_to_next_level": 10,
+          "level_progress": 0
+        },
+        "member_tags": [
+          {
+            "id": 231356,
+            "name": "Premium"
+          }
+        ]
+      }
+    ]
+  },
+  "tally": {
+    "fields": [
+      {
+        "questionId": "o98vA1",
+        "label": "o98vA1",
+        "localField": null
+      },
+      {
+        "questionId": "rD979X",
+        "label": "rD979X",
+        "localField": "f02"
+      },
+      {
+        "questionId": "4a0505",
+        "label": "4a0505",
+        "localField": "f03"
+      },
+      {
+        "questionId": "je4N41",
+        "label": "je4N41",
+        "localField": "f04"
+      },
+      {
+        "questionId": "2jd0dM",
+        "label": "2jd0dM",
+        "localField": "f05"
+      },
+      {
+        "questionId": "xVbKbk",
+        "label": "xVbKbk",
+        "localField": "f06"
+      },
+      {
+        "questionId": "RWepqK",
+        "label": "RWepqK",
+        "localField": "f07"
+      },
+      {
+        "questionId": "o9NW8b",
+        "label": "o9NW8b",
+        "localField": "f08"
+      },
+      {
+        "questionId": "GeEWOe",
+        "label": "GeEWOe",
+        "localField": "f09"
+      },
+      {
+        "questionId": "BEJl7e",
+        "label": "BEJl7e",
+        "localField": "f10"
+      },
+      {
+        "questionId": "Vp7gWj",
+        "label": "Vp7gWj",
+        "localField": "f11"
+      },
+      {
+        "questionId": "PRQKZ1",
+        "label": "PRQKZ1",
+        "localField": "f12"
+      },
+      {
+        "questionId": "o9rKyP",
+        "label": "o9rKyP",
+        "localField": "f12"
+      },
+      {
+        "questionId": "EqV9ol",
+        "label": "EqV9ol",
+        "localField": "f13"
+      }
+    ],
+    "submissions": [
+      {
+        "id": "bZxByro",
+        "formId": "woB5oM",
+        "respondentId": "7RaMrJ6",
+        "isCompleted": true,
+        "submittedAt": "2026-05-19T19:12:26.000Z",
+        "createdAt": "2026-05-19T19:12:26.000Z",
+        "updatedAt": "2026-05-19T19:12:26.000Z",
+        "previewUrl": "https://tally.so/forms/woB5oM/submissions/bZxByro/preview?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJiWnhCeXJvIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.7lp5D00fd7bUceuqZykkdl8UOPMRdXbgEADNXi4GzsU&signature=0d1d5bb591749f2b0a7e0db0e1d55ffb97505bf84ce6f2694bbd287dee022d39",
+        "pdfUrl": "https://api.tally.so/forms/woB5oM/submissions/bZxByro/pdf?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJiWnhCeXJvIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.7lp5D00fd7bUceuqZykkdl8UOPMRdXbgEADNXi4GzsU&signature=0d1d5bb591749f2b0a7e0db0e1d55ffb97505bf84ce6f2694bbd287dee022d39",
+        "responses": [
+          {
+            "id": "pk1W4lZ",
+            "formId": "woB5oM",
+            "questionId": "o98vA1",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": {
+              "Modalité": "Complet"
+            },
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "1pyvG1O",
+            "formId": "woB5oM",
+            "questionId": "rD979X",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": "ABOUMON YAYI CAHETHEL",
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "M7qY89g",
+            "formId": "woB5oM",
+            "questionId": "4a0505",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": "1986-04-04",
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "JWxD8NY",
+            "formId": "woB5oM",
+            "questionId": "je4N41",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": "aboumoncahethel@gmail.com",
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "gk1ZWR1",
+            "formId": "woB5oM",
+            "questionId": "2jd0dM",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": "+2290197288216",
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "ydRveWp",
+            "formId": "woB5oM",
+            "questionId": "xVbKbk",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": [
+              "Facebook"
+            ],
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "X2kYOKd",
+            "formId": "woB5oM",
+            "questionId": "RWepqK",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": "je suis comptable",
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "8Ry8j0Y",
+            "formId": "woB5oM",
+            "questionId": "o9NW8b",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": [
+              "ECOM AFRICA PRO"
+            ],
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "0Dyvop0",
+            "formId": "woB5oM",
+            "questionId": "GeEWOe",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": [
+              "Fedapay"
+            ],
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "z1oJWa8",
+            "formId": "woB5oM",
+            "questionId": "BEJl7e",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": 300000,
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "5pDvEyP",
+            "formId": "woB5oM",
+            "questionId": "Vp7gWj",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": [
+              "F CFA"
+            ],
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "dk1jQ5y",
+            "formId": "woB5oM",
+            "questionId": "PRQKZ1",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": [
+              {
+                "id": "NE4ayl",
+                "name": "invoice-SALERON30I7HI19X2SU.pdf",
+                "url": "https://storage.tally.so/private/invoice-SALERON30I7HI19X2SU.pdf?id=NE4ayl&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Ik5FNGF5bCIsImZvcm1JZCI6IndvQjVvTSIsImlhdCI6MTc3OTUyNjU5OX0.i6YaJCtui8_C2TPK1crJcoNFuSucwHtAEEmjixzBISQ&signature=7494945351ce49ed7ab34860bcaf6ba58edcf9c2590e7ee78ed3c6b1d38c3cb0",
+                "mimeType": "application/pdf",
+                "size": 2416
+              }
+            ],
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "YxvYVL6",
+            "formId": "woB5oM",
+            "questionId": "o9rKyP",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": [
+              {
+                "id": "vg0lb0",
+                "name": "FedaPay Recu No. trx_AU8_1779214309926.pdf",
+                "url": "https://storage.tally.so/private/FedaPay-Recu-No.-trx_AU8_1779214309926.pdf?id=vg0lb0&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InZnMGxiMCIsImZvcm1JZCI6IndvQjVvTSIsImlhdCI6MTc3OTUyNjU5OX0.0Xw8SYdi5gtm6_obIyIgeUToGkbJR1NXVUZPbwfjdpw&signature=6efb90d3c55b98535af369313a14e955c608197238cd28890fce7ea259b5a8b5",
+                "mimeType": "application/pdf",
+                "size": 15171
+              }
+            ],
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          },
+          {
+            "id": "DZPD0lj",
+            "formId": "woB5oM",
+            "questionId": "EqV9ol",
+            "respondentId": "7RaMrJ6",
+            "submissionId": "bZxByro",
+            "sessionUuid": "3b5bfdd1-54ab-4a6f-b45a-b0e2116ac1c0",
+            "answer": [
+              "J'ai payé en une fois"
+            ],
+            "createdAt": "2026-05-19T19:12:26.000Z",
+            "updatedAt": "2026-05-19T19:12:26.000Z"
+          }
+        ]
+      },
+      {
+        "id": "bZxPpBg",
+        "formId": "woB5oM",
+        "respondentId": "J9ee5eY",
+        "isCompleted": true,
+        "submittedAt": "2026-05-19T12:03:27.000Z",
+        "createdAt": "2026-05-19T12:03:27.000Z",
+        "updatedAt": "2026-05-19T12:03:27.000Z",
+        "previewUrl": "https://tally.so/forms/woB5oM/submissions/bZxPpBg/preview?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJiWnhQcEJnIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.XrwRR8i-zM7bV5GX7-253xFTZL2Kwj5AlsgUyzWwyBI&signature=ad6f5fc0c7c9dc478c323dc9142651e48c82e5773a715df56f9af1017da028db",
+        "pdfUrl": "https://api.tally.so/forms/woB5oM/submissions/bZxPpBg/pdf?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJiWnhQcEJnIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.XrwRR8i-zM7bV5GX7-253xFTZL2Kwj5AlsgUyzWwyBI&signature=ad6f5fc0c7c9dc478c323dc9142651e48c82e5773a715df56f9af1017da028db",
+        "responses": [
+          {
+            "id": "X2yk0Qj",
+            "formId": "woB5oM",
+            "questionId": "o98vA1",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": {
+              "Modalité": "Complet"
+            },
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "8R5yxrO",
+            "formId": "woB5oM",
+            "questionId": "rD979X",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": "Gaoussou",
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "0D5yOkN",
+            "formId": "woB5oM",
+            "questionId": "4a0505",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": "2003-04-08",
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "z1voYda",
+            "formId": "woB5oM",
+            "questionId": "je4N41",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": "caramokogayus@gmail.com",
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "5p5DxV6",
+            "formId": "woB5oM",
+            "questionId": "2jd0dM",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": "+2250798733635",
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "dkV1dRq",
+            "formId": "woB5oM",
+            "questionId": "xVbKbk",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": [
+              "Recommandations"
+            ],
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "Yxyvaq5",
+            "formId": "woB5oM",
+            "questionId": "RWepqK",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": "Ecommercant",
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "DZyPzWq",
+            "formId": "woB5oM",
+            "questionId": "EqV9ol",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": [
+              "J'ai payé en une fois"
+            ],
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "lMZ1r4B",
+            "formId": "woB5oM",
+            "questionId": "PRQKZ1",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": [
+              {
+                "id": "4E1JAd",
+                "name": "IMG_2748.png",
+                "url": "https://storage.tally.so/private/IMG_2748.png?id=4E1JAd&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjRFMUpBZCIsImZvcm1JZCI6IndvQjVvTSIsImlhdCI6MTc3OTUyNjU5OX0.sZTVGRzgukuvWtStw_SFvFJsx577jqOBiqU1OdHUI1g&signature=e68a31118c1cadf28721ce70f27b8ef95326fd6cdc4b613735fd2de3778b2e3c",
+                "mimeType": "image/png",
+                "size": 161750
+              }
+            ],
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "RVlaPrd",
+            "formId": "woB5oM",
+            "questionId": "Vp7gWj",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": [
+              "F CFA"
+            ],
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "okQ1Gxe",
+            "formId": "woB5oM",
+            "questionId": "GeEWOe",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": [
+              "Autres (Paiement Cash, Western Union, MoneyGram, etc.)"
+            ],
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "GQy4l7p",
+            "formId": "woB5oM",
+            "questionId": "BEJl7e",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": 200000,
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          },
+          {
+            "id": "Ooy9GV7",
+            "formId": "woB5oM",
+            "questionId": "o9NW8b",
+            "respondentId": "J9ee5eY",
+            "submissionId": "bZxPpBg",
+            "sessionUuid": "f6255180-e1d3-42f3-b8f9-986a4a07f437",
+            "answer": [
+              "ECOM AFRICA PRO"
+            ],
+            "createdAt": "2026-05-19T12:03:27.000Z",
+            "updatedAt": "2026-05-19T12:03:27.000Z"
+          }
+        ]
+      },
+      {
+        "id": "BEkJjB5",
+        "formId": "woB5oM",
+        "respondentId": "816pBQO",
+        "isCompleted": true,
+        "submittedAt": "2026-05-18T13:33:18.000Z",
+        "createdAt": "2026-05-18T13:33:18.000Z",
+        "updatedAt": "2026-05-18T13:33:18.000Z",
+        "previewUrl": "https://tally.so/forms/woB5oM/submissions/BEkJjB5/preview?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJCRWtKakI1IiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.cCv70QNiahP1P0-RchlVKf950wr0tfZTHxxzc37iuRQ&signature=193d5a9101914dcf35cc2cf6322f4d19a494f21d2dfcd818e17cfa88c154f7fc",
+        "pdfUrl": "https://api.tally.so/forms/woB5oM/submissions/BEkJjB5/pdf?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJCRWtKakI1IiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.cCv70QNiahP1P0-RchlVKf950wr0tfZTHxxzc37iuRQ&signature=193d5a9101914dcf35cc2cf6322f4d19a494f21d2dfcd818e17cfa88c154f7fc",
+        "responses": [
+          {
+            "id": "4pqX2dB",
+            "formId": "woB5oM",
+            "questionId": "o98vA1",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": {
+              "Modalité": "Complet"
+            },
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "jkpDB26",
+            "formId": "woB5oM",
+            "questionId": "rD979X",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": "GAZARD Judiric",
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "2DZ845A",
+            "formId": "woB5oM",
+            "questionId": "4a0505",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": "2000-03-03",
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "xloxdBJ",
+            "formId": "woB5oM",
+            "questionId": "je4N41",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": "gazardjudiric@gmail.com",
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "ZZg5dya",
+            "formId": "woB5oM",
+            "questionId": "2jd0dM",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": "+2290161177275",
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "NRg5AyW",
+            "formId": "woB5oM",
+            "questionId": "xVbKbk",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": [
+              "YouTube"
+            ],
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "qkpZbed",
+            "formId": "woB5oM",
+            "questionId": "RWepqK",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": "Développeur Web",
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "QOX2AyA",
+            "formId": "woB5oM",
+            "questionId": "o9NW8b",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": [
+              "ECOM AFRICA PRO"
+            ],
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "9oaGd51",
+            "formId": "woB5oM",
+            "questionId": "GeEWOe",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": [
+              "Fedapay"
+            ],
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "eYpZBPE",
+            "formId": "woB5oM",
+            "questionId": "BEJl7e",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": 200000,
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "Wjg9AdP",
+            "formId": "woB5oM",
+            "questionId": "Vp7gWj",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": [
+              "F CFA"
+            ],
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "aayNBoE",
+            "formId": "woB5oM",
+            "questionId": "PRQKZ1",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": [
+              {
+                "id": "P4YMqB",
+                "name": "FedaPay Recu No. trx_kEE_1778795291533.pdf",
+                "url": "https://storage.tally.so/private/FedaPay-Recu-No.-trx_kEE_1778795291533.pdf?id=P4YMqB&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlA0WU1xQiIsImZvcm1JZCI6IndvQjVvTSIsImlhdCI6MTc3OTUyNjU5OX0.WdGqrpM_UaPfU0mr5l7erJJxfhRXvtEnr_HT5bdIAYI&signature=bc1af1dba0705ae220bfa42da25529cff10f8b8e609323ff9ed55e5ce870c79c",
+                "mimeType": "application/pdf",
+                "size": 15212
+              }
+            ],
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "6p9Jd5O",
+            "formId": "woB5oM",
+            "questionId": "o9rKyP",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": [
+              {
+                "id": "vgL79l",
+                "name": "FedaPay Recu No. trx_WX4_1778862106025.pdf",
+                "url": "https://storage.tally.so/private/FedaPay-Recu-No.-trx_WX4_1778862106025.pdf?id=vgL79l&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InZnTDc5bCIsImZvcm1JZCI6IndvQjVvTSIsImlhdCI6MTc3OTUyNjU5OX0.T2y5elwbwWpu3fHrb2N0UyIEaLMEUHUQEf6HDHRgP6g&signature=919471941c1b8023ed1b7d4d64ab49ebd9e99e226f1b762916032bf07ce631b9",
+                "mimeType": "application/pdf",
+                "size": 15335
+              }
+            ],
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          },
+          {
+            "id": "7peld59",
+            "formId": "woB5oM",
+            "questionId": "EqV9ol",
+            "respondentId": "816pBQO",
+            "submissionId": "BEkJjB5",
+            "sessionUuid": "e6e45537-75be-45ef-a57a-d5aca5b52732",
+            "answer": [
+              "J'ai Payé en 2 tranches et j'ai soldé"
+            ],
+            "createdAt": "2026-05-18T13:33:18.000Z",
+            "updatedAt": "2026-05-18T13:33:18.000Z"
+          }
+        ]
+      },
+      {
+        "id": "rDAq0Rp",
+        "formId": "woB5oM",
+        "respondentId": "q4Jb2g9",
+        "isCompleted": true,
+        "submittedAt": "2026-05-16T20:43:47.000Z",
+        "createdAt": "2026-05-16T20:43:47.000Z",
+        "updatedAt": "2026-05-16T20:43:47.000Z",
+        "previewUrl": "https://tally.so/forms/woB5oM/submissions/rDAq0Rp/preview?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJyREFxMFJwIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.BAYvuVTgInoxljRQm64VV5kYAP9diZNlZk-3qLzDPII&signature=de4065a40ab565ed340d640daf4d826a742f1b678ad14cf42b085e858342957c",
+        "pdfUrl": "https://api.tally.so/forms/woB5oM/submissions/rDAq0Rp/pdf?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJyREFxMFJwIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.BAYvuVTgInoxljRQm64VV5kYAP9diZNlZk-3qLzDPII&signature=de4065a40ab565ed340d640daf4d826a742f1b678ad14cf42b085e858342957c",
+        "responses": [
+          {
+            "id": "V4NdRyN",
+            "formId": "woB5oM",
+            "questionId": "o98vA1",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": {
+              "Modalité": "Complet"
+            },
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "PGrgMyP",
+            "formId": "woB5oM",
+            "questionId": "rD979X",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": "TOSSE Naresh Cossi",
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "EN6gjYA",
+            "formId": "woB5oM",
+            "questionId": "4a0505",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": "2006-01-01",
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "rkYpNWp",
+            "formId": "woB5oM",
+            "questionId": "je4N41",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": "tossinonaresh@gmail.com",
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "4pOqWdd",
+            "formId": "woB5oM",
+            "questionId": "2jd0dM",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": "+2290154218356",
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "jkzpd2Y",
+            "formId": "woB5oM",
+            "questionId": "xVbKbk",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": [
+              "YouTube"
+            ],
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "2DoZq5g",
+            "formId": "woB5oM",
+            "questionId": "RWepqK",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": "Freelance",
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "xlzokBE",
+            "formId": "woB5oM",
+            "questionId": "BEJl7e",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": 300000,
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "ZZeg4yA",
+            "formId": "woB5oM",
+            "questionId": "Vp7gWj",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": [
+              "F CFA"
+            ],
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "NRPgKyN",
+            "formId": "woB5oM",
+            "questionId": "PRQKZ1",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": [
+              {
+                "id": "B6BzKe",
+                "name": "FedaPay Recu No. trx_zQQ_1778963609165.pdf",
+                "url": "https://storage.tally.so/private/FedaPay-Recu-No.-trx_zQQ_1778963609165.pdf?id=B6BzKe&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IkI2QnpLZSIsImZvcm1JZCI6IndvQjVvTSIsImlhdCI6MTc3OTUyNjU5OX0.7JqxfnFoZr6DFoqNRfQGhwfKQL5yjLzJgvJQ746LyoM&signature=b7f4fa0fccdd5e4c2534333b466c9f3f9118351fa88e836209bcfb8906e147c6",
+                "mimeType": "application/pdf",
+                "size": 15160
+              }
+            ],
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "qkzpxe8",
+            "formId": "woB5oM",
+            "questionId": "EqV9ol",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": [
+              "J'ai payé en une fois"
+            ],
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "QO4Xgyl",
+            "formId": "woB5oM",
+            "questionId": "o9NW8b",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": [
+              "ECOM AFRICA PRO"
+            ],
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          },
+          {
+            "id": "9o4aL5K",
+            "formId": "woB5oM",
+            "questionId": "GeEWOe",
+            "respondentId": "q4Jb2g9",
+            "submissionId": "rDAq0Rp",
+            "sessionUuid": "512d057c-5969-417f-8eb1-ec46a86c38cc",
+            "answer": [
+              "Fedapay"
+            ],
+            "createdAt": "2026-05-16T20:43:47.000Z",
+            "updatedAt": "2026-05-16T20:43:47.000Z"
+          }
+        ]
+      },
+      {
+        "id": "RW582Mj",
+        "formId": "woB5oM",
+        "respondentId": "WOKz8NP",
+        "isCompleted": true,
+        "submittedAt": "2026-05-15T19:59:14.000Z",
+        "createdAt": "2026-05-15T19:59:14.000Z",
+        "updatedAt": "2026-05-15T19:59:14.000Z",
+        "previewUrl": "https://tally.so/forms/woB5oM/submissions/RW582Mj/preview?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJSVzU4Mk1qIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.P6YRGU5m5mQVepsXSTaInzXZ8mQ_3nd8d-01bq3qUIk&signature=159df63ec61d60082caf2e9e1a61a85523fe29a7d09b671f641fc0e9023c579d",
+        "pdfUrl": "https://api.tally.so/forms/woB5oM/submissions/RW582Mj/pdf?accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJtaXNzaW9uSWQiOiJSVzU4Mk1qIiwiZm9ybUlkIjoid29CNW9NIiwiaWF0IjoxNzc5NTI2NTk5fQ.P6YRGU5m5mQVepsXSTaInzXZ8mQ_3nd8d-01bq3qUIk&signature=159df63ec61d60082caf2e9e1a61a85523fe29a7d09b671f641fc0e9023c579d",
+        "responses": [
+          {
+            "id": "gkv9LVK",
+            "formId": "woB5oM",
+            "questionId": "o98vA1",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": {
+              "Modalité": "Complet"
+            },
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "ydzJxbW",
+            "formId": "woB5oM",
+            "questionId": "rD979X",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": "Cakpo Stéphane ",
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "X2z4E7V",
+            "formId": "woB5oM",
+            "questionId": "4a0505",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": "2002-02-09",
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "8RMZGDo",
+            "formId": "woB5oM",
+            "questionId": "je4N41",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": "cakpostephane6@gmail.com",
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "0DaeL0Q",
+            "formId": "woB5oM",
+            "questionId": "2jd0dM",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": "+2290151725714",
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "z1L7ZBE",
+            "formId": "woB5oM",
+            "questionId": "xVbKbk",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": [
+              "YouTube"
+            ],
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "5pMZL0b",
+            "formId": "woB5oM",
+            "questionId": "RWepqK",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": "Étudiant",
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "dkv9lGN",
+            "formId": "woB5oM",
+            "questionId": "o9NW8b",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": [
+              "ECOM AFRICA PRO"
+            ],
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "Yxk4rB0",
+            "formId": "woB5oM",
+            "questionId": "GeEWOe",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": [
+              "Fedapay"
+            ],
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "DZM75Op",
+            "formId": "woB5oM",
+            "questionId": "BEJl7e",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": 200000,
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "lMv6L26",
+            "formId": "woB5oM",
+            "questionId": "Vp7gWj",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": [
+              "F CFA"
+            ],
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "RVkDReP",
+            "formId": "woB5oM",
+            "questionId": "PRQKZ1",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": [
+              {
+                "id": "R2z5vv",
+                "name": "FedaPay Recu No. trx_oN8_1763102778542.pdf",
+                "url": "https://storage.tally.so/private/FedaPay-Recu-No.-trx_oN8_1763102778542.pdf?id=R2z5vv&accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IlIyejV2diIsImZvcm1JZCI6IndvQjVvTSIsImlhdCI6MTc3OTUyNjU5OX0.nc1f7CIvdPaDABPpy986195cTpfwKNZxeMBlDG96oEg&signature=ba616b0697fe4b3e47d172f0eea86b8b9553d48087eb3a5396207c5a53f4660c",
+                "mimeType": "application/pdf",
+                "size": 19715
+              }
+            ],
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          },
+          {
+            "id": "okv2oNM",
+            "formId": "woB5oM",
+            "questionId": "EqV9ol",
+            "respondentId": "WOKz8NP",
+            "submissionId": "RW582Mj",
+            "sessionUuid": "bd184aba-db43-4700-840b-7c8333486108",
+            "answer": [
+              "J'ai payé en une fois"
+            ],
+            "createdAt": "2026-05-15T19:59:14.000Z",
+            "updatedAt": "2026-05-15T19:59:14.000Z"
+          }
+        ]
+      }
+    ]
+  },
+  "errors": {}
+}

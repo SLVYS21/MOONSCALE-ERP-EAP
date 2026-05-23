@@ -12,6 +12,11 @@ export class SyncController {
     return this.syncService.getStatus()
   }
 
+  @Get('samples')
+  getSamples(): any {
+    return this.syncService.getSamples()
+  }
+
   @Post('airtable')
   syncAirtable() {
     return this.syncService.syncAirtable()

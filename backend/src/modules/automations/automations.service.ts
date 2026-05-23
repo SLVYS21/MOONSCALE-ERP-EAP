@@ -1,13 +1,28 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
+import { Cron } from '@nestjs/schedule'
 import { Model, Types } from 'mongoose'
 import * as crypto from 'crypto'
 import { Automation, AutomationDocument, AutomationStep, AutomationTrigger } from './schemas/automation.schema'
 import { AutomationRun, AutomationRunDocument, RunLog } from './schemas/automation-run.schema'
 import { MailService } from '../mail/mail.service'
+import { CircleService, CIRCLE_PLANS } from '../circle/circle.service'
 import { Student, StudentDocument } from '../students/schemas/student.schema'
+import { Payment, PaymentDocument } from '../students/schemas/payment.schema'
 import { Task, TaskDocument } from '../tasks/schemas/task.schema'
 import { User, UserDocument } from '../users/schemas/user.schema'
+
+// ── Cron schedule presets ─────────────────────────────────────────────────────
+
+const SCHEDULE_MATCHERS: Record<string, (d: Date) => boolean> = {
+  'daily_6am':   (d) => d.getUTCHours() === 6  && d.getUTCMinutes() === 0,
+  'daily_8am':   (d) => d.getUTCHours() === 8  && d.getUTCMinutes() === 0,
+  'daily_9am':   (d) => d.getUTCHours() === 9  && d.getUTCMinutes() === 0,
+  'daily_12h':   (d) => d.getUTCHours() === 12 && d.getUTCMinutes() === 0,
+  'daily_18h':   (d) => d.getUTCHours() === 18 && d.getUTCMinutes() === 0,
+  'hourly':      (d) => d.getUTCMinutes() === 0,
+  'weekly_mon':  (d) => d.getUTCDay() === 1 && d.getUTCHours() === 9 && d.getUTCMinutes() === 0,
+}
 
 // ── Template interpolation ────────────────────────────────────────────────────
 
@@ -60,9 +75,11 @@ export class AutomationsService {
     @InjectModel(Automation.name) private automationModel: Model<AutomationDocument>,
     @InjectModel(AutomationRun.name) private runModel: Model<AutomationRunDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
+    @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Task.name) private taskModel: Model<TaskDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private mailService: MailService,
+    private circleService: CircleService,
   ) {}
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
@@ -174,6 +191,54 @@ export class AutomationsService {
     if (!automation) throw new NotFoundException('Automatisation introuvable')
     await this.runAutomation(automation, { trigger: 'manual', manualRun: true })
     return { started: true }
+  }
+
+  // ── Circle tags list (depuis l'API, avec fallback hardcodé) ─────────────────
+
+  async listCirclePlans() {
+    try {
+      return await this.circleService.listTags()
+    } catch (err: unknown) {
+      this.logger.warn(`Circle listTags échoué, fallback hardcodé : ${(err as Error).message}`)
+      return Object.entries(CIRCLE_PLANS).map(([, cfg]) => ({
+        id: cfg.tag,
+        name: cfg.name,
+        is_public: true,
+        color: null,
+      }))
+    }
+  }
+
+  // ── Cron runner (every minute) ────────────────────────────────────────────
+
+  @Cron('* * * * *')
+  async runScheduledAutomations() {
+    const now = new Date()
+    const automations = await this.automationModel.find({
+      'trigger.type': 'cron_schedule',
+      isActive: true,
+    }).lean()
+
+    for (const automation of automations) {
+      const preset = automation.trigger.config?.schedulePreset
+      if (!preset) continue
+
+      const matcher = SCHEDULE_MATCHERS[preset]
+      if (!matcher || !matcher(now)) continue
+
+      if (automation.lastRunAt) {
+        const diffMs = now.getTime() - new Date(automation.lastRunAt as Date).getTime()
+        if (diffMs < 50_000) continue
+      }
+
+      this.runAutomation(automation, {
+        trigger: 'cron_schedule',
+        scheduledAt: now.toISOString(),
+        preset,
+      }).catch((err: Error) =>
+        this.logger.error(`Cron automation ${automation._id} error: ${err.message}`),
+      )
+    }
   }
 
   // ── Internal execution ────────────────────────────────────────────────────
@@ -377,6 +442,105 @@ export class AutomationsService {
             tags: ['automatisation'],
           })
           return { status: 'ok', message: `Tâche créée : "${title}"` }
+        }
+
+        case 'create_payment': {
+          const emailRaw = interpolate(step.config.emailExpr ?? '', ctx)
+          const email = emailRaw.toLowerCase().trim()
+          if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
+
+          const amountRaw = interpolate(step.config.amountExpr ?? '0', ctx)
+          const amount = parseFloat(String(amountRaw).replace(/\s/g, '').replace(',', '.')) || 0
+
+          const student = await this.studentModel.findOne({ email }).select('_id name').lean()
+
+          const modality = (step.config.modality === 'Partiel' ? 'Partiel' : 'Complet') as 'Complet' | 'Partiel'
+          const currency = (['F CFA', 'USD', 'EURO'].includes(step.config.currency ?? '')
+            ? step.config.currency : 'F CFA') as 'F CFA' | 'USD' | 'EURO'
+          const validProducts = ['ECOM AFRICA PRO', 'COACHING', 'ECOM REVOLUTION']
+          const product = (validProducts.includes(step.config.product ?? '') ? step.config.product : 'ECOM AFRICA PRO') as 'ECOM AFRICA PRO' | 'COACHING' | 'ECOM REVOLUTION'
+
+          await this.paymentModel.create({
+            studentId: student?._id ?? null,
+            studentEmail: email,
+            studentName: (student as unknown as { name?: string })?.name ?? null,
+            status: 'NON TRAITÉ',
+            modality,
+            amount,
+            currency,
+            product,
+            gateway: interpolate(step.config.gateway ?? '', ctx) || null,
+            plan: (['Elite', 'Premium', 'Standard'].includes(step.config.plan ?? '')
+              ? step.config.plan as 'Elite' | 'Premium' | 'Standard'
+              : null),
+            source: 'manual',
+          })
+          return { status: 'ok', message: `Paiement créé pour ${email} — ${amount} ${currency}` }
+        }
+
+        case 'create_student': {
+          const emailRaw = interpolate(step.config.emailExpr ?? '', ctx)
+          const email = emailRaw.toLowerCase().trim()
+          if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
+
+          const existing = await this.studentModel.findOne({ email }).select('_id').lean()
+          if (existing) return { status: 'skipped', message: `Étudiant ${email} existe déjà — ignoré` }
+
+          const name = interpolate(step.config.nameExpr ?? '', ctx).trim() || email
+          const whatsapp = interpolate(step.config.whatsappExpr ?? '', ctx).trim() || null
+
+          await this.studentModel.create({ email, name, whatsapp, infoStatus: 'NON VÉRIFIÉ', notes: '', debtStatus: 'ok' })
+          return { status: 'ok', message: `Étudiant créé : ${name} (${email})` }
+        }
+
+        case 'circle_invite': {
+          const email = interpolate(step.config.emailExpr ?? '', ctx).toLowerCase().trim()
+          if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
+          const name = interpolate(step.config.nameExpr ?? '', ctx).trim() || email
+
+          const existing = await this.circleService.searchMember(email)
+          if (existing) return { status: 'skipped', message: `${email} est déjà membre Circle` }
+
+          await this.circleService.inviteMember(email, name)
+          return { status: 'ok', message: `Invitation Circle envoyée à ${email}` }
+        }
+
+        case 'circle_tag_add': {
+          const email = interpolate(step.config.emailExpr ?? '', ctx).toLowerCase().trim()
+          if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
+
+          // Préférer l'ID dynamique, fallback sur circlePlanKey (legacy)
+          const tagId = step.config.circleTagId ? Number(step.config.circleTagId) : null
+          const tagName = step.config.circleTagName ?? step.config.circlePlanKey ?? ''
+
+          if (tagId) {
+            await this.circleService.tagMemberById(email, tagId)
+            return { status: 'ok', message: `Tag "${tagName}" (ID ${tagId}) ajouté à ${email}` }
+          } else if (step.config.circlePlanKey) {
+            const plan = await this.circleService.tagMember(email, step.config.circlePlanKey)
+            if (!plan) return { status: 'error', message: `Tag échoué pour ${email} — plan "${step.config.circlePlanKey}" introuvable` }
+            return { status: 'ok', message: `Tag "${plan.name}" ajouté à ${email}` }
+          }
+          return { status: 'skipped', message: 'Tag Circle non défini' }
+        }
+
+        case 'circle_tag_remove': {
+          const email = interpolate(step.config.emailExpr ?? '', ctx).toLowerCase().trim()
+          if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
+
+          const tagId = step.config.circleTagId ? Number(step.config.circleTagId) : null
+          const tagName = step.config.circleTagName ?? step.config.circlePlanKey ?? ''
+
+          if (tagId) {
+            await this.circleService.removeTagById(email, tagId)
+            return { status: 'ok', message: `Tag "${tagName}" (ID ${tagId}) retiré de ${email}` }
+          } else if (step.config.circlePlanKey) {
+            const plan = CIRCLE_PLANS[step.config.circlePlanKey.toLowerCase()]
+            if (!plan) return { status: 'error', message: `Plan legacy "${step.config.circlePlanKey}" introuvable` }
+            await this.circleService.removeTag(email, plan.tag)
+            return { status: 'ok', message: `Tag "${plan.name}" retiré de ${email}` }
+          }
+          return { status: 'skipped', message: 'Tag Circle non défini' }
         }
 
         default:

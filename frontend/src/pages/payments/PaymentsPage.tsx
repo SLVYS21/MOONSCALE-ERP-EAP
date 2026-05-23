@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, type ElementType } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
-import { ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react'
+import {
+  ChevronLeft, ChevronRight, ExternalLink, CalendarDays,
+  Clock, CheckCircle2, XCircle, Banknote,
+} from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -12,13 +15,101 @@ import { useAuthStore } from '@/store/authStore'
 import api from '@/services/api'
 import type { Payment, PaymentStatus, PaginatedResponse } from '@/types'
 
-// ── Image lightbox ────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
-function ImageLightbox({
-  images,
-  initialIndex = 0,
-  onClose,
-}: {
+interface PaymentStats {
+  total: number
+  nonTraite: number
+  traite: number
+  rejete: number
+  todayByAmount: { currency: string; total: number }[]
+  monthByAmount: { currency: string; total: number }[]
+}
+
+// ── Period ────────────────────────────────────────────────────────────────────
+
+type Period = 'last7' | 'last30' | 'month' | 'all' | 'custom'
+
+const PERIODS: { value: Period; label: string }[] = [
+  { value: 'last7',  label: '7 derniers jours' },
+  { value: 'last30', label: '30 derniers jours' },
+  { value: 'month',  label: 'Ce mois' },
+  { value: 'all',    label: 'Tout' },
+  { value: 'custom', label: 'Personnalisé' },
+]
+
+function toISO(d: Date) { return d.toISOString().slice(0, 10) }
+
+function periodToDates(period: Period, customFrom: string, customTo: string) {
+  const now = new Date()
+  if (period === 'last7') {
+    const from = new Date(now); from.setDate(now.getDate() - 6)
+    return { dateFrom: toISO(from), dateTo: toISO(now) }
+  }
+  if (period === 'last30') {
+    const from = new Date(now); from.setDate(now.getDate() - 29)
+    return { dateFrom: toISO(from), dateTo: toISO(now) }
+  }
+  if (period === 'month') {
+    return { dateFrom: toISO(new Date(now.getFullYear(), now.getMonth(), 1)), dateTo: toISO(now) }
+  }
+  if (period === 'custom') {
+    return { dateFrom: customFrom || undefined, dateTo: customTo || undefined }
+  }
+  return { dateFrom: undefined, dateTo: undefined }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatAmountList(list: { currency: string; total: number }[]) {
+  if (!list || list.length === 0) return '—'
+  return list.map((a) => formatAmount(a.total, a.currency)).join(' · ')
+}
+
+const STATUS_TABS: { status: PaymentStatus; label: string }[] = [
+  { status: 'NON TRAITÉ', label: 'Non traités' },
+  { status: 'TRAITÉ',     label: 'Traités' },
+  { status: 'REJETÉ',     label: 'Rejetés' },
+]
+
+const STATUS_BADGE: Record<PaymentStatus, { variant: 'warning' | 'success' | 'danger'; label: string }> = {
+  'NON TRAITÉ': { variant: 'warning', label: 'NON TRAITÉ' },
+  'TRAITÉ':     { variant: 'success', label: 'TRAITÉ' },
+  'REJETÉ':     { variant: 'danger',  label: 'REJETÉ' },
+}
+
+const SOURCE_LABELS: Record<string, string> = {
+  tally: 'Tally',
+  chariow: 'Chariow',
+  manual: 'Manuel',
+}
+
+// ── KPI card ──────────────────────────────────────────────────────────────────
+
+function StatCard({ icon: Icon, label, value, sub, color }: {
+  icon: ElementType
+  label: string
+  value: number | string
+  sub?: string
+  color: string
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-xl border border-gray-800 bg-gray-900 px-4 py-3.5">
+      <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${color}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className="truncate text-lg font-semibold text-gray-100">{value}</p>
+        {sub && <p className="text-xs text-gray-500">{sub}</p>}
+      </div>
+    </div>
+  )
+}
+
+// ── Image lightbox ─────────────────────────────────────────────────────────────
+
+function ImageLightbox({ images, initialIndex = 0, onClose }: {
   images: string[]
   initialIndex?: number
   onClose: () => void
@@ -74,6 +165,7 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
     mutationFn: (body: object) => api.post(`/payments/${payment._id}/treat`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['payments-stats'] })
       onClose()
     },
     onError: () => setError('Erreur lors du traitement du paiement.'),
@@ -153,9 +245,7 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
           <Button variant="secondary" onClick={onClose}>Annuler</Button>
           <Button
             loading={isPending}
-            onClick={() =>
-              mutate({ modality, amount: Number(amount), currency, product, gateway, plan, notes })
-            }
+            onClick={() => mutate({ modality, amount: Number(amount), currency, product, gateway, plan, notes })}
           >
             Traiter
           </Button>
@@ -167,24 +257,6 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
 
 // ── Payments page ─────────────────────────────────────────────────────────────
 
-const STATUS_TABS: { status: PaymentStatus; label: string }[] = [
-  { status: 'NON TRAITÉ', label: 'Non traités' },
-  { status: 'TRAITÉ', label: 'Traités' },
-  { status: 'REJETÉ', label: 'Rejetés' },
-]
-
-const STATUS_BADGE: Record<PaymentStatus, { variant: 'warning' | 'success' | 'danger'; label: string }> = {
-  'NON TRAITÉ': { variant: 'warning', label: 'NON TRAITÉ' },
-  'TRAITÉ': { variant: 'success', label: 'TRAITÉ' },
-  'REJETÉ': { variant: 'danger', label: 'REJETÉ' },
-}
-
-const SOURCE_LABELS: Record<string, string> = {
-  tally: 'Tally',
-  chariow: 'Chariow',
-  manual: 'Manuel',
-}
-
 export function PaymentsPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -192,23 +264,43 @@ export function PaymentsPage() {
   const isAdmin = user?.role === 'superadmin' || user?.role === 'admin'
 
   const [activeStatus, setActiveStatus] = useState<PaymentStatus>('NON TRAITÉ')
+  const [period, setPeriod] = useState<Period>('last7')
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo] = useState('')
   const [page, setPage] = useState(1)
   const limit = 25
   const [treatPayment, setTreatPayment] = useState<Payment | null>(null)
   const [lightbox, setLightbox] = useState<{ images: string[]; idx: number } | null>(null)
 
+  const { dateFrom, dateTo } = periodToDates(period, customFrom, customTo)
+
+  const { data: stats } = useQuery<PaymentStats>({
+    queryKey: ['payments-stats'],
+    queryFn: () => api.get<PaymentStats>('/payments/stats').then((r) => r.data),
+    staleTime: 60_000,
+  })
+
   const { data, isLoading } = useQuery<PaginatedResponse<Payment>>({
-    queryKey: ['payments', { status: activeStatus, page }],
+    queryKey: ['payments', { status: activeStatus, page, dateFrom, dateTo }],
     queryFn: () =>
       api.get<PaginatedResponse<Payment>>('/payments', {
-        params: { status: activeStatus, page, limit },
+        params: {
+          status: activeStatus,
+          page,
+          limit,
+          dateFrom: dateFrom || undefined,
+          dateTo: dateTo || undefined,
+        },
       }).then((r) => r.data),
     placeholderData: keepPreviousData,
   })
 
   const rejectMutation = useMutation({
     mutationFn: (paymentId: string) => api.post(`/payments/${paymentId}/reject`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['payments'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['payments-stats'] })
+    },
   })
 
   const payments = data?.data ?? []
@@ -217,14 +309,87 @@ export function PaymentsPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-100">Paiements</h1>
-          <p className="mt-0.5 text-sm text-gray-500">{total} paiement{total !== 1 ? 's' : ''}</p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-100">Paiements</h1>
+        <p className="mt-0.5 text-sm text-gray-500">{total} paiement{total !== 1 ? 's' : ''} affichés</p>
       </div>
 
-      {/* Tabs */}
+      {/* KPI cards — global totals */}
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <StatCard
+          icon={Clock}
+          label="En attente"
+          value={stats?.nonTraite ?? '—'}
+          color="bg-amber-600/20 text-amber-400"
+        />
+        <StatCard
+          icon={CheckCircle2}
+          label="Traités (total)"
+          value={stats?.traite ?? '—'}
+          color="bg-emerald-600/20 text-emerald-400"
+        />
+        <StatCard
+          icon={XCircle}
+          label="Rejetés"
+          value={stats?.rejete ?? '—'}
+          color="bg-red-600/20 text-red-400"
+        />
+        <StatCard
+          icon={CalendarDays}
+          label="Reçus aujourd'hui"
+          value={formatAmountList(stats?.todayByAmount ?? [])}
+          color="bg-blue-600/20 text-blue-400"
+        />
+        <StatCard
+          icon={Banknote}
+          label="Reçus ce mois"
+          value={formatAmountList(stats?.monthByAmount ?? [])}
+          color="bg-purple-600/20 text-purple-400"
+        />
+      </div>
+
+      {/* Period filter */}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <CalendarDays className="h-3.5 w-3.5" />
+          <span>Période</span>
+        </div>
+        <div className="flex gap-1 rounded-lg border border-gray-800 bg-gray-900 p-1">
+          {PERIODS.map((p) => (
+            <button
+              key={p.value}
+              onClick={() => { setPeriod(p.value); setPage(1) }}
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                period === p.value
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {period === 'custom' && (
+          <div className="flex items-center gap-2">
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => { setCustomFrom(e.target.value); setPage(1) }}
+              className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-xs text-gray-100 focus:border-indigo-500 focus:outline-none"
+            />
+            <span className="text-xs text-gray-500">→</span>
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => { setCustomTo(e.target.value); setPage(1) }}
+              className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-xs text-gray-100 focus:border-indigo-500 focus:outline-none"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Status tabs */}
       <div className="mb-4 flex gap-1 border-b border-gray-800">
         {STATUS_TABS.map((t) => (
           <button
@@ -237,6 +402,11 @@ export function PaymentsPage() {
             }`}
           >
             {t.label}
+            {t.status === 'NON TRAITÉ' && stats && stats.nonTraite > 0 && (
+              <span className="ml-1.5 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-xs text-amber-400">
+                {stats.nonTraite}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -282,12 +452,8 @@ export function PaymentsPage() {
                         <p className="font-medium text-gray-200">{formatAmount(p.amount, p.currency)}</p>
                       </td>
                       <td className="py-3 pr-4">
-                        {p.modality === 'Complet' && (
-                          <Badge variant="success">Complet</Badge>
-                        )}
-                        {p.modality === 'Partiel' && (
-                          <Badge variant="warning">Partiel</Badge>
-                        )}
+                        {p.modality === 'Complet' && <Badge variant="success">Complet</Badge>}
+                        {p.modality === 'Partiel' && <Badge variant="warning">Partiel</Badge>}
                         {!p.modality && <span className="text-gray-600">—</span>}
                       </td>
                       <td className="py-3 pr-4 text-gray-400">{p.product ?? '—'}</td>
@@ -345,10 +511,9 @@ export function PaymentsPage() {
           </div>
         )}
 
-        {/* Pagination */}
         {totalPages > 1 && (
           <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-4">
-            <p className="text-xs text-gray-500">Page {page} / {totalPages}</p>
+            <p className="text-xs text-gray-500">Page {page} / {totalPages} — {total} paiement{total > 1 ? 's' : ''}</p>
             <div className="flex gap-2">
               <button
                 disabled={page <= 1}

@@ -11,7 +11,6 @@ import {
   FileText,
   Settings,
   MessageSquare,
-  Bell,
   RefreshCw,
   LogOut,
   Sun,
@@ -45,7 +44,6 @@ const NAV_GROUPS = [
     items: [
       { to: '/students', icon: GraduationCap, label: 'Étudiants' },
       { to: '/payments', icon: CreditCard, label: 'Paiements' },
-      { to: '/reminders', icon: Bell, label: 'Rappels' },
       { to: '/finances', icon: DollarSign, label: 'Finances' },
     ],
   },

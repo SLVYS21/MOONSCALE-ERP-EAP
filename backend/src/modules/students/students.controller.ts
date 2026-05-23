@@ -34,6 +34,8 @@ class ListQuery {
   @IsOptional() @IsString() debtStatus?: string
   @IsOptional() @IsString() product?: string
   @IsOptional() @IsString() studentEmail?: string
+  @IsOptional() @IsString() dateFrom?: string
+  @IsOptional() @IsString() dateTo?: string
   @IsOptional() @Type(() => Number) @IsNumber() @Min(1) page?: number
   @IsOptional() @Type(() => Number) @IsNumber() @Min(1) limit?: number
 }
@@ -47,6 +49,11 @@ export class StudentsController {
   ) {}
 
   // ── Étudiants ──────────────────────────────────────────────────
+
+  @Get('students/stats')
+  getStudentStats() {
+    return this.studentsService.getStudentStats()
+  }
 
   @Get('students')
   listStudents(@Query() query: ListQuery) {
@@ -94,6 +101,11 @@ export class StudentsController {
   }
 
   // ── Paiements ──────────────────────────────────────────────────
+
+  @Get('payments/stats')
+  getPaymentStats() {
+    return this.studentsService.getPaymentStats()
+  }
 
   @Get('payments')
   listPayments(@Query() query: ListQuery) {

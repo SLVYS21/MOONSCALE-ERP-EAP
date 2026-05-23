@@ -8,7 +8,7 @@ import {
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { formatDate, formatAmount, cn } from '@/lib/utils'
+import { formatDateTime, formatAmount, cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import api from '@/services/api'
 import type {
@@ -437,6 +437,8 @@ function TransactionsTab({
               <thead>
                 <tr className="border-b border-gray-800 text-left text-xs text-gray-500">
                   <th className="pb-3 font-medium">Date</th>
+                  <th className="pb-3 font-medium">Statut</th>
+                  <th className="pb-3 font-medium">Type</th>
                   <th className="pb-3 font-medium">Description</th>
                   <th className="pb-3 font-medium">Catégorie</th>
                   <th className="pb-3 font-medium">Gateway</th>
@@ -447,7 +449,25 @@ function TransactionsTab({
               <tbody className="divide-y divide-gray-800/60">
                 {txs.map((tx) => (
                   <tr key={tx._id} className="hover:bg-gray-800/20 transition-colors">
-                    <td className="py-3 pr-4 text-xs text-gray-400 whitespace-nowrap">{formatDate(tx.date)}</td>
+                    <td className="py-3 pr-4 text-xs text-gray-400 whitespace-nowrap">{formatDateTime(tx.date)}</td>
+                    <td className="py-3 pr-4">
+                      <Badge variant={
+                        tx.status === 'completed' ? 'success'
+                        : tx.status === 'pending' ? 'warning'
+                        : tx.status === 'failed' ? 'danger'
+                        : 'default'
+                      }>
+                        {tx.status === 'completed' ? 'Complété'
+                          : tx.status === 'pending' ? 'En attente'
+                          : tx.status === 'failed' ? 'Échoué'
+                          : 'Remboursé'}
+                      </Badge>
+                    </td>
+                    <td className="py-3 pr-4">
+                      <Badge variant={tx.type === 'income' ? 'success' : 'danger'}>
+                        {tx.type === 'income' ? '↑ Revenu' : '↓ Dépense'}
+                      </Badge>
+                    </td>
                     <td className="py-3 pr-4">
                       <p className="font-medium text-gray-200">{tx.description}</p>
                       {tx.notes && <p className="text-xs text-gray-500">{tx.notes}</p>}
