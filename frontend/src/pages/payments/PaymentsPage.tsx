@@ -1,19 +1,19 @@
-import { useState, useEffect, type ElementType } from 'react'
+import { useState, useEffect, useRef, type ElementType, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
 import {
   ChevronLeft, ChevronRight, ExternalLink, CalendarDays,
-  Clock, CheckCircle2, XCircle, Banknote, CreditCard, Search,
+  Clock, CheckCircle2, XCircle, Banknote, CreditCard, Search, ChevronDown,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
-import { formatDate, formatAmount } from '@/lib/utils'
+import { cn, formatDate, formatAmount } from '@/lib/utils'
 import { CIRCLE_PLAN_LABELS } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import api from '@/services/api'
-import type { Payment, PaymentStatus, PaymentProduct, PaymentCurrency, PaginatedResponse } from '@/types'
+import type { Payment, PaymentStatus, PaymentProduct, PaymentCurrency, PaymentModality, PaginatedResponse } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -72,19 +72,22 @@ const STATUS_TABS: { status: PaymentStatus; label: string }[] = [
   { status: 'REJETÉ',     label: 'Rejetés' },
 ]
 
-const STATUS_BADGE: Record<PaymentStatus, { variant: 'warning' | 'success' | 'danger'; label: string }> = {
-  'NON TRAITÉ': { variant: 'warning', label: 'NON TRAITÉ' },
-  'TRAITÉ':     { variant: 'success', label: 'TRAITÉ' },
-  'REJETÉ':     { variant: 'danger',  label: 'REJETÉ' },
-}
+const STATUS_OPTIONS: { value: PaymentStatus; label: string; badge: ReactNode }[] = [
+  { value: 'NON TRAITÉ', label: 'Non traité',  badge: <Badge variant="warning">NON TRAITÉ</Badge> },
+  { value: 'TRAITÉ',     label: 'Traité',      badge: <Badge variant="success">TRAITÉ</Badge> },
+  { value: 'REJETÉ',     label: 'Rejeté',      badge: <Badge variant="danger">REJETÉ</Badge> },
+]
 
-const SOURCE_LABELS: Record<string, string> = {
-  tally:   'Tally',
-  chariow: 'Chariow',
-  manual:  'Manuel',
-}
+const MODALITY_OPTIONS: { value: PaymentModality; label: string; badge: ReactNode }[] = [
+  { value: 'Complet', label: 'Complet (soldé)',   badge: <Badge variant="success">Complet</Badge> },
+  { value: 'Partiel', label: 'Partiel (acompte)', badge: <Badge variant="warning">Partiel</Badge> },
+]
 
-// ── Input class ───────────────────────────────────────────────────────────────
+const PRODUCT_OPTIONS: { value: PaymentProduct; label: string }[] = [
+  { value: 'ECOM AFRICA PRO',  label: 'ECOM AFRICA PRO' },
+  { value: 'ECOM REVOLUTION',  label: 'ECOM REVOLUTION' },
+  { value: 'COACHING',         label: 'COACHING' },
+]
 
 const inputCls = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
@@ -112,7 +115,67 @@ function StatCard({ icon: Icon, label, value, sub, iconBgCls, iconCls }: {
   )
 }
 
-// ── Image lightbox ─────────────────────────────────────────────────────────────
+// ── Inline dropdown ───────────────────────────────────────────────────────────
+
+function InlineDropdown<T extends string>({
+  options, onSelect, pending, children,
+}: {
+  options: { value: T; label: string; badge?: ReactNode }[]
+  onSelect: (v: T) => void
+  pending?: boolean
+  children: ReactNode
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const fn = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        onClick={(e) => { e.stopPropagation(); if (!pending) setOpen((o) => !o) }}
+        disabled={pending}
+        className={cn(
+          'group flex items-center gap-1 rounded-lg px-1.5 py-0.5 transition-colors',
+          pending ? 'cursor-wait opacity-60' : 'hover:bg-gray-800/70 cursor-pointer',
+        )}
+      >
+        {children}
+        <ChevronDown className={cn(
+          'h-3 w-3 shrink-0 transition-all',
+          pending ? 'text-gray-500 animate-pulse' : 'text-gray-600 group-hover:text-gray-300',
+          open && 'rotate-180 text-gray-300',
+        )} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 top-full z-30 mt-1 min-w-[180px] rounded-xl border border-gray-700 bg-gray-900 p-1 shadow-2xl">
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={(e) => { e.stopPropagation(); onSelect(opt.value); setOpen(false) }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+              >
+                <span className="flex-1">{opt.badge ?? <span className="text-gray-200">{opt.label}</span>}</span>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Image lightbox ────────────────────────────────────────────────────────────
 
 function ImageLightbox({ images, initialIndex = 0, onClose }: {
   images: string[]
@@ -284,6 +347,7 @@ export function PaymentsPage() {
   const limit = 25
   const [treatPayment, setTreatPayment] = useState<Payment | null>(null)
   const [lightbox, setLightbox] = useState<{ images: string[]; idx: number } | null>(null)
+  const [updatingCell, setUpdatingCell] = useState<{ id: string; field: string } | null>(null)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
@@ -323,6 +387,25 @@ export function PaymentsPage() {
       qc.invalidateQueries({ queryKey: ['payments-stats'] })
     },
   })
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, fields }: { id: string; fields: Record<string, unknown> }) =>
+      api.patch(`/payments/${id}`, fields).then((r) => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payments'] })
+      qc.invalidateQueries({ queryKey: ['payments-stats'] })
+      setUpdatingCell(null)
+    },
+    onError: () => setUpdatingCell(null),
+  })
+
+  const updateField = (id: string, field: string, value: unknown) => {
+    setUpdatingCell({ id, field })
+    updateMutation.mutate({ id, fields: { [field]: value } })
+  }
+
+  const isPendingCell = (id: string, field: string) =>
+    updatingCell?.id === id && updatingCell?.field === field
 
   const payments = data?.data ?? []
   const total = data?.total ?? 0
@@ -466,9 +549,10 @@ export function PaymentsPage() {
                 <tr className="border-b border-gray-800 bg-gray-900/20">
                   <th className="py-3 pl-5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Étudiant</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Montant</th>
+                  <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Statut</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Modalité</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Produit</th>
-                  <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Source</th>
+                  <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Plateforme</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Preuves</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Date</th>
                   {isAdmin && activeStatus === 'NON TRAITÉ' && (
@@ -477,81 +561,151 @@ export function PaymentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {payments.map((p) => {
-                  const b = STATUS_BADGE[p.status]
-                  return (
-                    <tr key={p._id} className="border-b border-gray-800/50 transition-colors hover:bg-indigo-50/40 dark:hover:bg-gray-800/30 last:border-0">
-                      <td className="py-3 pl-5 pr-4">
-                        <button
-                          onClick={() => p.studentId && navigate(`/students/${p.studentId}`)}
-                          className={`text-left ${p.studentId ? 'hover:underline cursor-pointer' : 'cursor-default'}`}
+                {payments.map((p) => (
+                  <tr key={p._id} className="border-b border-gray-800/50 transition-colors hover:bg-indigo-50/40 dark:hover:bg-gray-800/30 last:border-0">
+
+                    {/* Étudiant */}
+                    <td className="py-3 pl-5 pr-4">
+                      <button
+                        onClick={() => p.studentId && navigate(`/students/${p.studentId}`)}
+                        className={`text-left ${p.studentId ? 'hover:underline cursor-pointer' : 'cursor-default'}`}
+                      >
+                        <p className="font-medium text-gray-100">{p.studentName}</p>
+                        <p className="text-xs text-gray-500">{p.studentEmail}</p>
+                      </button>
+                    </td>
+
+                    {/* Montant */}
+                    <td className="py-3 pr-4">
+                      <p className="font-semibold tabular-nums text-gray-100">
+                        {p.amount != null ? formatAmount(p.amount, p.currency) : '—'}
+                      </p>
+                    </td>
+
+                    {/* Statut — inline editable */}
+                    <td className="py-3 pr-4">
+                      {isAdmin ? (
+                        <InlineDropdown
+                          options={STATUS_OPTIONS}
+                          onSelect={(v) => updateField(p._id, 'status', v)}
+                          pending={isPendingCell(p._id, 'status')}
                         >
-                          <p className="font-medium text-gray-100">{p.studentName}</p>
-                          <p className="text-xs text-gray-500">{p.studentEmail}</p>
-                        </button>
-                      </td>
-                      <td className="py-3 pr-4">
-                        <p className="font-semibold tabular-nums text-gray-100">{formatAmount(p.amount, p.currency)}</p>
-                      </td>
-                      <td className="py-3 pr-4">
-                        {p.modality === 'Complet' && <Badge variant="success">Complet</Badge>}
-                        {p.modality === 'Partiel' && <Badge variant="warning">Partiel</Badge>}
-                        {!p.modality && <span className="text-gray-600">—</span>}
-                      </td>
-                      <td className="py-3 pr-4 text-xs text-gray-400">{p.product ?? '—'}</td>
-                      <td className="py-3 pr-4">
-                        <Badge variant="default">{SOURCE_LABELS[p.source] ?? p.source}</Badge>
-                      </td>
-                      <td className="py-3 pr-4">
-                        {p.proofImages.length > 0 ? (
-                          <div className="flex gap-1">
-                            {p.proofImages.slice(0, 3).map((url, i) => (
-                              <button
-                                key={i}
-                                onClick={() => setLightbox({ images: p.proofImages, idx: i })}
-                                className="group relative h-10 w-10 overflow-hidden rounded-lg border border-gray-800 shadow-sm cursor-pointer"
-                                aria-label={`Voir preuve ${i + 1}`}
-                              >
-                                <img src={url} alt="" className="h-full w-full object-cover" />
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
-                                  <ExternalLink className="h-3 w-3 text-white opacity-0 group-hover:opacity-100" />
-                                </div>
-                              </button>
-                            ))}
-                            {p.proofImages.length > 3 && (
-                              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-800 bg-gray-900/30 text-xs text-gray-500">
-                                +{p.proofImages.length - 3}
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-gray-600">—</span>
-                        )}
-                      </td>
-                      <td className="py-3 pr-4">
-                        <p className="text-xs text-gray-400 tabular-nums">{formatDate(p.paidAt ?? p.createdAt)}</p>
-                        {p.status !== 'NON TRAITÉ' && (
-                          <Badge variant={b.variant} className="mt-1">{b.label}</Badge>
-                        )}
-                      </td>
-                      {isAdmin && activeStatus === 'NON TRAITÉ' && (
-                        <td className="py-3 pr-5">
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => setTreatPayment(p)}>Traiter</Button>
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              loading={rejectMutation.isPending}
-                              onClick={() => rejectMutation.mutate(p._id)}
-                            >
-                              Rejeter
-                            </Button>
-                          </div>
-                        </td>
+                          {STATUS_OPTIONS.find((o) => o.value === p.status)?.badge ?? (
+                            <Badge variant="warning">{p.status}</Badge>
+                          )}
+                        </InlineDropdown>
+                      ) : (
+                        STATUS_OPTIONS.find((o) => o.value === p.status)?.badge ?? (
+                          <Badge variant="warning">{p.status}</Badge>
+                        )
                       )}
-                    </tr>
-                  )
-                })}
+                    </td>
+
+                    {/* Modalité — inline editable */}
+                    <td className="py-3 pr-4">
+                      {isAdmin && p.modality ? (
+                        <InlineDropdown
+                          options={MODALITY_OPTIONS}
+                          onSelect={(v) => updateField(p._id, 'modality', v)}
+                          pending={isPendingCell(p._id, 'modality')}
+                        >
+                          {p.modality === 'Complet'
+                            ? <Badge variant="success">Complet</Badge>
+                            : <Badge variant="warning">Partiel</Badge>}
+                        </InlineDropdown>
+                      ) : p.modality ? (
+                        p.modality === 'Complet'
+                          ? <Badge variant="success">Complet</Badge>
+                          : <Badge variant="warning">Partiel</Badge>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+
+                    {/* Produit — inline editable */}
+                    <td className="py-3 pr-4">
+                      {isAdmin ? (
+                        <InlineDropdown
+                          options={PRODUCT_OPTIONS}
+                          onSelect={(v) => updateField(p._id, 'product', v)}
+                          pending={isPendingCell(p._id, 'product')}
+                        >
+                          <span className="text-xs font-medium text-gray-300">{p.product ?? '—'}</span>
+                        </InlineDropdown>
+                      ) : (
+                        <span className="text-xs text-gray-400">{p.product ?? '—'}</span>
+                      )}
+                    </td>
+
+                    {/* Plateforme (gateway) */}
+                    <td className="py-3 pr-4">
+                      {p.gateway ? (
+                        <span className="rounded-full border border-gray-700 bg-gray-800/60 px-2.5 py-0.5 text-xs text-gray-300">
+                          {p.gateway}
+                        </span>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+
+                    {/* Preuves */}
+                    <td className="py-3 pr-4">
+                      {p.proofImages.length > 0 ? (
+                        <div className="flex gap-1">
+                          {p.proofImages.slice(0, 3).map((url, i) => (
+                            <button
+                              key={i}
+                              onClick={(e) => { e.stopPropagation(); setLightbox({ images: p.proofImages, idx: i }) }}
+                              className="group relative h-10 w-10 overflow-hidden rounded-lg border border-gray-800 shadow-sm cursor-pointer"
+                              aria-label={`Voir preuve ${i + 1}`}
+                            >
+                              <img src={url} alt="" className="h-full w-full object-cover" />
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
+                                <ExternalLink className="h-3 w-3 text-white opacity-0 group-hover:opacity-100" />
+                              </div>
+                            </button>
+                          ))}
+                          {p.proofImages.length > 3 && (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-800 bg-gray-900/30 text-xs text-gray-500">
+                              +{p.proofImages.length - 3}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-gray-600">—</span>
+                      )}
+                    </td>
+
+                    {/* Date */}
+                    <td className="py-3 pr-4">
+                      <p className="text-xs text-gray-400 tabular-nums whitespace-nowrap">
+                        {formatDate(p.paidAt ?? p.createdAt)}
+                      </p>
+                      {p.processedAt && (
+                        <p className="mt-0.5 text-[10px] text-gray-600">
+                          Traité le {formatDate(p.processedAt)}
+                        </p>
+                      )}
+                    </td>
+
+                    {/* Actions (NON TRAITÉ admin only) */}
+                    {isAdmin && activeStatus === 'NON TRAITÉ' && (
+                      <td className="py-3 pr-5">
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => setTreatPayment(p)}>Traiter</Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            loading={rejectMutation.isPending}
+                            onClick={() => rejectMutation.mutate(p._id)}
+                          >
+                            Rejeter
+                          </Button>
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

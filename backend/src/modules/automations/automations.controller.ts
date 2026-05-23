@@ -81,6 +81,14 @@ export class AutomationsController {
     return this.automationsService.toggleActive(id)
   }
 
+  @Post('seed-defaults')
+  @HttpCode(HttpStatus.OK)
+  seedDefaults(@CurrentUser() user: UserDocument) {
+    return this.automationsService.seedDefaultAutomations(
+      (user._id as { toString(): string }).toString(),
+    )
+  }
+
   @Post(':id/run')
   @HttpCode(HttpStatus.OK)
   runManual(@Param('id') id: string) {

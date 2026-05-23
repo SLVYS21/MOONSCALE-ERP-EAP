@@ -54,14 +54,18 @@ function evaluateCondition(
 ): boolean {
   const val = resolvePath(field, ctx)
   const strVal = String(val ?? '')
+  const numVal = parseFloat(strVal)
+  const numCmp = parseFloat(value)
   switch (operator) {
-    case 'equals': return strVal === value
-    case 'not_equals': return strVal !== value
-    case 'contains': return strVal.toLowerCase().includes(value.toLowerCase())
+    case 'equals':       return strVal === value
+    case 'not_equals':   return strVal !== value
+    case 'contains':     return strVal.toLowerCase().includes(value.toLowerCase())
     case 'not_contains': return !strVal.toLowerCase().includes(value.toLowerCase())
-    case 'is_empty': return !val || strVal === ''
+    case 'is_empty':     return !val || strVal === ''
     case 'is_not_empty': return !!(val && strVal !== '')
-    default: return true
+    case 'gt':           return !isNaN(numVal) && !isNaN(numCmp) && numVal > numCmp
+    case 'lt':           return !isNaN(numVal) && !isNaN(numCmp) && numVal < numCmp
+    default:             return true
   }
 }
 
@@ -209,6 +213,130 @@ export class AutomationsService {
     }
   }
 
+  // ── Seed des automatisations par défaut ──────────────────────────────────
+
+  async seedDefaultAutomations(userId: string): Promise<{ created: string[]; skipped: string[] }> {
+    const createdNames: string[] = []
+    const skippedNames: string[] = []
+
+    const defaults: Array<{ name: string; description: string; trigger: AutomationTrigger; steps: AutomationStep[] }> = [
+      {
+        name: '🎉 Accueil étudiant — Paiement traité',
+        description: "Déclenché quand un paiement est marqué TRAITÉ. Invite l'étudiant sur Circle, lui assigne le tag correspondant à son plan, et lui envoie un email de bienvenue.",
+        trigger: { type: 'payment_treated', config: {} },
+        steps: [
+          {
+            id: 'circle_invite',
+            type: 'circle_invite',
+            name: 'Inviter sur Circle',
+            config: { emailExpr: '{{student.email}}', nameExpr: '{{student.name}}', circlePlanKey: '{{payment.plan}}' },
+          },
+          {
+            id: 'circle_tag',
+            type: 'circle_tag_add',
+            name: 'Assigner le tag plan',
+            config: { emailExpr: '{{student.email}}', circlePlanKey: '{{payment.plan}}' },
+          },
+          {
+            id: 'welcome_email',
+            type: 'send_email',
+            name: 'Email de bienvenue',
+            config: {
+              to: '{{student.email}}',
+              subject: '🎓 Bienvenue dans la formation !',
+              body: 'Bonjour {{student.name}},\n\nTon paiement a bien été validé. Tu vas recevoir tes accès Circle très prochainement.\n\nÀ bientôt dans la communauté !',
+            },
+          },
+        ],
+      },
+      {
+        name: '⚠️ Relance débiteurs — Dette détectée',
+        description: "Déclenché quand une dette est détectée sur un étudiant. Envoie deux rappels email espacés de 7 jours, puis marque le compte EN RETARD sur Circle.",
+        trigger: { type: 'debt_detected', config: {} },
+        steps: [
+          {
+            id: 'reminder_1',
+            type: 'send_email',
+            name: 'Rappel 1 — Solde en attente',
+            config: {
+              to: '{{student.email}}',
+              subject: '⚠️ Rappel — Solde de paiement en attente',
+              body: 'Bonjour {{student.name}},\n\nNous n\'avons pas encore reçu le solde de ton paiement pour la formation.\n\nMerci de régulariser ta situation dans les meilleurs délais pour conserver ton accès.\n\nL\'équipe Myril',
+            },
+          },
+          {
+            id: 'wait_7d',
+            type: 'wait',
+            name: 'Attente 7 jours',
+            config: { duration: 168, unit: 'hours' },
+          },
+          {
+            id: 'reminder_2',
+            type: 'send_email',
+            name: 'Rappel 2 — Dernier avertissement',
+            config: {
+              to: '{{student.email}}',
+              subject: '🚨 Dernier rappel — Ton accès est menacé',
+              body: 'Bonjour {{student.name}},\n\nSans régularisation de ta situation, nous serons contraints de suspendre ton accès à la communauté.\n\nContacte-nous rapidement pour trouver une solution.\n\nL\'équipe Myril',
+            },
+          },
+          {
+            id: 'tag_retard',
+            type: 'circle_tag_add',
+            name: 'Marquer EN RETARD',
+            config: { emailExpr: '{{student.email}}', circleTagName: 'EN RETARD' },
+          },
+        ],
+      },
+      {
+        name: '📝 Formulaire soumis → Paiement en attente',
+        description: "Déclenché quand un formulaire d'inscription est soumis. Crée automatiquement un paiement NON TRAITÉ et notifie l'équipe.",
+        trigger: { type: 'form_submitted', config: {} },
+        steps: [
+          {
+            id: 'create_pmt',
+            type: 'create_payment',
+            name: 'Créer le paiement NON TRAITÉ',
+            config: {
+              emailExpr: '{{response.email}}',
+              nameExpr: '{{response.name}}',
+              amountExpr: '{{response.amount}}',
+              currency: 'F CFA',
+              product: 'ECOM AFRICA PRO',
+              modality: 'Complet',
+            },
+          },
+          {
+            id: 'notify_team',
+            type: 'notify_team',
+            name: "Alerter l'équipe",
+            config: { recipients: 'admins', note: 'Nouveau formulaire soumis par {{response.email}} — paiement à examiner.' },
+          },
+        ],
+      },
+    ]
+
+    for (const def of defaults) {
+      const existing = await this.automationModel.findOne({ name: def.name }).select('_id').lean()
+      if (existing) { skippedNames.push(def.name); continue }
+
+      await this.automationModel.create({
+        name: def.name,
+        description: def.description,
+        isActive: false,
+        trigger: def.trigger,
+        steps: def.steps,
+        runCount: 0,
+        lastRunAt: null,
+        createdBy: new Types.ObjectId(userId),
+      })
+      createdNames.push(def.name)
+      this.logger.log(`Automation seeded: ${def.name}`)
+    }
+
+    return { created: createdNames, skipped: skippedNames }
+  }
+
   // ── Cron runner (every minute) ────────────────────────────────────────────
 
   @Cron('* * * * *')
@@ -320,6 +448,19 @@ export class AutomationsService {
     step: AutomationStep,
     ctx: Record<string, unknown>,
   ): Promise<{ status: 'ok' | 'error' | 'skipped'; message: string; stop?: boolean }> {
+    // Step-level conditions — skip this step only (automation continues)
+    if (step.conditions?.length) {
+      for (const cond of step.conditions) {
+        const pass = evaluateCondition(cond.field, cond.operator, cond.value, ctx)
+        if (!pass) {
+          return {
+            status: 'skipped',
+            message: `Condition non remplie : ${cond.field} ${cond.operator}${cond.value ? ' ' + cond.value : ''} — étape ignorée`,
+          }
+        }
+      }
+    }
+
     try {
       switch (step.type) {
         case 'send_email': {

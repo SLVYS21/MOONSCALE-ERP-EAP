@@ -3,13 +3,16 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import {
   RefreshCw, Database, AlertTriangle, CheckCircle2, Clock, Zap,
   Activity, FileText, Download, FlaskConical, CheckCheck,
+  Users, CreditCard, ChevronDown, ChevronUp, Check,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { formatDate } from '@/lib/utils'
+import { Badge } from '@/components/ui/Badge'
+import { cn, formatDate, formatAmount } from '@/lib/utils'
 import api from '@/services/api'
 import type {
   SyncStatus, AirtableSyncResult, CircleSyncResult, DebtorResult, TallyImportResult,
+  PendingRespondent, PendingRespondentsPreview, RegularizeResult,
 } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -145,6 +148,286 @@ function SamplesSummary({ data }: { data: SamplesWriteResult }) {
   )
 }
 
+// ── Pending respondents panel ──────────────────────────────────────────────────
+
+function PendingRespondentsPanel() {
+  const [preview, setPreview] = useState<PendingRespondentsPreview | null>(null)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [result, setResult] = useState<RegularizeResult | null>(null)
+  const [expanded, setExpanded] = useState(true)
+
+  const detectMutation = useMutation({
+    mutationFn: () => api.get<PendingRespondentsPreview>('/sync/pending-respondents').then((r) => r.data),
+    onSuccess: (data) => {
+      setPreview(data)
+      setSelected(new Set(data.respondents.map((r) => r.email)))
+      setResult(null)
+    },
+  })
+
+  const confirmMutation = useMutation({
+    mutationFn: (emails: string[]) =>
+      api.post<RegularizeResult>('/sync/regularize-pending', { emails }).then((r) => r.data),
+    onSuccess: (data) => {
+      setResult(data)
+      setPreview(null)
+      setSelected(new Set())
+    },
+  })
+
+  const allSelected = preview ? selected.size === preview.respondents.length : false
+  const toggle = (email: string) => {
+    setSelected((s) => {
+      const next = new Set(s)
+      next.has(email) ? next.delete(email) : next.add(email)
+      return next
+    })
+  }
+  const toggleAll = () => {
+    if (!preview) return
+    setSelected(allSelected ? new Set() : new Set(preview.respondents.map((r) => r.email)))
+  }
+
+  return (
+    <Card className="p-0 overflow-hidden border-indigo-500/30">
+      {/* Header */}
+      <button
+        onClick={() => setExpanded((e) => !e)}
+        className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-gray-800/30 transition-colors"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15">
+          <Users className="h-4.5 w-4.5 text-indigo-400" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-100">Nouveaux inscrits sans invitation Circle</p>
+          <p className="mt-0.5 text-xs text-gray-500">
+            Détecte les réponses formulaire récentes dont l'étudiant n'a pas encore été invité sur Circle
+          </p>
+        </div>
+        {preview && (
+          <span className="rounded-full bg-indigo-500/20 px-2.5 py-0.5 text-xs font-semibold text-indigo-300 shrink-0">
+            {preview.found} détecté{preview.found > 1 ? 's' : ''}
+          </span>
+        )}
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 text-gray-600 shrink-0" />
+        ) : (
+          <ChevronDown className="h-4 w-4 text-gray-600 shrink-0" />
+        )}
+      </button>
+
+      {expanded && (
+        <div className="border-t border-gray-800 px-5 pb-5 pt-4">
+
+          {/* Step 1 — Detect */}
+          {!preview && !result && (
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+              <div className="rounded-full bg-indigo-500/10 p-3">
+                <Users className="h-6 w-6 text-indigo-400" />
+              </div>
+              <p className="text-sm text-gray-400">
+                Lancez la détection pour voir les personnes qui ont rempli le formulaire mais n'ont pas encore reçu leur invitation Circle.
+              </p>
+              <Button
+                onClick={() => detectMutation.mutate()}
+                loading={detectMutation.isPending}
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                {detectMutation.isPending ? 'Détection en cours…' : 'Détecter les nouveaux inscrits'}
+              </Button>
+              {detectMutation.isError && (
+                <p className="text-xs text-red-400">
+                  Erreur : {String(detectMutation.error)}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Step 2 — Review table */}
+          {preview && (
+            <>
+              {preview.respondents.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 py-8 text-center">
+                  <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+                  <p className="text-sm font-medium text-emerald-300">Tout le monde est déjà régularisé</p>
+                  <p className="text-xs text-gray-500">Aucun nouvel inscrit sans paiement trouvé.</p>
+                  <button
+                    onClick={() => { setPreview(null); setSelected(new Set()) }}
+                    className="mt-2 text-xs text-gray-500 hover:text-gray-300 underline"
+                  >
+                    Relancer la détection
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {/* Controls */}
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={toggleAll}
+                        className={cn(
+                          'flex h-5 w-5 items-center justify-center rounded border transition-colors',
+                          allSelected
+                            ? 'border-indigo-500 bg-indigo-600 text-white'
+                            : 'border-gray-600 bg-transparent text-transparent hover:border-gray-400',
+                        )}
+                      >
+                        <Check className="h-3 w-3" />
+                      </button>
+                      <span className="text-xs text-gray-400">
+                        {selected.size} / {preview.respondents.length} sélectionné{selected.size > 1 ? 's' : ''}
+                      </span>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setPreview(null); setSelected(new Set()); detectMutation.mutate() }}
+                        disabled={detectMutation.isPending}
+                        className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                      >
+                        Rafraîchir
+                      </button>
+                      <Button
+                        size="sm"
+                        disabled={selected.size === 0 || confirmMutation.isPending}
+                        loading={confirmMutation.isPending}
+                        onClick={() => confirmMutation.mutate(Array.from(selected))}
+                        className="flex items-center gap-1.5"
+                      >
+                        <CreditCard className="h-3.5 w-3.5" />
+                        Créer {selected.size} paiement{selected.size > 1 ? 's' : ''}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Table */}
+                  <div className="overflow-x-auto rounded-xl border border-gray-800">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-800 bg-gray-900/40">
+                          <th className="w-10 py-2.5 pl-4 pr-2 text-left"></th>
+                          <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Personne</th>
+                          <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Montant</th>
+                          <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Produit</th>
+                          <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Modalité</th>
+                          <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Plateforme</th>
+                          <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Preuves</th>
+                          <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Soumis le</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {preview.respondents.map((r: PendingRespondent) => (
+                          <tr
+                            key={r.responseId}
+                            onClick={() => toggle(r.email)}
+                            className={cn(
+                              'cursor-pointer border-b border-gray-800/50 transition-colors last:border-0',
+                              selected.has(r.email)
+                                ? 'bg-indigo-500/5 hover:bg-indigo-500/10'
+                                : 'hover:bg-gray-800/30 opacity-60',
+                            )}
+                          >
+                            <td className="py-3 pl-4 pr-2">
+                              <div className={cn(
+                                'flex h-5 w-5 items-center justify-center rounded border transition-colors',
+                                selected.has(r.email)
+                                  ? 'border-indigo-500 bg-indigo-600 text-white'
+                                  : 'border-gray-600 bg-transparent',
+                              )}>
+                                {selected.has(r.email) && <Check className="h-3 w-3" />}
+                              </div>
+                            </td>
+                            <td className="py-3 pr-4">
+                              <p className="font-medium text-gray-100">{r.name}</p>
+                              <p className="text-xs text-gray-500">{r.email}</p>
+                            </td>
+                            <td className="py-3 pr-4">
+                              <p className="font-semibold tabular-nums text-gray-100">
+                                {r.amount > 0 ? formatAmount(r.amount, r.currency) : '—'}
+                              </p>
+                            </td>
+                            <td className="py-3 pr-4">
+                              <span className="text-xs text-gray-400">{r.product}</span>
+                            </td>
+                            <td className="py-3 pr-4">
+                              <Badge variant={r.modality === 'Complet' ? 'success' : 'warning'}>
+                                {r.modality}
+                              </Badge>
+                            </td>
+                            <td className="py-3 pr-4">
+                              {r.gateway ? (
+                                <span className="rounded-full border border-gray-700 bg-gray-800/60 px-2.5 py-0.5 text-xs text-gray-300">
+                                  {r.gateway}
+                                </span>
+                              ) : <span className="text-gray-600">—</span>}
+                            </td>
+                            <td className="py-3 pr-4">
+                              {r.proofCount > 0 ? (
+                                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-400">
+                                  {r.proofCount} fichier{r.proofCount > 1 ? 's' : ''}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-600">Aucune</span>
+                              )}
+                            </td>
+                            <td className="py-3 pr-4">
+                              <p className="text-xs text-gray-500 tabular-nums whitespace-nowrap">
+                                {r.submittedAt ? formatDate(r.submittedAt) : '—'}
+                              </p>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Step 3 — Result */}
+          {result && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+                <p className="text-sm font-semibold text-emerald-300">
+                  {result.created} paiement{result.created > 1 ? 's' : ''} créé{result.created > 1 ? 's' : ''} avec succès
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5">
+                  <p className="text-gray-500">Scannés</p>
+                  <p className="mt-0.5 text-lg font-bold text-gray-100">{result.scanned}</p>
+                </div>
+                <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5">
+                  <p className="text-gray-500">Déjà sur Circle</p>
+                  <p className="mt-0.5 text-lg font-bold text-gray-400">{result.alreadyInvited}</p>
+                </div>
+                <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5">
+                  <p className="text-gray-500">Déjà un paiement</p>
+                  <p className="mt-0.5 text-lg font-bold text-gray-400">{result.alreadyHavePayment}</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => { setResult(null); detectMutation.mutate() }}
+                  loading={detectMutation.isPending}
+                  className="flex items-center gap-1.5"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" />
+                  Relancer la détection
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </Card>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function SyncPage() {
@@ -204,6 +487,11 @@ export function SyncPage() {
         <p className="mt-0.5 text-sm text-gray-500">
           Import Airtable, enrichissement Circle, détection des débiteurs
         </p>
+      </div>
+
+      {/* Pending respondents — two-step flow */}
+      <div className="mb-6">
+        <PendingRespondentsPanel />
       </div>
 
       {/* Quota bar */}

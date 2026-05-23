@@ -40,10 +40,17 @@ export interface AutomationTrigger {
   }
 }
 
+export interface StepCondition {
+  field: string      // dot-path in context, e.g. "student.debtStatus"
+  operator: string   // equals | not_equals | contains | not_contains | is_empty | is_not_empty | gt | lt
+  value: string      // comparison value (ignored for is_empty / is_not_empty)
+}
+
 export interface AutomationStep {
   id: string
   type: StepType
   name?: string
+  conditions?: StepCondition[]  // ALL must pass — step is skipped (not aborted) if any fails
   config: {
     // send_email
     to?: string

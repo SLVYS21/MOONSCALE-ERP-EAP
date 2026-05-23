@@ -410,6 +410,28 @@ export class StudentsService {
 
   // ── Traitement d'un paiement (le flux principal) ─────────────────
 
+  async updatePaymentFields(
+    paymentId: string,
+    fields: {
+      status?: string
+      modality?: string
+      product?: string
+      gateway?: string
+      amount?: number
+      currency?: string
+    },
+  ): Promise<void> {
+    const payment = await this.paymentModel.findById(paymentId)
+    if (!payment) throw new NotFoundException('Paiement introuvable')
+    if (fields.status)   payment.status   = fields.status as import('./schemas/payment.schema').PaymentStatus
+    if (fields.modality) payment.modality = fields.modality as import('./schemas/payment.schema').PaymentModality
+    if (fields.product)  payment.product  = fields.product as import('./schemas/payment.schema').PaymentProduct
+    if (fields.gateway !== undefined) payment.gateway = fields.gateway
+    if (fields.amount   !== undefined) payment.amount   = fields.amount
+    if (fields.currency) payment.currency = fields.currency as import('./schemas/payment.schema').PaymentCurrency
+    await payment.save()
+  }
+
   async rejectPayment(paymentId: string): Promise<void> {
     const payment = await this.paymentModel.findById(paymentId)
     if (!payment) throw new NotFoundException('Paiement introuvable')
@@ -751,6 +773,59 @@ export class StudentsService {
 
   async bulkAnalyzeProofs(): Promise<{ queued: number; alreadyDone: number }> {
     return this.runAnalyzeProofs({})
+  }
+
+  async applyOcrAmounts(): Promise<{ updated: number; skipped: number; noConsensus: number }> {
+    let updated = 0
+    let skipped = 0
+    let noConsensus = 0
+
+    const payments = await this.paymentModel
+      .find({
+        ocrStatus: 'done',
+        status: 'NON TRAITÉ',
+        'ocrResults.0': { $exists: true },
+      })
+      .lean<Array<{
+        _id: Types.ObjectId
+        amount: number
+        currency: string
+        ocrResults: Array<{ extractedAmount: number | null; extractedCurrency: string | null; error: string | null }>
+      }>>()
+
+    for (const payment of payments) {
+      const successes = payment.ocrResults.filter((r) => !r.error && r.extractedAmount !== null)
+      if (successes.length === 0) { noConsensus++; continue }
+
+      const amounts = successes.map((r) => r.extractedAmount as number)
+      const freq = new Map<number, number>()
+      for (const a of amounts) freq.set(a, (freq.get(a) ?? 0) + 1)
+      const maxFreq = Math.max(...freq.values())
+      const top = [...freq.entries()].filter(([, f]) => f === maxFreq).map(([a]) => a)
+      const consensusAmount = Math.round(
+        top.length === 1 ? top[0] : amounts.reduce((s, a) => s + a, 0) / amounts.length,
+      )
+
+      const currencies = successes.map((r) => r.extractedCurrency).filter(Boolean) as string[]
+      const currFreq = new Map<string, number>()
+      for (const c of currencies) currFreq.set(c, (currFreq.get(c) ?? 0) + 1)
+      const topCurrency = [...currFreq.entries()].sort((a, b) => b[1] - a[1])[0]?.[0]
+
+      const patch: Record<string, unknown> = {}
+      if (consensusAmount !== payment.amount) patch.amount = consensusAmount
+      if (topCurrency && topCurrency !== payment.currency) {
+        const valid = ['F CFA', 'FCFA', 'USD', 'EURO']
+        if (valid.includes(topCurrency)) patch.currency = topCurrency
+      }
+
+      if (Object.keys(patch).length === 0) { skipped++; continue }
+
+      await this.paymentModel.updateOne({ _id: payment._id }, { $set: patch })
+      updated++
+    }
+
+    this.logger.log(`ApplyOcrAmounts: ${updated} mis à jour, ${skipped} inchangés, ${noConsensus} sans consensus`)
+    return { updated, skipped, noConsensus }
   }
 
   async analyzeDebtorProofs(): Promise<{ queued: number; alreadyDone: number }> {

@@ -8,8 +8,9 @@ import {
   ClipboardList, CreditCard, GraduationCap, Link2,
   Mail, Globe, Timer, GitBranch, Bell, FileText, Pencil, CheckSquare,
   AlarmClock, AlertTriangle, Crosshair, TrendingUp, Trophy, Phone,
-  CalendarClock, UserPlus, Send, Tag, X as TagX,
+  CalendarClock, UserPlus, Send, Tag, X as TagX, Filter,
 } from 'lucide-react'
+import type { StepCondition } from '@/types'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import type { Automation, AutomationStep, AutomationRun, StepType, TriggerType, Form } from '@/types'
@@ -162,6 +163,8 @@ const OPERATORS = [
   { value: 'not_contains', label: 'ne contient pas' },
   { value: 'is_empty',     label: 'est vide' },
   { value: 'is_not_empty', label: "n'est pas vide" },
+  { value: 'gt',           label: 'est supérieur à' },
+  { value: 'lt',           label: 'est inférieur à' },
 ]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -238,6 +241,13 @@ function StepBlock({
           <p className="truncate text-sm font-medium text-gray-100">{step.name || meta.label}</p>
           <p className="text-xs text-gray-500">{meta.label}</p>
         </div>
+        {(step.conditions?.length ?? 0) > 0 && (
+          <span title={`${step.conditions!.length} condition${step.conditions!.length > 1 ? 's' : ''}`}
+            className="flex shrink-0 items-center gap-1 rounded-full bg-violet-500/20 px-1.5 py-0.5 text-xs text-violet-400">
+            <Filter className="h-3 w-3" />
+            {step.conditions!.length}
+          </span>
+        )}
         {selected && <div className="h-2 w-2 shrink-0 rounded-full bg-indigo-400" />}
         <button
           onClick={(e) => { e.stopPropagation(); onDelete() }}
@@ -401,6 +411,106 @@ function TriggerConfig({
           <p className="mt-1 text-xs text-gray-500">
             Envoyez une requête POST à cette URL pour déclencher l'automatisation.
           </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Step-level conditions editor ──────────────────────────────────────────────
+
+function ConditionsEditor({
+  conditions,
+  onChange,
+}: {
+  conditions: StepCondition[]
+  onChange: (c: StepCondition[]) => void
+}) {
+  const [open, setOpen] = useState(conditions.length > 0)
+
+  const add = () => onChange([...conditions, { field: '', operator: 'equals', value: '' }])
+  const remove = (i: number) => onChange(conditions.filter((_, j) => j !== i))
+  const update = (i: number, patch: Partial<StepCondition>) => {
+    const next = conditions.map((c, j) => (j === i ? { ...c, ...patch } : c))
+    onChange(next)
+  }
+
+  return (
+    <div className="rounded-lg border border-gray-700/60 bg-gray-900/60">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
+      >
+        <Filter className="h-3.5 w-3.5 shrink-0 text-violet-400" />
+        <span className="flex-1 text-xs font-semibold text-gray-300">
+          Conditions d'exécution
+        </span>
+        {conditions.length > 0 && (
+          <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-xs font-medium text-violet-300">
+            {conditions.length}
+          </span>
+        )}
+        <ChevronDown className={cn('h-3.5 w-3.5 text-gray-600 transition-transform', open && 'rotate-180')} />
+      </button>
+
+      {open && (
+        <div className="space-y-2 border-t border-gray-700/60 px-3 pb-3 pt-2">
+          {conditions.length === 0 && (
+            <p className="py-1 text-xs text-gray-600">
+              Aucune condition — l'étape s'exécute toujours.
+            </p>
+          )}
+
+          {conditions.map((cond, i) => (
+            <div key={i} className="flex items-center gap-1.5">
+              <input
+                value={cond.field}
+                onChange={(e) => update(i, { field: e.target.value })}
+                placeholder="student.debtStatus"
+                className={cn(inputCls, 'flex-1 min-w-0')}
+              />
+              <select
+                value={cond.operator}
+                onChange={(e) => update(i, { operator: e.target.value })}
+                className={cn(inputCls, 'w-36 shrink-0')}
+              >
+                {OPERATORS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+              {!['is_empty', 'is_not_empty'].includes(cond.operator) && (
+                <input
+                  value={cond.value}
+                  onChange={(e) => update(i, { value: e.target.value })}
+                  placeholder="valeur"
+                  className={cn(inputCls, 'w-28 shrink-0')}
+                />
+              )}
+              <button
+                type="button"
+                onClick={() => remove(i)}
+                className="shrink-0 rounded p-1 text-gray-600 transition-colors hover:text-red-400"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={add}
+            className="mt-1 flex items-center gap-1.5 text-xs text-violet-400 transition-colors hover:text-violet-300"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Ajouter une condition
+          </button>
+
+          {conditions.length > 0 && (
+            <p className="rounded-lg bg-violet-500/10 px-3 py-2 text-xs text-violet-300">
+              Toutes les conditions doivent être vraies. Si l'une échoue, cette étape est ignorée — l'automatisation continue avec les étapes suivantes.
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -895,6 +1005,14 @@ function StepConfig({
           </p>
         </>
       )}
+
+      {/* ── Conditions d'exécution (toutes étapes) ──────────────────── */}
+      <div className="pt-2">
+        <ConditionsEditor
+          conditions={step.conditions ?? []}
+          onChange={(conds) => onChange({ ...step, conditions: conds })}
+        />
+      </div>
     </div>
   )
 }

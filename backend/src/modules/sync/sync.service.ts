@@ -60,6 +60,33 @@ export interface PendingStudentsResult {
   durationMs: number
 }
 
+export interface RegularizeResult {
+  scanned: number
+  alreadyInvited: number
+  alreadyHavePayment: number
+  created: number
+  durationMs: number
+}
+
+export interface PendingRespondent {
+  responseId: string
+  email: string
+  name: string
+  amount: number
+  currency: string
+  product: string
+  modality: 'Complet' | 'Partiel'
+  gateway: string
+  proofCount: number
+  submittedAt: string | null
+}
+
+export interface PendingRespondentsPreview {
+  found: number
+  respondents: PendingRespondent[]
+  durationMs: number
+}
+
 export interface DebtorProofsResult {
   processed: number
   uploaded: number
@@ -81,6 +108,9 @@ export class SyncService {
 
   // Tally form ID (REST API — IDs sans préfixe "question_")
   private readonly TALLY_FORM_ID = 'woB5oM'
+
+  // ID MongoDB du formulaire local qui recueille les réponses à traiter
+  private readonly PENDING_FORM_ID = '6a094afd5e04220ef3802b6f'
   private readonly TALLY_TO_FIELD: Record<string, string> = {
     rD979X: 'f02',  // Nom et Prénoms
     '4a0505': 'f03', // Date de naissance
@@ -968,41 +998,203 @@ export class SyncService {
     }
   }
 
+  // ── Prévisualisation — réponses formulaire sans invitation (lecture seule) ──
+
+  async previewPendingRespondents(): Promise<PendingRespondentsPreview> {
+    const start = Date.now()
+
+    const localForm = await this.formModel
+      .findById(this.PENDING_FORM_ID)
+      .select('_id')
+      .lean<{ _id: Types.ObjectId }>()
+
+    if (!localForm) throw new Error(`Formulaire introuvable (ID: ${this.PENDING_FORM_ID})`)
+
+    type RespDoc = { _id: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }>; metadata: Record<string, unknown> }
+    const responses = await this.responseModel
+      .find({ formId: localForm._id })
+      .sort({ 'metadata.submittedAt': -1 })
+      .lean<RespDoc[]>()
+
+    const respondents: PendingRespondent[] = []
+    const seen = new Set<string>()
+
+    for (const resp of responses) {
+      const email = ((resp.answers.find((a) => a.fieldId === 'f04')?.value as string) ?? '').toLowerCase().trim()
+      if (!email || seen.has(email)) continue
+      seen.add(email)
+
+      const student = await this.studentModel.findOne({ email }).select('circleId').lean<{ circleId: number | null }>()
+      if (student?.circleId) continue
+
+      const existingPayment = await this.paymentModel.findOne({ studentEmail: email }).select('_id').lean()
+      if (existingPayment) continue
+
+      const name = (resp.answers.find((a) => a.fieldId === 'f02')?.value as string | undefined) ?? email
+      const amountRaw = resp.answers.find((a) => a.fieldId === 'f10')?.value
+      const amount = typeof amountRaw === 'number'
+        ? amountRaw
+        : parseFloat(String(amountRaw ?? '0').replace(/\s/g, '').replace(',', '.')) || 0
+      const currencyRaw = ((resp.answers.find((a) => a.fieldId === 'f11')?.value as string) ?? '').trim()
+      const currency = ['EURO', 'USD'].includes(currencyRaw) ? currencyRaw : 'F CFA'
+      const productRaw = ((resp.answers.find((a) => a.fieldId === 'f08')?.value as string) ?? '').trim()
+      const product = productRaw.toUpperCase().includes('REVOLUTION') ? 'ECOM REVOLUTION' : 'ECOM AFRICA PRO'
+      const gateway = ((resp.answers.find((a) => a.fieldId === 'f09')?.value as string) ?? '').trim()
+      const modalityRaw = ((resp.answers.find((a) => a.fieldId === 'f13')?.value as string) ?? '').toLowerCase()
+      const modality: 'Complet' | 'Partiel' = (modalityRaw.includes('pas encore') || modalityRaw.includes('caution'))
+        ? 'Partiel' : 'Complet'
+      const proofFiles = (resp.answers.find((a) => a.fieldId === 'f12')?.value as Array<{ url?: string }>) ?? []
+      const submittedAt = (resp.metadata?.submittedAt as string | undefined) ?? null
+
+      respondents.push({
+        responseId: String(resp._id),
+        email,
+        name,
+        amount,
+        currency,
+        product,
+        modality,
+        gateway,
+        proofCount: proofFiles.filter((f) => f.url).length,
+        submittedAt,
+      })
+    }
+
+    this.logger.log(`Preview pending: ${respondents.length} à régulariser`)
+    return { found: respondents.length, respondents, durationMs: Date.now() - start }
+  }
+
+  // ── Régularisation — réponses formulaire sans invitation ────────────────────
+  // Trouve toutes les réponses du formulaire local dont l'étudiant n'a pas encore
+  // de circleId (= n'a pas reçu son invitation) et crée le paiement NON TRAITÉ manquant.
+
+  async regularizePendingFormRespondents(emails?: string[]): Promise<RegularizeResult> {
+    const start = Date.now()
+    let alreadyInvited = 0
+    let alreadyHavePayment = 0
+    let created = 0
+
+    const localForm = await this.formModel
+      .findById(this.PENDING_FORM_ID)
+      .select('_id')
+      .lean<{ _id: Types.ObjectId }>()
+
+    if (!localForm) throw new Error(`Formulaire introuvable (ID: ${this.PENDING_FORM_ID})`)
+
+    type RespDoc = { _id: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }>; metadata: Record<string, unknown> }
+    const responses = await this.responseModel
+      .find({ formId: localForm._id })
+      .sort({ 'metadata.submittedAt': 1 })
+      .lean<RespDoc[]>()
+
+    const filterSet = emails?.length ? new Set(emails.map((e) => e.toLowerCase().trim())) : null
+    const seen = new Set<string>()
+
+    for (const resp of responses) {
+      const email = ((resp.answers.find((a) => a.fieldId === 'f04')?.value as string) ?? '').toLowerCase().trim()
+      if (!email || seen.has(email)) continue
+      seen.add(email)
+
+      // Si une liste d'emails est fournie, ignorer les autres
+      if (filterSet && !filterSet.has(email)) continue
+
+      const student = await this.studentModel
+        .findOne({ email })
+        .select('_id circleId name')
+        .lean<{ _id: Types.ObjectId; circleId: number | null; name: string }>()
+
+      // Déjà sur Circle = déjà invité
+      if (student?.circleId) { alreadyInvited++; continue }
+
+      // A déjà un paiement (en attente ou autre)
+      const existingPayment = await this.paymentModel.findOne({ studentEmail: email }).select('_id').lean()
+      if (existingPayment) { alreadyHavePayment++; continue }
+
+      // Extraire les données du formulaire
+      const name = (resp.answers.find((a) => a.fieldId === 'f02')?.value as string | undefined) ?? email
+      const amountRaw = resp.answers.find((a) => a.fieldId === 'f10')?.value
+      const amount = typeof amountRaw === 'number'
+        ? amountRaw
+        : parseFloat(String(amountRaw ?? '0').replace(/\s/g, '').replace(',', '.')) || 0
+      const currencyRaw = ((resp.answers.find((a) => a.fieldId === 'f11')?.value as string) ?? '').trim()
+      const currency = (['EURO', 'USD'].includes(currencyRaw) ? currencyRaw : 'F CFA') as 'F CFA' | 'EURO' | 'USD'
+      const productRaw = ((resp.answers.find((a) => a.fieldId === 'f08')?.value as string) ?? '').trim()
+      const product = productRaw.toUpperCase().includes('REVOLUTION') ? 'ECOM REVOLUTION' as const : 'ECOM AFRICA PRO' as const
+      const gatewayRaw = ((resp.answers.find((a) => a.fieldId === 'f09')?.value as string) ?? '').trim()
+      const modalityRaw = ((resp.answers.find((a) => a.fieldId === 'f13')?.value as string) ?? '').toLowerCase()
+      const modality: 'Complet' | 'Partiel' = (modalityRaw.includes('pas encore') || modalityRaw.includes('caution'))
+        ? 'Partiel' : 'Complet'
+      const proofFiles = (resp.answers.find((a) => a.fieldId === 'f12')?.value as Array<{ url?: string }>) ?? []
+      const proofImages = proofFiles.map((f) => f.url).filter(Boolean) as string[]
+      const tallySubmissionId = resp.metadata?.tallySubmissionId as string | undefined
+
+      await this.paymentModel.create({
+        studentId: student?._id ?? null,
+        studentEmail: email,
+        studentName: name,
+        status: 'NON TRAITÉ',
+        modality,
+        amount,
+        currency,
+        product,
+        gateway: gatewayRaw || null,
+        proofImages,
+        source: 'tally' as const,
+        tallySubmissionId: tallySubmissionId ?? null,
+        notes: 'Créé par régularisation automatique',
+      })
+      created++
+      this.logger.log(`Régularisation: paiement créé pour ${email}`)
+    }
+
+    this.logger.log(`Régularisation: ${seen.size} scannés, ${created} créés, ${alreadyHavePayment} déjà payants, ${alreadyInvited} déjà invités`)
+    return { scanned: seen.size, alreadyInvited, alreadyHavePayment, created, durationMs: Date.now() - start }
+  }
+
   // ── Détection étudiants Tally sans Airtable ni Circle ────────────────────
   // Ces étudiants ont répondu au formulaire mais ne sont pas encore régularisés.
 
   async detectPendingStudents(): Promise<PendingStudentsResult> {
     const start = Date.now()
 
-    // Paiements Tally dont l'étudiant n'a ni airtableId ni circleId
-    const tallyPayments = await this.paymentModel
-      .find({ source: 'tally' })
-      .select('studentEmail studentName studentId createdAt')
-      .lean<Array<{ studentEmail: string; studentName: string | null; studentId: Types.ObjectId | null; createdAt: Date; _id: Types.ObjectId }>>()
+    type RespDoc = { _id: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }>; metadata: Record<string, unknown> }
+
+    // 20 dernières réponses du formulaire, les plus récentes en premier
+    const responses = await this.responseModel
+      .find({ formId: new Types.ObjectId(this.PENDING_FORM_ID) })
+      .sort({ 'metadata.submittedAt': -1 })
+      .limit(20)
+      .lean<RespDoc[]>()
 
     const result: PendingStudentsResult['students'] = []
     const seen = new Set<string>()
 
-    for (const p of tallyPayments) {
-      if (seen.has(p.studentEmail)) continue
-      seen.add(p.studentEmail)
+    let n: number = 0;
+    for (const resp of responses) {
+      const email = ((resp.answers.find((a) => a.fieldId === 'f04')?.value as string) ?? '').toLowerCase().trim()
+      if (!email || seen.has(email)) continue
+      seen.add(email)
 
-      const student = await this.studentModel
-        .findOne({ email: p.studentEmail })
-        .select('airtableId circleId')
-        .lean<{ airtableId: string | null; circleId: number | null }>()
+      // Vérifie qu'aucun paiement n'est déjà lié à cet email
+      const existingPayment = await this.paymentModel
+        .findOne({ studentEmail: email })
+        .select('_id')
+        .lean<{ _id: Types.ObjectId }>()
 
-      if (student && !student.airtableId && !student.circleId) {
+      if (!existingPayment) {
+        const name = (resp.answers.find((a) => a.fieldId === 'f02')?.value as string | undefined) ?? email
+        const submittedAt = (resp.metadata?.submittedAt as string | undefined) ?? null
         result.push({
-          email: p.studentEmail,
-          name: p.studentName ?? p.studentEmail,
-          paymentId: String(p._id),
-          submittedAt: p.createdAt ?? null,
+          email,
+          name,
+          paymentId: String(resp._id), // ID de la réponse formulaire
+          submittedAt: submittedAt ? new Date(submittedAt) : null,
         })
       }
+      console.log(n++);
     }
 
-    this.logger.log(`Pending students: ${result.length} trouvé(s) à régulariser`)
+    this.logger.log(`Pending students (20 dernières réponses): ${result.length} sans paiement`)
     return { found: result.length, students: result, durationMs: Date.now() - start }
   }
 

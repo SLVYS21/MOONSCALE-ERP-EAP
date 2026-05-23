@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Req, UseGuards } from '@nestjs/common'
+import { Controller, Get, Post, Body, Param, Delete, Req, UseGuards, HttpCode, HttpStatus } from '@nestjs/common'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { SyncService } from './sync.service'
 
@@ -47,9 +47,20 @@ export class SyncController {
     return this.syncService.backfillProofImages()
   }
 
+  @Get('pending-respondents')
+  previewPendingRespondents() {
+    return this.syncService.previewPendingRespondents()
+  }
+
   @Post('pending-students')
   detectPendingStudents() {
     return this.syncService.detectPendingStudents()
+  }
+
+  @Post('regularize-pending')
+  @HttpCode(HttpStatus.OK)
+  regularizePendingFormRespondents(@Body('emails') emails?: string[]) {
+    return this.syncService.regularizePendingFormRespondents(emails)
   }
 
   @Post('debtor-proofs')

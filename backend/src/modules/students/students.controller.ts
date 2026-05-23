@@ -10,7 +10,7 @@ import { Roles } from '../../common/decorators/roles.decorator'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { CloudinaryService } from '../cloudinary/cloudinary.service'
 import type { UserDocument } from '../users/schemas/user.schema'
-import { IsString, IsOptional, IsIn, IsNumber, Min } from 'class-validator'
+import { IsString, IsOptional, IsIn, IsNumber, Min, IsEnum } from 'class-validator'
 import { Type } from 'class-transformer'
 
 class TreatPaymentDto {
@@ -21,6 +21,15 @@ class TreatPaymentDto {
   @IsOptional() @IsString() product?: string
   @IsOptional() @IsString() gateway?: string
   @IsOptional() @IsString() notes?: string
+}
+
+class UpdatePaymentFieldsDto {
+  @IsOptional() @IsString() @IsIn(['NON TRAITÉ', 'TRAITÉ', 'REJETÉ']) status?: string
+  @IsOptional() @IsString() @IsIn(['Complet', 'Partiel']) modality?: string
+  @IsOptional() @IsString() @IsIn(['ECOM AFRICA PRO', 'COACHING', 'ECOM REVOLUTION']) product?: string
+  @IsOptional() @IsString() gateway?: string
+  @IsOptional() @Type(() => Number) @IsNumber() amount?: number
+  @IsOptional() @IsString() currency?: string
 }
 
 class AddNoteDto {
@@ -133,6 +142,15 @@ export class StudentsController {
     return this.studentsService.listPayments(query)
   }
 
+  @Patch('payments/:id')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  async updatePaymentFields(@Param('id') id: string, @Body() dto: UpdatePaymentFieldsDto) {
+    await this.studentsService.updatePaymentFields(id, dto)
+    return { message: 'Paiement mis à jour' }
+  }
+
   @Post('payments/:id/treat')
   @UseGuards(RolesGuard)
   @Roles('superadmin', 'admin')
@@ -169,6 +187,14 @@ export class StudentsController {
   @HttpCode(HttpStatus.OK)
   analyzeDebtorProofs() {
     return this.studentsService.analyzeDebtorProofs()
+  }
+
+  @Post('payments/apply-ocr-amounts')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  applyOcrAmounts() {
+    return this.studentsService.applyOcrAmounts()
   }
 
   @Post('payments/:id/analyze')

@@ -396,10 +396,17 @@ export interface AutomationTrigger {
   }
 }
 
+export interface StepCondition {
+  field: string
+  operator: string
+  value: string
+}
+
 export interface AutomationStep {
   id: string
   type: StepType
   name?: string
+  conditions?: StepCondition[]
   config: {
     to?: string
     subject?: string
@@ -522,6 +529,33 @@ export interface DebtorResult {
 export interface PendingStudentsResult {
   found: number
   students: { email: string; name: string; paymentId: string; submittedAt: string | null }[]
+  durationMs: number
+}
+
+export interface PendingRespondent {
+  responseId: string
+  email: string
+  name: string
+  amount: number
+  currency: string
+  product: string
+  modality: 'Complet' | 'Partiel'
+  gateway: string
+  proofCount: number
+  submittedAt: string | null
+}
+
+export interface PendingRespondentsPreview {
+  found: number
+  respondents: PendingRespondent[]
+  durationMs: number
+}
+
+export interface RegularizeResult {
+  scanned: number
+  alreadyInvited: number
+  alreadyHavePayment: number
+  created: number
   durationMs: number
 }
 
