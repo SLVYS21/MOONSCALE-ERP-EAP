@@ -655,18 +655,36 @@ export class SyncService {
               const tallySource = (answerMap.get('f06') as string | undefined)?.trim() || null
               const tallyOccupation = (answerMap.get('f07') as string | undefined)?.trim() || null
 
-              // Upsert student — $ifNull préserve les valeurs existantes, ne remplace que les nulls
-              await this.studentModel.findOneAndUpdate(
-                { email: tallyEmail },
-                [{ $set: {
-                  name:       { $ifNull: ['$name', tallyName] },
-                  birthDate:  tallyBirthRaw   ? { $ifNull: ['$birthDate',  new Date(tallyBirthRaw)] } : '$birthDate',
-                  whatsapp:   tallyWhatsapp   ? { $ifNull: ['$whatsapp',   tallyWhatsapp] }           : '$whatsapp',
-                  source:     tallySource     ? { $ifNull: ['$source',     tallySource] }              : '$source',
-                  occupation: tallyOccupation ? { $ifNull: ['$occupation', tallyOccupation] }         : '$occupation',
-                } }],
-                { upsert: true },
-              )
+              // Enrichir le student existant (seulement les champs null) ou le créer
+              const existingStudent = await this.studentModel
+                .findOne({ email: tallyEmail })
+                .select('_id birthDate whatsapp source occupation name')
+                .lean<{ _id: Types.ObjectId; birthDate?: Date | null; whatsapp?: string | null; source?: string | null; occupation?: string | null; name?: string }>()
+
+              if (existingStudent) {
+                const patch: Record<string, unknown> = {}
+                if (!existingStudent.birthDate && tallyBirthRaw)   patch.birthDate  = new Date(tallyBirthRaw)
+                if (!existingStudent.whatsapp   && tallyWhatsapp)   patch.whatsapp   = tallyWhatsapp
+                if (!existingStudent.source     && tallySource)     patch.source     = tallySource
+                if (!existingStudent.occupation && tallyOccupation) patch.occupation = tallyOccupation
+                if (Object.keys(patch).length > 0) {
+                  await this.studentModel.updateOne({ email: tallyEmail }, { $set: patch })
+                }
+              } else {
+                try {
+                  await this.studentModel.create({
+                    email:      tallyEmail,
+                    name:       tallyName,
+                    birthDate:  tallyBirthRaw   ? new Date(tallyBirthRaw) : null,
+                    whatsapp:   tallyWhatsapp   ?? null,
+                    source:     tallySource     ?? null,
+                    occupation: tallyOccupation ?? null,
+                  })
+                } catch (dupErr: unknown) {
+                  if ((dupErr as { code?: number })?.code !== 11000) throw dupErr
+                  // Race condition — déjà créé entre le findOne et le create, on continue
+                }
+              }
 
               const student = await this.studentModel.findOne({ email: tallyEmail }).select('_id').lean<{ _id: Types.ObjectId }>()
 
