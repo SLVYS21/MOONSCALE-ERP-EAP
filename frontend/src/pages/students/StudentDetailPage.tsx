@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, ExternalLink, Clock, Zap, CheckCircle2, AlertTriangle,
   RefreshCw, Lock, Unlock, Calendar, MapPin, Phone, Mail,
-  ShieldOff, ShieldCheck, User, Repeat, TrendingUp,
+  /*ShieldOff, ShieldCheck,*/ User, Repeat, TrendingUp,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -335,15 +335,15 @@ export function StudentDetailPage() {
     enabled: !!data?.student?.email,
   })
 
-  const restrictMutation = useMutation({
-    mutationFn: () => api.post(`/students/${id}/restrict`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
-  })
+  // const restrictMutation = useMutation({
+  //   mutationFn: () => api.post(`/students/${id}/restrict`),
+  //   onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
+  // })
 
-  const restoreMutation = useMutation({
-    mutationFn: () => api.post(`/students/${id}/restore`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
-  })
+  // const restoreMutation = useMutation({
+  //   mutationFn: () => api.post(`/students/${id}/restore`),
+  //   onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
+  // })
 
   const formationStatusMutation = useMutation({
     mutationFn: (paymentStatus: 'EN RÈGLE' | 'EN RETARD') =>
