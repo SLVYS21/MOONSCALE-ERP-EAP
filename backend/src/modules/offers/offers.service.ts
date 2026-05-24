@@ -111,7 +111,7 @@ export class OffersService {
 
   private matchPlan(plans: OfferPlan[], paymentPlan: string | null): OfferPlan | undefined {
     const active = plans.filter((p) => p.isActive)
-    if (!paymentPlan) return active[0]
+    if (!paymentPlan) return active[1]
     const norm = paymentPlan.toLowerCase().trim()
     return (
       active.find((p) => p.name.toLowerCase() === norm) ??
