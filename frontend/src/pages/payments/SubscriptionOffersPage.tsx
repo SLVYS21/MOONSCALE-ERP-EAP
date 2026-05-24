@@ -229,7 +229,7 @@ function OfferModal({
                       {suggestions.map((s) => (
                         <button
                           key={s}
-                          onClick={() => setProduct(s)}
+                          onClick={() => setName(s)}
                           className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
                         >
                           {s}
