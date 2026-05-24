@@ -116,7 +116,7 @@ export class OffersService {
     return (
       active.find((p) => p.name.toLowerCase() === norm) ??
       active.find((p) => p.name.toLowerCase().includes(norm) || norm.includes(p.name.toLowerCase().split(' ')[0])) ??
-      active[0]
+      active[1]
     )
   }
 
