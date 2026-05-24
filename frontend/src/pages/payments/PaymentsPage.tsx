@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef, type ElementType, type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
 import {
   ChevronLeft, ChevronRight, ExternalLink, CalendarDays,
-  Clock, CheckCircle2, XCircle, Banknote, CreditCard, Search, ChevronDown,
+  Clock, CheckCircle2, XCircle, Banknote, CreditCard, Search, ChevronDown, Package,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { cn, formatDate, formatAmount } from '@/lib/utils'
-import { CIRCLE_PLAN_LABELS } from '@/lib/constants'
 import { useAuthStore } from '@/store/authStore'
 import api from '@/services/api'
-import type { Payment, PaymentStatus, PaymentProduct, PaymentCurrency, PaymentModality, PaginatedResponse } from '@/types'
+import type { Payment, PaymentStatus, PaymentCurrency, PaymentModality, PaginatedResponse, Offer } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -83,11 +82,7 @@ const MODALITY_OPTIONS: { value: PaymentModality; label: string; badge: ReactNod
   { value: 'Partiel', label: 'Partiel (acompte)', badge: <Badge variant="warning">Partiel</Badge> },
 ]
 
-const PRODUCT_OPTIONS: { value: PaymentProduct; label: string }[] = [
-  { value: 'ECOM AFRICA PRO',  label: 'ECOM AFRICA PRO' },
-  { value: 'ECOM REVOLUTION',  label: 'ECOM REVOLUTION' },
-  { value: 'COACHING',         label: 'COACHING' },
-]
+const planLabel = (plan: string | null | undefined) => plan ?? '—'
 
 const inputCls = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
@@ -236,16 +231,27 @@ function ImageLightbox({ images, initialIndex = 0, onClose }: {
 
 // ── Treat modal ───────────────────────────────────────────────────────────────
 
-function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => void }) {
+function TreatModal({ payment, offers, onClose }: { payment: Payment; offers: Offer[]; onClose: () => void }) {
   const qc = useQueryClient()
   const [modality, setModality] = useState<'Complet' | 'Partiel'>(payment.modality ?? 'Complet')
   const [amount, setAmount] = useState(String(payment.amount ?? ''))
   const [currency, setCurrency] = useState<PaymentCurrency>(payment.currency ?? 'F CFA')
-  const [product, setProduct] = useState<PaymentProduct>(payment.product ?? 'ECOM AFRICA PRO')
   const [gateway, setGateway] = useState(payment.gateway ?? '')
-  const [plan, setPlan] = useState<string>(payment.plan ?? 'standard')
   const [notes, setNotes] = useState(payment.notes ?? '')
   const [error, setError] = useState('')
+
+  const defaultOffer = offers.find((o) => o.name === payment.product) ?? offers[0]
+  const [selectedOfferName, setSelectedOfferName] = useState(defaultOffer?.name ?? '')
+  const selectedOffer = offers.find((o) => o.name === selectedOfferName)
+  const availablePlans = (selectedOffer?.plans ?? []).filter((p) => p.isActive)
+  const defaultPlan = availablePlans.find((p) => p.name === payment.plan) ?? availablePlans[0]
+  const [selectedPlanName, setSelectedPlanName] = useState(defaultPlan?.name ?? '')
+
+  const handleOfferChange = (name: string) => {
+    setSelectedOfferName(name)
+    const o = offers.find((o) => o.name === name)
+    setSelectedPlanName(o?.plans.find((p) => p.isActive)?.name ?? '')
+  }
 
   const { mutate, isPending } = useMutation({
     mutationFn: (body: object) => api.post(`/payments/${payment._id}/treat`, body),
@@ -272,11 +278,10 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
             </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Produit</label>
-            <select value={product} onChange={(e) => setProduct(e.target.value as PaymentProduct)} className={inputCls}>
-              <option value="ECOM AFRICA PRO">ECOM AFRICA PRO</option>
-              <option value="ECOM REVOLUTION">ECOM REVOLUTION</option>
-              <option value="COACHING">COACHING</option>
+            <label className="mb-1.5 block text-xs font-medium text-gray-400">Offre</label>
+            <select value={selectedOfferName} onChange={(e) => handleOfferChange(e.target.value)} className={inputCls}>
+              {offers.length === 0 && <option value="">Chargement…</option>}
+              {offers.map((o) => <option key={o._id} value={o.name}>{o.name}</option>)}
             </select>
           </div>
           <div>
@@ -290,14 +295,15 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
             </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Gateway</label>
-            <input value={gateway} onChange={(e) => setGateway(e.target.value)} className={inputCls} placeholder="FedaPay, Wave…" />
+            <label className="mb-1.5 block text-xs font-medium text-gray-400">Plan</label>
+            <select value={selectedPlanName} onChange={(e) => setSelectedPlanName(e.target.value)} className={inputCls} disabled={availablePlans.length === 0}>
+              {availablePlans.length === 0 && <option value="">— aucun plan —</option>}
+              {availablePlans.map((p) => <option key={p._id} value={p.name}>{p.name} · {p.durationMonths} mois</option>)}
+            </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Plan Circle</label>
-            <select value={plan} onChange={(e) => setPlan(e.target.value)} className={inputCls}>
-              {Object.entries(CIRCLE_PLAN_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
+            <label className="mb-1.5 block text-xs font-medium text-gray-400">Gateway</label>
+            <input value={gateway} onChange={(e) => setGateway(e.target.value)} className={inputCls} placeholder="FedaPay, Wave…" />
           </div>
         </div>
 
@@ -319,7 +325,7 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
           <Button variant="secondary" onClick={onClose}>Annuler</Button>
           <Button
             loading={isPending}
-            onClick={() => mutate({ modality, amount: Number(amount), currency, product, gateway, plan, notes })}
+            onClick={() => mutate({ modality, amount: Number(amount), currency, product: selectedOfferName, plan: selectedPlanName, gateway, notes })}
           >
             Traiter le paiement
           </Button>
@@ -362,6 +368,12 @@ export function PaymentsPage() {
     queryKey: ['payments-stats'],
     queryFn: () => api.get<PaymentStats>('/payments/stats').then((r) => r.data),
     staleTime: 60_000,
+  })
+
+  const { data: offers = [] } = useQuery<Offer[]>({
+    queryKey: ['subscription-offers'],
+    queryFn: () => api.get<Offer[]>('/subscription-offers').then((r) => r.data),
+    staleTime: 5 * 60_000,
   })
 
   const { data, isLoading } = useQuery<PaginatedResponse<Payment>>({
@@ -413,9 +425,18 @@ export function PaymentsPage() {
 
   return (
     <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-100">Paiements</h1>
-        <p className="mt-0.5 text-sm text-gray-500">{total} paiement{total !== 1 ? 's' : ''} affichés</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-100">Paiements</h1>
+          <p className="mt-0.5 text-sm text-gray-500">{total} paiement{total !== 1 ? 's' : ''} affichés</p>
+        </div>
+        <Link
+          to="/payments/offers"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 hover:text-gray-100 transition-colors border border-gray-700"
+        >
+          <Package size={14} />
+          Offres & Souscriptions
+        </Link>
       </div>
 
       {/* KPI cards */}
@@ -552,6 +573,7 @@ export function PaymentsPage() {
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Statut</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Modalité</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Produit</th>
+                  <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Plan Circle</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Plateforme</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Preuves</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Date</th>
@@ -626,14 +648,40 @@ export function PaymentsPage() {
                     <td className="py-3 pr-4">
                       {isAdmin ? (
                         <InlineDropdown
-                          options={PRODUCT_OPTIONS}
-                          onSelect={(v) => updateField(p._id, 'product', v)}
+                          options={offers.map((o) => ({ value: o.name, label: o.name }))}
+                          onSelect={(v) => {
+                            const newOffer = offers.find((o) => o.name === v)
+                            const firstPlan = newOffer?.plans.find((pl) => pl.isActive)?.name ?? null
+                            setUpdatingCell({ id: p._id, field: 'product' })
+                            updateMutation.mutate({ id: p._id, fields: { product: v, plan: firstPlan } })
+                          }}
                           pending={isPendingCell(p._id, 'product')}
                         >
                           <span className="text-xs font-medium text-gray-300">{p.product ?? '—'}</span>
                         </InlineDropdown>
                       ) : (
                         <span className="text-xs text-gray-400">{p.product ?? '—'}</span>
+                      )}
+                    </td>
+
+                    {/* Plan — inline editable, filtered by current offer */}
+                    <td className="py-3 pr-4">
+                      {isAdmin ? (
+                        <InlineDropdown
+                          options={(offers.find((o) => o.name === p.product)?.plans ?? [])
+                            .filter((pl) => pl.isActive)
+                            .map((pl) => ({ value: pl.name, label: `${pl.name} · ${pl.durationMonths} mois` }))}
+                          onSelect={(v) => updateField(p._id, 'plan', v)}
+                          pending={isPendingCell(p._id, 'plan')}
+                        >
+                          <span className="text-xs font-medium text-gray-300">
+                            {planLabel(p.plan)}
+                          </span>
+                        </InlineDropdown>
+                      ) : (
+                        <span className="text-xs text-gray-400">
+                          {planLabel(p.plan)}
+                        </span>
                       )}
                     </td>
 
@@ -739,7 +787,7 @@ export function PaymentsPage() {
       </Card>
 
       {treatPayment && (
-        <TreatModal payment={treatPayment} onClose={() => setTreatPayment(null)} />
+        <TreatModal payment={treatPayment} offers={offers} onClose={() => setTreatPayment(null)} />
       )}
       {lightbox && (
         <ImageLightbox

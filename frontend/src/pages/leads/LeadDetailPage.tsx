@@ -8,7 +8,7 @@ import {
   GitBranch, Star, PhoneCall, PhoneOff, UserCheck, ChevronUp,
 } from 'lucide-react'
 import api from '@/services/api'
-import type { Lead, LeadCall, Offer, PipelineStatus, QualificationStatus } from '@/types'
+import type { Lead, LeadCall, LeadOffer, PipelineStatus, QualificationStatus } from '@/types'
 import { cn } from '@/lib/utils'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -131,7 +131,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
 function CallCard({ leadId, call, offers, onUpdate }: {
   leadId: string
   call: LeadCall
-  offers: Offer[]
+  offers: LeadOffer[]
   onUpdate: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -183,7 +183,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
 
       {expanded && (
         <div className="border-t border-gray-800 p-4 space-y-4">
-          {/* Status / Offer row */}
+          {/* Status / LeadOffer row */}
           <div className="flex flex-wrap gap-3">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Statut</label>
@@ -201,7 +201,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
               <label className="block text-xs text-gray-500 mb-1">Offre proposée</label>
               <select
                 className="rounded-lg bg-gray-800 border border-gray-700 px-2 py-1.5 text-xs text-gray-200 focus:outline-none"
-                value={(call.offer_proposed_id as Offer | null)?._id ?? ''}
+                value={(call.offer_proposed_id as LeadOffer | null)?._id ?? ''}
                 onChange={(e) => updateMutation.mutate({ offer_proposed_id: e.target.value || undefined })}
               >
                 <option value="">— aucune —</option>
@@ -367,7 +367,7 @@ export function LeadDetailPage() {
 
   const { data: offers = [] } = useQuery({
     queryKey: ['offers'],
-    queryFn: () => api.get('/offers', { params: { active_only: 'true' } }).then((r) => r.data as Offer[]),
+    queryFn: () => api.get('/offers', { params: { active_only: 'true' } }).then((r) => r.data as LeadOffer[]),
   })
 
   const pipelineMutation = useMutation({
@@ -533,7 +533,7 @@ export function LeadDetailPage() {
             </div>
           )}
 
-          {/* Offers */}
+          {/* LeadOffers */}
           <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Offres liées</h3>
             {lead.offer_ids.length > 0 ? (

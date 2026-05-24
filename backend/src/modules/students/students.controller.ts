@@ -15,19 +15,22 @@ import { Type } from 'class-transformer'
 
 class TreatPaymentDto {
   @IsOptional() @IsString() planKey?: string
+  @IsOptional() @IsString() plan?: string
   @IsOptional() @IsString() modality?: string
   @IsOptional() @Type(() => Number) @IsNumber() amount?: number
   @IsOptional() @IsString() currency?: string
   @IsOptional() @IsString() product?: string
   @IsOptional() @IsString() gateway?: string
   @IsOptional() @IsString() notes?: string
+  @IsOptional() @IsString() offerId?: string
 }
 
 class UpdatePaymentFieldsDto {
   @IsOptional() @IsString() @IsIn(['NON TRAITÉ', 'TRAITÉ', 'REJETÉ']) status?: string
   @IsOptional() @IsString() @IsIn(['Complet', 'Partiel']) modality?: string
-  @IsOptional() @IsString() @IsIn(['ECOM AFRICA PRO', 'COACHING', 'ECOM REVOLUTION']) product?: string
+  @IsOptional() @IsString() product?: string
   @IsOptional() @IsString() gateway?: string
+  @IsOptional() @IsString() plan?: string
   @IsOptional() @Type(() => Number) @IsNumber() amount?: number
   @IsOptional() @IsString() currency?: string
 }

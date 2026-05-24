@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, Plus, Pencil, EyeOff, Eye, Tag, X, ChevronDown, ChevronUp } from 'lucide-react'
 import api from '@/services/api'
-import type { Offer } from '@/types'
+import type { LeadOffer as Offer } from '@/types'
 import { cn } from '@/lib/utils'
 
 const TYPE_LABELS: Record<string, string> = {

@@ -1,9 +1,11 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Cron } from '@nestjs/schedule'
+import { ConfigService } from '@nestjs/config'
 import { Model, Types } from 'mongoose'
 import * as crypto from 'crypto'
-import { Automation, AutomationDocument, AutomationStep, AutomationTrigger } from './schemas/automation.schema'
+import Groq from 'groq-sdk'
+import { Automation, AutomationDocument, AutomationStep, AutomationTrigger, AudienceFilter } from './schemas/automation.schema'
 import { AutomationRun, AutomationRunDocument, RunLog } from './schemas/automation-run.schema'
 import { MailService } from '../mail/mail.service'
 import { CircleService, CIRCLE_PLANS } from '../circle/circle.service'
@@ -11,6 +13,10 @@ import { Student, StudentDocument } from '../students/schemas/student.schema'
 import { Payment, PaymentDocument } from '../students/schemas/payment.schema'
 import { Task, TaskDocument } from '../tasks/schemas/task.schema'
 import { User, UserDocument } from '../users/schemas/user.schema'
+import { Form, FormDocument } from '../forms/schemas/form.schema'
+import { FormResponse, FormResponseDocument } from '../forms/schemas/form-response.schema'
+import { Offer, OfferDocument } from '../offers/schemas/offer.schema'
+import { Subscription, SubscriptionDocument } from '../offers/schemas/subscription.schema'
 
 // ── Cron schedule presets ─────────────────────────────────────────────────────
 
@@ -38,7 +44,9 @@ function interpolate(template: string, ctx: Record<string, unknown>): string {
 }
 
 function resolvePath(path: string, ctx: Record<string, unknown>): unknown {
-  const parts = path.trim().split('.')
+  // Strip template delimiters {{ }} so "{{payment.plan}}" and "payment.plan" both work
+  const clean = path.trim().replace(/^\{\{/, '').replace(/\}\}$/, '').trim()
+  const parts = clean.split('.')
   let val: unknown = ctx
   for (const part of parts) {
     val = (val as Record<string, unknown>)?.[part]
@@ -74,6 +82,7 @@ function evaluateCondition(
 @Injectable()
 export class AutomationsService {
   private readonly logger = new Logger(AutomationsService.name)
+  private readonly groq: Groq
 
   constructor(
     @InjectModel(Automation.name) private automationModel: Model<AutomationDocument>,
@@ -82,9 +91,16 @@ export class AutomationsService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Task.name) private taskModel: Model<TaskDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Form.name) private formModel: Model<FormDocument>,
+    @InjectModel(FormResponse.name) private responseModel: Model<FormResponseDocument>,
+    @InjectModel(Offer.name) private offerModel: Model<OfferDocument>,
+    @InjectModel(Subscription.name) private subscriptionModel: Model<SubscriptionDocument>,
     private mailService: MailService,
     private circleService: CircleService,
-  ) {}
+    private configService: ConfigService,
+  ) {
+    this.groq = new Groq({ apiKey: this.configService.get<string>('GROQ_API_KEY') })
+  }
 
   // ── CRUD ──────────────────────────────────────────────────────────────────
 
@@ -195,6 +211,81 @@ export class AutomationsService {
     if (!automation) throw new NotFoundException('Automatisation introuvable')
     await this.runAutomation(automation, { trigger: 'manual', manualRun: true })
     return { started: true }
+  }
+
+  // ── Audience-based campaigns ──────────────────────────────────────────────
+
+  private buildAudienceQuery(filters: AudienceFilter[]): Record<string, unknown> {
+    const query: Record<string, unknown> = {}
+    for (const f of filters) {
+      const op = f.operator
+      const val = f.value ?? ''
+      if (op === 'equals')       query[f.field] = val
+      else if (op === 'not_equals') query[f.field] = { $ne: val }
+      else if (op === 'contains') query[f.field] = { $regex: val, $options: 'i' }
+      else if (op === 'not_contains') query[f.field] = { $not: { $regex: val, $options: 'i' } }
+      else if (op === 'is_empty') query[f.field] = { $in: [null, '', undefined] }
+      else if (op === 'is_not_empty') query[f.field] = { $nin: [null, ''], $exists: true }
+      else if (op === 'gt')  query[f.field] = { $gt: isNaN(Number(val)) ? val : Number(val) }
+      else if (op === 'lt')  query[f.field] = { $lt: isNaN(Number(val)) ? val : Number(val) }
+    }
+    return query
+  }
+
+  async previewAudience(id: string) {
+    const automation = await this.automationModel.findById(id).lean()
+    if (!automation) throw new NotFoundException('Automatisation introuvable')
+    const audience = automation.trigger?.config?.audience
+    if (!audience) return { entity: null, count: 0, sample: [] }
+
+    const query = this.buildAudienceQuery(audience.filters ?? [])
+    if (audience.entity === 'student') {
+      const [count, sample] = await Promise.all([
+        this.studentModel.countDocuments(query),
+        this.studentModel.find(query).select('name email debtStatus').limit(5).lean(),
+      ])
+      return { entity: 'student', count, sample }
+    } else {
+      const [count, sample] = await Promise.all([
+        this.paymentModel.countDocuments(query),
+        this.paymentModel.find(query).select('studentName studentEmail status product amount').limit(5).lean(),
+      ])
+      return { entity: 'payment', count, sample }
+    }
+  }
+
+  async runForAudience(id: string) {
+    const automation = await this.automationModel.findById(id)
+    if (!automation) throw new NotFoundException('Automatisation introuvable')
+    const audience = automation.trigger?.config?.audience
+    if (!audience) throw new NotFoundException('Pas d\'audience configurée')
+
+    const query = this.buildAudienceQuery(audience.filters ?? [])
+
+    if (audience.entity === 'student') {
+      const students = await this.studentModel.find(query).lean()
+      this.logger.log(`Audience run: ${students.length} students matched for automation ${id}`)
+      for (const student of students) {
+        try {
+          await this.runAutomation(automation, { trigger: 'audience_based', student })
+        } catch (err) {
+          this.logger.error(`Audience run error for student ${student.email}: ${(err as Error).message}`)
+        }
+      }
+      return { ran: students.length }
+    } else {
+      const payments = await this.paymentModel.find(query).lean()
+      this.logger.log(`Audience run: ${payments.length} payments matched for automation ${id}`)
+      for (const payment of payments) {
+        const student = await this.studentModel.findOne({ email: payment.studentEmail }).lean()
+        try {
+          await this.runAutomation(automation, { trigger: 'audience_based', student, payment })
+        } catch (err) {
+          this.logger.error(`Audience run error for payment ${payment._id}: ${(err as Error).message}`)
+        }
+      }
+      return { ran: payments.length }
+    }
   }
 
   // ── Circle tags list (depuis l'API, avec fallback hardcodé) ─────────────────
@@ -371,6 +462,57 @@ export class AutomationsService {
 
   // ── Internal execution ────────────────────────────────────────────────────
 
+  // ── Extraction Groq depuis une réponse formulaire ─────────────────────────
+
+  private async extractStudentFromResponse(responseId: string): Promise<{
+    name?: string
+    whatsapp?: string
+    occupation?: string
+    source?: string
+  } | null> {
+    try {
+      type RespLean = { formId: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }> }
+      const response = await this.responseModel.findById(responseId).lean<RespLean>()
+      if (!response) return null
+
+      type FormLean = { fields: Array<{ id: string; label: string; type: string }> }
+      const form = await this.formModel.findById(response.formId).select('fields').lean<FormLean>()
+      const fieldMap = new Map((form?.fields ?? []).map((f) => [f.id, f]))
+
+      const lines: string[] = []
+      for (const answer of response.answers) {
+        const field = fieldMap.get(answer.fieldId)
+        if (!field || ['heading', 'paragraph', 'file'].includes(field.type)) continue
+        const raw = answer.value
+        const val = Array.isArray(raw) ? raw.join(', ') : String(raw ?? '')
+        if (val && val !== 'null') lines.push(`${field.label}: ${val}`)
+      }
+      if (!lines.length) return null
+
+      const completion = await this.groq.chat.completions.create({
+        model: 'llama-3.3-70b-versatile',
+        temperature: 0,
+        response_format: { type: 'json_object' },
+        messages: [
+          {
+            role: 'system',
+            content: 'Tu es un extracteur de données. Extrais les informations du profil étudiant depuis les réponses au formulaire. Réponds UNIQUEMENT en JSON valide, sans markdown ni explication.',
+          },
+          {
+            role: 'user',
+            content: `Voici les réponses au formulaire :\n\n${lines.join('\n')}\n\nExtrait ces champs (null si absent) :\n{\n  "name": "nom complet de l\'étudiant",\n  "whatsapp": "numéro WhatsApp avec indicatif pays",\n  "occupation": "métier, profession ou occupation",\n  "source": "comment il a connu le programme (réseau social, ami, publicité, etc.)"\n}`,
+          },
+        ],
+      })
+
+      const content = completion.choices[0]?.message?.content ?? '{}'
+      return JSON.parse(content) as { name?: string; whatsapp?: string; occupation?: string; source?: string }
+    } catch (err: unknown) {
+      this.logger.warn(`extractStudentFromResponse(${responseId}) failed: ${(err as Error).message}`)
+      return null
+    }
+  }
+
   private async findAndRun(type: string, eventData: Record<string, unknown>) {
     const query: Record<string, unknown> = { 'trigger.type': type, isActive: true }
     if (type === 'form_submitted' && eventData.formId) {
@@ -411,6 +553,10 @@ export class AutomationsService {
 
       for (const step of automation.steps) {
         const result = await this.executeStep(step, enrichedCtx)
+        // Merge step outputs into context so subsequent steps can reference them
+        if (result.contextUpdate) {
+          Object.assign(enrichedCtx, result.contextUpdate)
+        }
         logs.push({
           stepId: step.id,
           stepName: step.name ?? step.type,
@@ -447,7 +593,7 @@ export class AutomationsService {
   private async executeStep(
     step: AutomationStep,
     ctx: Record<string, unknown>,
-  ): Promise<{ status: 'ok' | 'error' | 'skipped'; message: string; stop?: boolean }> {
+  ): Promise<{ status: 'ok' | 'error' | 'skipped'; message: string; stop?: boolean; contextUpdate?: Record<string, unknown> }> {
     // Step-level conditions — skip this step only (automation continues)
     if (step.conditions?.length) {
       for (const cond of step.conditions) {
@@ -598,10 +744,12 @@ export class AutomationsService {
           const modality = (step.config.modality === 'Partiel' ? 'Partiel' : 'Complet') as 'Complet' | 'Partiel'
           const currency = (['F CFA', 'USD', 'EURO'].includes(step.config.currency ?? '')
             ? step.config.currency : 'F CFA') as 'F CFA' | 'USD' | 'EURO'
-          const validProducts = ['ECOM AFRICA PRO', 'COACHING', 'ECOM REVOLUTION']
-          const product = (validProducts.includes(step.config.product ?? '') ? step.config.product : 'ECOM AFRICA PRO') as 'ECOM AFRICA PRO' | 'COACHING' | 'ECOM REVOLUTION'
+          const product = step.config.product ?? ''
+          const plan = step.config.plan ?? null
 
-          await this.paymentModel.create({
+          const ctxResponseId = (ctx.responseId as string | undefined) ?? null
+
+          const createdPayment = await this.paymentModel.create({
             studentId: student?._id ?? null,
             studentEmail: email,
             studentName: (student as unknown as { name?: string })?.name ?? null,
@@ -611,12 +759,25 @@ export class AutomationsService {
             currency,
             product,
             gateway: interpolate(step.config.gateway ?? '', ctx) || null,
-            plan: (['Elite', 'Premium', 'Standard'].includes(step.config.plan ?? '')
-              ? step.config.plan as 'Elite' | 'Premium' | 'Standard'
-              : null),
+            plan,
             source: 'manual',
+            responseId: ctxResponseId ? new Types.ObjectId(ctxResponseId) : null,
           })
-          return { status: 'ok', message: `Paiement créé pour ${email} — ${amount} ${currency}` }
+          const paymentCtxUpdate = {
+            _id: String(createdPayment._id),
+            studentEmail: email,
+            product,
+            plan,
+            amount,
+            currency,
+            modality,
+            status: 'NON TRAITÉ',
+          }
+          return {
+            status: 'ok',
+            message: `Paiement créé pour ${email} — ${amount} ${currency}`,
+            contextUpdate: { payment: paymentCtxUpdate },
+          }
         }
 
         case 'create_student': {
@@ -627,11 +788,45 @@ export class AutomationsService {
           const existing = await this.studentModel.findOne({ email }).select('_id').lean()
           if (existing) return { status: 'skipped', message: `Étudiant ${email} existe déjà — ignoré` }
 
-          const name = interpolate(step.config.nameExpr ?? '', ctx).trim() || email
-          const whatsapp = interpolate(step.config.whatsappExpr ?? '', ctx).trim() || null
+          let name = interpolate(step.config.nameExpr ?? '', ctx).trim() || email
+          let whatsapp = interpolate(step.config.whatsappExpr ?? '', ctx).trim() || null
+          let occupation: string | null = null
+          let source: string | null = null
+          let infoStatus = 'NON VÉRIFIÉ'
 
-          await this.studentModel.create({ email, name, whatsapp, infoStatus: 'NON VÉRIFIÉ', notes: '', debtStatus: 'ok' })
-          return { status: 'ok', message: `Étudiant créé : ${name} (${email})` }
+          // Enrichissement Groq si un paiement avec responseId est dans le contexte
+          const paymentCtx = ctx.payment as Record<string, unknown> | undefined
+          if (paymentCtx?._id) {
+            const payment = await this.paymentModel
+              .findById(String(paymentCtx._id))
+              .select('responseId')
+              .lean<{ responseId: Types.ObjectId | null }>()
+
+            if (payment?.responseId) {
+              const enriched = await this.extractStudentFromResponse(String(payment.responseId))
+              if (enriched) {
+                if (enriched.name)       name       = enriched.name
+                if (enriched.whatsapp)   whatsapp   = enriched.whatsapp
+                if (enriched.occupation) occupation = enriched.occupation
+                if (enriched.source)     source     = enriched.source
+                infoStatus = 'EXACTE'
+                this.logger.log(`create_student: enrichi via Groq pour ${email}`)
+              }
+            }
+          }
+
+          const createdStudent = await this.studentModel.create({ email, name, whatsapp, occupation, source, infoStatus, notes: '', debtStatus: 'ok' })
+          const studentCtxUpdate = {
+            _id: String(createdStudent._id),
+            email: createdStudent.email,
+            name: createdStudent.name,
+            whatsapp: createdStudent.whatsapp ?? null,
+          }
+          return {
+            status: 'ok',
+            message: `Étudiant créé : ${name} (${email})${infoStatus === 'EXACTE' ? ' [enrichi Groq]' : ''}`,
+            contextUpdate: { student: studentCtxUpdate },
+          }
         }
 
         case 'circle_invite': {
@@ -682,6 +877,102 @@ export class AutomationsService {
             return { status: 'ok', message: `Tag "${plan.name}" retiré de ${email}` }
           }
           return { status: 'skipped', message: 'Tag Circle non défini' }
+        }
+
+        case 'create_subscription': {
+          const payment = ctx.payment as Record<string, unknown> | undefined
+          const student = ctx.student as Record<string, unknown> | undefined
+
+          if (!payment || !student) {
+            return { status: 'skipped', message: 'Contexte payment/student manquant pour create_subscription' }
+          }
+
+          type LeanOffer = {
+            _id: unknown
+            name: string
+            plans: Array<{
+              _id: unknown
+              name: string
+              durationMonths: number
+              price: number
+              currency: string
+              partialDueAfterDays: number
+              isActive: boolean
+            }>
+          }
+
+          let offer: LeanOffer | null = null
+          let plan: LeanOffer['plans'][0] | undefined
+
+          const paymentProduct = payment.product as string
+          const paymentPlan    = payment.plan as string | undefined
+
+          if (step.config.matchMode === 'manual' && step.config.offerId) {
+            offer = await this.offerModel.findById(step.config.offerId).lean<LeanOffer>()
+            plan = offer?.plans.find((p) => p.name === step.config.planName && p.isActive)
+          } else {
+            // Auto: match offer by payment.product, plan by payment.plan
+            offer = await this.offerModel.findOne({ name: paymentProduct }).lean<LeanOffer>()
+            if (offer) {
+              plan = offer.plans.find((p) => p.name === paymentPlan && p.isActive)
+                   ?? offer.plans.find((p) => p.isActive)
+            }
+          }
+
+          if (!offer) {
+            return { status: 'skipped', message: `Aucune offre trouvée pour le produit "${paymentProduct}"` }
+          }
+          if (!plan) {
+            return { status: 'skipped', message: `Aucun plan actif trouvé dans l'offre "${offer.name}"` }
+          }
+
+          const startDate = payment.paidAt
+            ? new Date(payment.paidAt as string)
+            : new Date()
+          const endDate = new Date(startDate)
+          endDate.setMonth(endDate.getMonth() + plan.durationMonths)
+
+          const modality = (payment.modality as string) ?? 'Complet'
+          const nextPaymentDate = modality === 'Partiel'
+            ? new Date(startDate.getTime() + plan.partialDueAfterDays * 24 * 60 * 60 * 1000)
+            : null
+
+          const offerName = `${offer.name} — ${plan.name}`
+
+          const [subscription] = await this.subscriptionModel.create([{
+            studentId:    student._id   as string,
+            studentEmail: (student.email as string).toLowerCase(),
+            offerId:      offer._id     as string,
+            paymentId:    (payment._id as string | undefined) ?? null,
+            offerName,
+            offerProduct: offer.name,
+            offerPlan:    plan.name,
+            durationMonths: plan.durationMonths,
+            startDate,
+            endDate,
+            status: 'active',
+            modality,
+            paidAmount:  (payment.amount as number) ?? 0,
+            totalAmount: plan.price || (payment.amount as number) || 0,
+            currency:    (payment.currency as string) ?? plan.currency ?? 'F CFA',
+            nextPaymentDate,
+            remindersSent: 0,
+          }])
+
+          this.triggerEvent('subscription_created', {
+            student,
+            subscription: {
+              _id: String((subscription as { _id: unknown })._id),
+              offerName,
+              offerProduct: offer.name,
+              offerPlan: plan.name,
+              durationMonths: plan.durationMonths,
+              startDate: startDate.toISOString(),
+              endDate: endDate.toISOString(),
+            },
+          })
+
+          return { status: 'ok', message: `Souscription créée : ${offerName} (${plan.durationMonths} mois)` }
         }
 
         default:

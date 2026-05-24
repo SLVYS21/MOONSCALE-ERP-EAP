@@ -27,6 +27,7 @@ import { TrackingLinksPage } from '@/pages/leads/TrackingLinksPage'
 import { AnalyticsPage } from '@/pages/analytics/AnalyticsPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { ContentPage } from '@/pages/content/ContentPage'
+import { SubscriptionOffersPage } from '@/pages/payments/SubscriptionOffersPage'
 
 export default function App() {
   return (
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
+          <Route path="/payments/offers" element={<SubscriptionOffersPage />} />
           <Route path="/sync" element={<SyncPage />} />
           <Route path="/wiki" element={<WikiPage />} />
           <Route path="/wiki/:slug" element={<WikiPage />} />

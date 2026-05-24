@@ -3,10 +3,10 @@ import { Document, Types } from 'mongoose'
 
 export type PaymentStatus = 'NON TRAITÉ' | 'TRAITÉ' | 'REJETÉ'
 export type PaymentModality = 'Complet' | 'Partiel'
-export type PaymentProduct = 'ECOM AFRICA PRO' | 'COACHING' | 'ECOM REVOLUTION'
+export type PaymentProduct = string
 export type PaymentCurrency = 'F CFA' | 'FCFA' | 'USD' | 'EURO'
-export type PaymentGateway = 'FedaPay' | 'Fedapay' | 'Carte Bancaire' | 'Carte Bancaire ' | 'Chariow' | 'Autres' | 'Autres (Paiement Cash, Western Union, MoneyGram, etc.)'
-export type CirclePlan = 'Elite' | 'Premium' | 'Standard'
+export type PaymentGateway = string
+export type CirclePlan = string
 
 export type PaymentDocument = Payment & Document
 
@@ -34,13 +34,13 @@ export class Payment {
   @Prop({ type: String, enum: ['F CFA', 'FCFA', 'USD', 'EURO'], default: 'F CFA' })
   currency: PaymentCurrency
 
-  @Prop({ type: String, enum: ['ECOM AFRICA PRO', 'COACHING', 'ECOM REVOLUTION'], required: true })
+  @Prop({ type: String, required: true })
   product: PaymentProduct
 
   @Prop({ type: String, default: null })
   gateway: string | null
 
-  @Prop({ type: String, enum: ['Elite', 'Premium', 'Standard', null], default: null })
+  @Prop({ type: String, default: null })
   plan: CirclePlan | null
 
   @Prop({ default: 0 })
@@ -69,12 +69,16 @@ export class Payment {
   airtableId: string | null
 
   // Source du paiement (tally, chariow, manual)
-  @Prop({ type: String, enum: ['tally', 'chariow', 'manual'], default: 'manual' })
+  @Prop({ type: String, enum: ['tally', 'chariow', 'manual', 'form'], default: 'manual' })
   source: string
 
   // Identifiant Tally pour déduplication lors de l'import des soumissions
   @Prop({ type: String, default: null })
   tallySubmissionId: string | null
+
+  // Lien vers la réponse formulaire interne dont ce paiement est issu
+  @Prop({ type: Types.ObjectId, ref: 'FormResponse', default: null })
+  responseId: Types.ObjectId | null
 
   // OCR des preuves de paiement
   @Prop({ type: String, enum: ['pending', 'done', 'failed', null], default: null })

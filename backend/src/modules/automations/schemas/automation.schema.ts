@@ -15,6 +15,10 @@ export type TriggerType =
   | 'lead_won'
   | 'call_completed'
   | 'cron_schedule'
+  | 'subscription_created'
+  | 'subscription_expiring'
+  | 'partial_payment_due'
+  | 'audience_based'
 
 export type StepType =
   | 'send_email'
@@ -30,6 +34,18 @@ export type StepType =
   | 'circle_invite'
   | 'circle_tag_add'
   | 'circle_tag_remove'
+  | 'create_subscription'
+
+export interface AudienceFilter {
+  field: string
+  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'is_empty' | 'is_not_empty' | 'gt' | 'lt'
+  value?: string
+}
+
+export interface AudienceConfig {
+  entity: 'student' | 'payment'
+  filters: AudienceFilter[]
+}
 
 export interface AutomationTrigger {
   type: TriggerType
@@ -37,6 +53,7 @@ export interface AutomationTrigger {
     formId?: string        // for form_submitted
     webhookKey?: string    // for incoming_webhook (auto-generated UUID)
     schedulePreset?: string // for cron_schedule
+    audience?: AudienceConfig // for audience_based
   }
 }
 
@@ -94,6 +111,10 @@ export interface AutomationStep {
     circleTagId?: number    // ID du tag Circle (depuis l'API — stable)
     circleTagName?: string  // Nom affiché (peut changer)
     circlePlanKey?: string  // Legacy — clé CIRCLE_PLANS hardcodée
+    // create_subscription
+    matchMode?: 'auto' | 'manual'  // auto = match by payment.product+plan, manual = explicit ids
+    offerId?: string
+    planName?: string
   }
 }
 

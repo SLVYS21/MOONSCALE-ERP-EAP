@@ -8,12 +8,12 @@ import {
   ClipboardList, CreditCard, GraduationCap, Link2,
   Mail, Globe, Timer, GitBranch, Bell, FileText, Pencil, CheckSquare,
   AlarmClock, AlertTriangle, Crosshair, TrendingUp, Trophy, Phone,
-  CalendarClock, UserPlus, Send, Tag, X as TagX, Filter,
+  CalendarClock, UserPlus, Send, Tag, X as TagX, Filter, Users, Repeat,
 } from 'lucide-react'
-import type { StepCondition } from '@/types'
+import type { StepCondition, AudienceFilter, AudienceConfig } from '@/types'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
-import type { Automation, AutomationStep, AutomationRun, StepType, TriggerType, Form } from '@/types'
+import type { Automation, AutomationStep, AutomationRun, StepType, TriggerType, Form, Offer } from '@/types'
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -29,6 +29,8 @@ const toggleActive = (id: string): Promise<Automation> =>
   api.post(`/automations/${id}/toggle`).then((r) => r.data)
 
 const runManual = (id: string) => api.post(`/automations/${id}/run`).then((r) => r.data)
+const previewAudience = (id: string) => api.get(`/automations/${id}/audience-preview`).then((r) => r.data as { entity: string | null; count: number; sample: { name?: string; email?: string; studentEmail?: string; studentName?: string }[] })
+const runAudience = (id: string) => api.post(`/automations/${id}/run-audience`).then((r) => r.data as { ran: number })
 
 const fetchRuns = (id: string): Promise<{ data: AutomationRun[]; total: number }> =>
   api.get(`/automations/${id}/runs?page=1&limit=30`).then((r) => r.data)
@@ -55,7 +57,11 @@ const TRIGGER_META: Record<TriggerType, { label: string; Icon: LucideIcon; color
   lead_stage_changed: { label: 'Étape lead changée', Icon: TrendingUp,    color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',      desc: "Se déclenche quand l'étape pipeline d'un lead change" },
   lead_won:         { label: 'Lead converti (Won)',  Icon: Trophy,         color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30', desc: 'Se déclenche quand un lead est marqué Won' },
   call_completed:   { label: 'Appel terminé',        Icon: Phone,          color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30', desc: "Se déclenche quand un appel diagnostic est marqué réalisé" },
-  cron_schedule:    { label: 'Planification',         Icon: CalendarClock,  color: 'text-violet-400 bg-violet-500/10 border-violet-500/30', desc: 'Se déclenche automatiquement selon un calendrier défini' },
+  cron_schedule:         { label: 'Planification',           Icon: CalendarClock,  color: 'text-violet-400 bg-violet-500/10 border-violet-500/30', desc: 'Se déclenche automatiquement selon un calendrier défini' },
+  subscription_created:  { label: 'Souscription créée',      Icon: CheckCircle2,   color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', desc: "Se déclenche quand un étudiant souscrit à une offre" },
+  subscription_expiring: { label: 'Souscription expirante',  Icon: AlarmClock,     color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',   desc: 'Se déclenche 7, 3 et 1 jour(s) avant la fin d\'accès' },
+  partial_payment_due:   { label: 'Échéance partielle due',   Icon: AlertTriangle,  color: 'text-red-400 bg-red-500/10 border-red-500/30',         desc: 'Se déclenche quand un solde partiel arrive à échéance' },
+  audience_based:        { label: 'Campagne audience',        Icon: Filter,         color: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/30', desc: 'Lance l\'automatisation pour chaque entité correspondant aux filtres définis' },
 }
 
 const STEP_META: Record<StepType, { label: string; Icon: LucideIcon; color: string; desc: string }> = {
@@ -72,12 +78,14 @@ const STEP_META: Record<StepType, { label: string; Icon: LucideIcon; color: stri
   circle_invite:    { label: 'Inviter dans Circle',      Icon: Send,        color: 'text-sky-400 bg-sky-500/10 border-sky-500/30',            desc: "Envoie une invitation Circle à l'étudiant" },
   circle_tag_add:   { label: 'Ajouter un tag Circle',    Icon: Tag,         color: 'text-teal-400 bg-teal-500/10 border-teal-500/30',         desc: 'Ajoute un tag / plan Circle à un membre' },
   circle_tag_remove: { label: 'Retirer un tag Circle',  Icon: TagX,        color: 'text-rose-400 bg-rose-500/10 border-rose-500/30',         desc: 'Retire un tag / plan Circle d\'un membre' },
+  create_subscription: { label: 'Créer une souscription', Icon: Repeat,    color: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/30', desc: 'Crée une souscription à partir du paiement traité' },
 }
 
 const STEP_TYPES: StepType[] = [
   'send_email', 'http_request', 'wait', 'condition',
   'notify_team', 'add_note', 'update_student', 'create_task',
   'create_payment', 'create_student', 'circle_invite', 'circle_tag_add', 'circle_tag_remove',
+  'create_subscription',
 ]
 
 const VARIABLES: Record<TriggerType, { token: string; desc: string }[]> = {
@@ -144,6 +152,91 @@ const VARIABLES: Record<TriggerType, { token: string; desc: string }[]> = {
     { token: '{{scheduledAt}}', desc: "Date/heure d'exécution" },
     { token: '{{preset}}', desc: 'Nom de la planification' },
   ],
+  subscription_created: [
+    { token: '{{student.name}}', desc: "Nom de l'étudiant" },
+    { token: '{{student.email}}', desc: "Email de l'étudiant" },
+    { token: '{{student.whatsapp}}', desc: 'WhatsApp' },
+    { token: '{{subscription.offerName}}', desc: "Nom de l'offre" },
+    { token: '{{subscription.offerProduct}}', desc: 'Produit' },
+    { token: '{{subscription.offerPlan}}', desc: 'Plan Circle' },
+    { token: '{{subscription.durationMonths}}', desc: 'Durée (mois)' },
+    { token: '{{subscription.startDate}}', desc: 'Date de début' },
+    { token: '{{subscription.endDate}}', desc: "Date de fin d'accès" },
+    { token: '{{subscription.modality}}', desc: 'Modalité' },
+    { token: '{{subscription.paidAmount}}', desc: 'Montant payé' },
+    { token: '{{subscription.totalAmount}}', desc: "Montant total de l'offre" },
+    { token: '{{subscription.currency}}', desc: 'Devise' },
+    { token: '{{subscription.nextPaymentDate}}', desc: 'Prochaine échéance (si partiel)' },
+  ],
+  subscription_expiring: [
+    { token: '{{student.name}}', desc: "Nom de l'étudiant" },
+    { token: '{{student.email}}', desc: "Email de l'étudiant" },
+    { token: '{{student.whatsapp}}', desc: 'WhatsApp' },
+    { token: '{{daysUntilExpiry}}', desc: "Jours avant expiration" },
+    { token: '{{subscription.offerName}}', desc: "Nom de l'offre" },
+    { token: '{{subscription.endDate}}', desc: "Date d'expiration" },
+  ],
+  partial_payment_due: [
+    { token: '{{student.name}}', desc: "Nom de l'étudiant" },
+    { token: '{{student.email}}', desc: "Email de l'étudiant" },
+    { token: '{{student.whatsapp}}', desc: 'WhatsApp' },
+    { token: '{{remainingAmount}}', desc: 'Montant restant dû' },
+    { token: '{{daysSinceDue}}', desc: 'Jours de retard' },
+    { token: '{{subscription.offerName}}', desc: "Nom de l'offre" },
+    { token: '{{subscription.nextPaymentDate}}', desc: "Date d'échéance" },
+    { token: '{{subscription.currency}}', desc: 'Devise' },
+  ],
+  audience_based: [
+    { token: '{{student.name}}', desc: "Nom de l'étudiant" },
+    { token: '{{student.email}}', desc: "Email de l'étudiant" },
+    { token: '{{student.whatsapp}}', desc: 'WhatsApp' },
+    { token: '{{student.debtStatus}}', desc: 'Statut dette' },
+    { token: '{{payment.amount}}', desc: 'Montant du paiement (si audience=paiement)' },
+    { token: '{{payment.product}}', desc: 'Produit (si audience=paiement)' },
+    { token: '{{payment.status}}', desc: 'Statut paiement (si audience=paiement)' },
+  ],
+}
+
+// Tokens injected into context by each step type (used to show available variables in subsequent steps)
+const STEP_OUTPUTS: Partial<Record<StepType, { token: string; desc: string }[]>> = {
+  create_student: [
+    { token: '{{student._id}}',    desc: "ID de l'étudiant créé" },
+    { token: '{{student.email}}',  desc: "Email" },
+    { token: '{{student.name}}',   desc: "Nom" },
+    { token: '{{student.whatsapp}}', desc: "WhatsApp" },
+  ],
+  create_payment: [
+    { token: '{{payment._id}}',          desc: "ID du paiement créé" },
+    { token: '{{payment.studentEmail}}', desc: "Email de l'étudiant" },
+    { token: '{{payment.product}}',      desc: "Produit" },
+    { token: '{{payment.plan}}',         desc: "Plan" },
+    { token: '{{payment.amount}}',       desc: "Montant" },
+    { token: '{{payment.currency}}',     desc: "Devise" },
+    { token: '{{payment.modality}}',     desc: "Modalité" },
+    { token: '{{payment.status}}',       desc: "Statut (NON TRAITÉ)" },
+  ],
+}
+
+const AUDIENCE_FIELDS: Record<'student' | 'payment', { value: string; label: string }[]> = {
+  student: [
+    { value: 'debtStatus',   label: 'Statut dette' },
+    { value: 'infoStatus',   label: "Statut infos" },
+    { value: 'email',        label: 'Email' },
+    { value: 'name',         label: 'Nom' },
+    { value: 'whatsapp',     label: 'WhatsApp' },
+    { value: 'source',       label: 'Source' },
+    { value: 'circleIsActive', label: 'Circle actif' },
+  ],
+  payment: [
+    { value: 'status',    label: 'Statut paiement' },
+    { value: 'product',   label: 'Produit' },
+    { value: 'modality',  label: 'Modalité' },
+    { value: 'plan',      label: 'Plan Circle' },
+    { value: 'gateway',   label: 'Passerelle' },
+    { value: 'amount',    label: 'Montant' },
+    { value: 'currency',  label: 'Devise' },
+    { value: 'studentEmail', label: 'Email étudiant' },
+  ],
 }
 
 const SCHEDULE_PRESETS = [
@@ -181,7 +274,8 @@ function makeStep(type: StepType): AutomationStep {
     : type === 'notify_team'    ? { recipients: 'all_admins' }
     : type === 'update_student' ? { studentField: 'infoStatus', studentValue: 'EXACTE' }
     : type === 'create_task'    ? { taskPriority: 'medium' }
-    : type === 'create_payment' ? { currency: 'F CFA', product: 'ECOM AFRICA PRO', modality: 'Complet' }
+    : type === 'create_payment'      ? { currency: 'F CFA', product: 'ECOM AFRICA PRO', modality: 'Complet' }
+    : type === 'create_subscription' ? { matchMode: 'auto' }
     : {}
   return { id: uid(), type, name: STEP_META[type].label, config: defaults }
 }
@@ -308,9 +402,11 @@ function Connector({ onAdd }: { onAdd: (type: StepType) => void }) {
 function VariablesPanel({
   triggerType,
   formFields,
+  precedingSteps,
 }: {
   triggerType: TriggerType
   formFields?: Form['fields']
+  precedingSteps?: AutomationStep[]
 }) {
   const vars = VARIABLES[triggerType] ?? []
   const fieldVars = (formFields ?? [])
@@ -318,24 +414,169 @@ function VariablesPanel({
     .map((f) => ({ token: `{{answers.${f.id}}}`, desc: f.label }))
 
   const allVars = [...vars, ...fieldVars]
-  if (!allVars.length) return null
+
+  const stepOutputGroups: { stepName: string; vars: { token: string; desc: string }[] }[] = []
+  for (const step of precedingSteps ?? []) {
+    const outputs = STEP_OUTPUTS[step.type]
+    if (outputs?.length) {
+      stepOutputGroups.push({ stepName: step.name || STEP_META[step.type].label, vars: outputs })
+    }
+  }
+
+  if (!allVars.length && !stepOutputGroups.length) return null
+
+  const tokenCode = (token: string) => (
+    <code
+      key={token}
+      onClick={() => navigator.clipboard.writeText(token)}
+      title="Cliquer pour copier"
+      className="cursor-pointer rounded bg-gray-800 px-1.5 py-0.5 text-xs text-indigo-300 transition-colors hover:bg-gray-700"
+    >
+      {token}
+    </code>
+  )
 
   return (
-    <div className="mt-6 rounded-lg border border-gray-800 bg-gray-950 p-3">
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Variables disponibles</p>
-      <div className="space-y-1.5">
-        {allVars.map((v) => (
-          <div key={v.token} className="flex items-center gap-2">
-            <code
-              onClick={() => navigator.clipboard.writeText(v.token)}
-              title="Cliquer pour copier"
-              className="cursor-pointer rounded bg-gray-800 px-1.5 py-0.5 text-xs text-indigo-300 transition-colors hover:bg-gray-700"
-            >
-              {v.token}
-            </code>
-            <span className="text-xs text-gray-600">{v.desc}</span>
+    <div className="mt-6 space-y-3">
+      {allVars.length > 0 && (
+        <div className="rounded-lg border border-gray-800 bg-gray-950 p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Variables disponibles</p>
+          <div className="space-y-1.5">
+            {allVars.map((v) => (
+              <div key={v.token} className="flex items-center gap-2">
+                {tokenCode(v.token)}
+                <span className="text-xs text-gray-600">{v.desc}</span>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
+      )}
+
+      {stepOutputGroups.length > 0 && (
+        <div className="rounded-lg border border-indigo-800/40 bg-indigo-950/20 p-3">
+          <p className="mb-2.5 text-xs font-semibold uppercase tracking-wider text-indigo-500">Sorties des étapes précédentes</p>
+          <div className="space-y-3">
+            {stepOutputGroups.map((group) => (
+              <div key={group.stepName}>
+                <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-indigo-400/60">{group.stepName}</p>
+                <div className="space-y-1.5">
+                  {group.vars.map((v) => (
+                    <div key={v.token} className="flex items-center gap-2">
+                      {tokenCode(v.token)}
+                      <span className="text-xs text-gray-600">{v.desc}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AudienceEditor({
+  audience,
+  onChange,
+}: {
+  audience: AudienceConfig
+  onChange: (a: AudienceConfig) => void
+}) {
+  const fields = AUDIENCE_FIELDS[audience.entity]
+
+  const addFilter = () =>
+    onChange({ ...audience, filters: [...audience.filters, { field: fields[0].value, operator: 'equals', value: '' }] })
+  const removeFilter = (i: number) =>
+    onChange({ ...audience, filters: audience.filters.filter((_, j) => j !== i) })
+  const updateFilter = (i: number, patch: Partial<AudienceFilter>) =>
+    onChange({ ...audience, filters: audience.filters.map((f, j) => (j === i ? { ...f, ...patch } : f)) })
+
+  return (
+    <div className="space-y-3">
+      <div>
+        <label className={labelCls}>Type d'entité</label>
+        <div className="flex gap-2">
+          {(['student', 'payment'] as const).map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => onChange({ entity: e, filters: [] })}
+              className={cn(
+                'flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors',
+                audience.entity === e
+                  ? 'border-fuchsia-500 bg-fuchsia-600/10 text-fuchsia-300'
+                  : 'border-gray-700 bg-gray-800/40 text-gray-400 hover:border-gray-600',
+              )}
+            >
+              <Users className="h-3.5 w-3.5" />
+              {e === 'student' ? 'Étudiants' : 'Paiements'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <label className={labelCls}>Filtres audience</label>
+          <button
+            type="button"
+            onClick={addFilter}
+            className="flex items-center gap-1 text-xs text-fuchsia-400 hover:text-fuchsia-300 transition-colors"
+          >
+            <Plus className="h-3 w-3" /> Ajouter
+          </button>
+        </div>
+        {audience.filters.length === 0 && (
+          <p className="rounded-lg border border-dashed border-gray-700 py-3 text-center text-xs text-gray-600">
+            Aucun filtre — toutes les entités seront ciblées
+          </p>
+        )}
+        <div className="space-y-2">
+          {audience.filters.map((f, i) => (
+            <div key={i} className="rounded-lg border border-gray-700/70 bg-gray-800/40 p-2.5 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Filtre {i + 1}</span>
+                <button type="button" onClick={() => removeFilter(i)} className="text-gray-600 hover:text-red-400 transition-colors">
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] text-gray-500">Champ</label>
+                <select
+                  className={inputCls}
+                  value={f.field}
+                  onChange={(e) => updateFilter(i, { field: e.target.value })}
+                >
+                  {fields.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] text-gray-500">Opérateur</label>
+                <select
+                  className={inputCls}
+                  value={f.operator}
+                  onChange={(e) => updateFilter(i, { operator: e.target.value as AudienceFilter['operator'] })}
+                >
+                  {OPERATORS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              {!['is_empty', 'is_not_empty'].includes(f.operator) && (
+                <div>
+                  <label className="mb-1 block text-[10px] text-gray-500">Valeur</label>
+                  <input
+                    className={inputCls}
+                    value={f.value ?? ''}
+                    onChange={(e) => updateFilter(i, { value: e.target.value })}
+                    placeholder="Valeur..."
+                  />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -413,6 +654,13 @@ function TriggerConfig({
           </p>
         </div>
       )}
+
+      {trigger.type === 'audience_based' && (
+        <AudienceEditor
+          audience={trigger.config?.audience ?? { entity: 'student', filters: [] }}
+          onChange={(audience) => onChange({ ...trigger, config: { ...trigger.config, audience } })}
+        />
+      )}
     </div>
   )
 }
@@ -431,6 +679,10 @@ function ConditionsEditor({
   const add = () => onChange([...conditions, { field: '', operator: 'equals', value: '' }])
   const remove = (i: number) => onChange(conditions.filter((_, j) => j !== i))
   const update = (i: number, patch: Partial<StepCondition>) => {
+    // Strip {{ }} if user pastes a template token into the field path
+    if (patch.field !== undefined) {
+      patch.field = patch.field.replace(/^\{\{/, '').replace(/\}\}$/, '').trim()
+    }
     const next = conditions.map((c, j) => (j === i ? { ...c, ...patch } : c))
     onChange(next)
   }
@@ -463,37 +715,53 @@ function ConditionsEditor({
           )}
 
           {conditions.map((cond, i) => (
-            <div key={i} className="flex items-center gap-1.5">
-              <input
-                value={cond.field}
-                onChange={(e) => update(i, { field: e.target.value })}
-                placeholder="student.debtStatus"
-                className={cn(inputCls, 'flex-1 min-w-0')}
-              />
-              <select
-                value={cond.operator}
-                onChange={(e) => update(i, { operator: e.target.value })}
-                className={cn(inputCls, 'w-36 shrink-0')}
-              >
-                {OPERATORS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-              {!['is_empty', 'is_not_empty'].includes(cond.operator) && (
+            <div key={i} className="rounded-lg border border-gray-700/70 bg-gray-800/40 p-2.5 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
+                  Condition {i + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => remove(i)}
+                  className="rounded p-0.5 text-gray-600 transition-colors hover:text-red-400"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] text-gray-500">
+                  Champ <span className="text-gray-600 normal-case">(sans accolades)</span>
+                </label>
                 <input
-                  value={cond.value}
-                  onChange={(e) => update(i, { value: e.target.value })}
-                  placeholder="valeur"
-                  className={cn(inputCls, 'w-28 shrink-0')}
+                  value={cond.field}
+                  onChange={(e) => update(i, { field: e.target.value })}
+                  placeholder="payment.plan"
+                  className={inputCls}
                 />
+              </div>
+              <div>
+                <label className="mb-1 block text-[10px] text-gray-500">Opérateur</label>
+                <select
+                  value={cond.operator}
+                  onChange={(e) => update(i, { operator: e.target.value })}
+                  className={inputCls}
+                >
+                  {OPERATORS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </div>
+              {!['is_empty', 'is_not_empty'].includes(cond.operator) && (
+                <div>
+                  <label className="mb-1 block text-[10px] text-gray-500">Valeur</label>
+                  <input
+                    value={cond.value}
+                    onChange={(e) => update(i, { value: e.target.value })}
+                    placeholder="TRAITÉ"
+                    className={inputCls}
+                  />
+                </div>
               )}
-              <button
-                type="button"
-                onClick={() => remove(i)}
-                className="shrink-0 rounded p-1 text-gray-600 transition-colors hover:text-red-400"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
             </div>
           ))}
 
@@ -516,6 +784,164 @@ function ConditionsEditor({
     </div>
   )
 }
+
+// ── CreatePaymentConfig ───────────────────────────────────────────────────────
+
+function CreatePaymentConfig({
+  step, onChange, inputCls, labelCls,
+}: { step: AutomationStep; onChange: (s: AutomationStep) => void; inputCls: string; labelCls: string }) {
+  const cfg = step.config
+  const upd = (patch: Partial<typeof cfg>) => onChange({ ...step, config: { ...cfg, ...patch } })
+
+  const { data: offers = [] } = useQuery<Offer[]>({
+    queryKey: ['subscription-offers'],
+    queryFn: () => api.get<Offer[]>('/subscription-offers').then((r) => r.data),
+  })
+
+  const selectedOffer = offers.find((o) => o.name === cfg.product)
+  const availablePlans = (selectedOffer?.plans ?? []).filter((p) => p.isActive)
+
+  const handleOfferChange = (name: string) => {
+    const o = offers.find((o) => o.name === name)
+    upd({ product: name, plan: o?.plans.find((p) => p.isActive)?.name ?? '' })
+  }
+
+  return (
+    <>
+      <div>
+        <label className={labelCls}>Email (expression) *</label>
+        <input value={cfg.emailExpr ?? ''} onChange={(e) => upd({ emailExpr: e.target.value })} placeholder="{{student.email}} ou {{answers.f04}}" className={inputCls} />
+      </div>
+      <div>
+        <label className={labelCls}>Montant (expression)</label>
+        <input value={cfg.amountExpr ?? ''} onChange={(e) => upd({ amountExpr: e.target.value })} placeholder="{{answers.f10}} ou 50000" className={inputCls} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className={labelCls}>Devise</label>
+          <select value={cfg.currency ?? 'F CFA'} onChange={(e) => upd({ currency: e.target.value })} className={inputCls}>
+            {['F CFA', 'USD', 'EURO'].map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className={labelCls}>Modalité</label>
+          <select value={cfg.modality ?? 'Complet'} onChange={(e) => upd({ modality: e.target.value })} className={inputCls}>
+            <option value="Complet">Complet</option>
+            <option value="Partiel">Partiel</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label className={labelCls}>Offre</label>
+        <select value={cfg.product ?? ''} onChange={(e) => handleOfferChange(e.target.value)} className={inputCls}>
+          <option value="">— Choisir une offre —</option>
+          {offers.map((o) => <option key={o._id} value={o.name}>{o.name}</option>)}
+        </select>
+      </div>
+      {selectedOffer && (
+        <div>
+          <label className={labelCls}>Plan</label>
+          <select value={cfg.plan ?? ''} onChange={(e) => upd({ plan: e.target.value })} className={inputCls}>
+            <option value="">— Choisir un plan —</option>
+            {availablePlans.map((p) => (
+              <option key={p._id} value={p.name}>{p.name} · {p.durationMonths} mois</option>
+            ))}
+          </select>
+        </div>
+      )}
+      <div>
+        <label className={labelCls}>Gateway (expression)</label>
+        <input value={cfg.gateway ?? ''} onChange={(e) => upd({ gateway: e.target.value })} placeholder="{{answers.f09}} ou FedaPay" className={inputCls} />
+      </div>
+      <p className="rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-300">
+        Le paiement est créé avec le statut NON TRAITÉ. Vous pourrez le traiter depuis la page Paiements.
+      </p>
+    </>
+  )
+}
+
+// ── CreateSubscriptionConfig ──────────────────────────────────────────────────
+
+function CreateSubscriptionConfig({
+  step, onChange,
+}: { step: AutomationStep; onChange: (s: AutomationStep) => void }) {
+  const { data: offers = [] } = useQuery<Offer[]>({
+    queryKey: ['subscription-offers'],
+    queryFn: () => api.get<Offer[]>('/subscription-offers').then((r) => r.data),
+  })
+
+  const cfg = step.config
+  const matchMode = cfg.matchMode ?? 'auto'
+  const selectedOffer = offers.find((o) => o._id === cfg.offerId)
+  const activePlans = selectedOffer?.plans.filter((p) => p.isActive) ?? []
+
+  const patch = (fields: Partial<AutomationStep['config']>) =>
+    onChange({ ...step, config: { ...cfg, ...fields } })
+
+  const sel = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+
+  return (
+    <div className="space-y-3">
+      {/* Mode */}
+      <div className="flex gap-2">
+        {(['auto', 'manual'] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => patch({ matchMode: m, offerId: undefined, planName: undefined })}
+            className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+              matchMode === m
+                ? 'border-fuchsia-500/50 bg-fuchsia-500/10 text-fuchsia-400'
+                : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            {m === 'auto' ? 'Auto (depuis le paiement)' : 'Manuel (choisir l\'offre)'}
+          </button>
+        ))}
+      </div>
+
+      {matchMode === 'auto' && (
+        <p className="rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/20 px-3 py-2 text-xs text-fuchsia-300">
+          Détecte automatiquement l'offre via <code>payment.product</code> et le plan via <code>payment.plan</code>. À utiliser avec le trigger <strong>Paiement traité</strong>.
+        </p>
+      )}
+
+      {matchMode === 'manual' && (
+        <>
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-gray-400">Offre</label>
+            <select
+              value={cfg.offerId ?? ''}
+              onChange={(e) => patch({ offerId: e.target.value, planName: undefined })}
+              className={sel}
+            >
+              <option value="">— Choisir une offre —</option>
+              {offers.map((o) => (
+                <option key={o._id} value={o._id}>{o.name}</option>
+              ))}
+            </select>
+          </div>
+          {selectedOffer && (
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Plan</label>
+              <select
+                value={cfg.planName ?? ''}
+                onChange={(e) => patch({ planName: e.target.value })}
+                className={sel}
+              >
+                <option value="">— Choisir un plan —</option>
+                {activePlans.map((p) => (
+                  <option key={p._id} value={p.name}>{p.name} ({p.durationMonths} mois)</option>
+                ))}
+              </select>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── StepConfig ────────────────────────────────────────────────────────────────
 
 function StepConfig({
   step, onChange, circlePlans,
@@ -691,14 +1117,14 @@ function StepConfig({
       {step.type === 'condition' && (
         <>
           <div>
-            <label className={labelCls}>Champ (chemin de variable)</label>
+            <label className={labelCls}>Champ (sans accolades)</label>
             <input
               value={cfg.field ?? ''}
-              onChange={(e) => upd({ field: e.target.value })}
-              placeholder="student.email"
+              onChange={(e) => upd({ field: e.target.value.replace(/^\{\{/, '').replace(/\}\}$/, '').trim() })}
+              placeholder="payment.plan"
               className={inputCls}
             />
-            <p className="mt-1 text-xs text-gray-500">Ex : student.email, payment.amount</p>
+            <p className="mt-1 text-xs text-gray-500">Ex : payment.plan, student.debtStatus, payment.amount</p>
           </div>
           <div>
             <label className={labelCls}>Opérateur</label>
@@ -879,46 +1305,7 @@ function StepConfig({
 
       {/* create_payment */}
       {step.type === 'create_payment' && (
-        <>
-          <div>
-            <label className={labelCls}>Email (expression) *</label>
-            <input value={cfg.emailExpr ?? ''} onChange={(e) => upd({ emailExpr: e.target.value })} placeholder="{{student.email}} ou {{answers.f04}}" className={inputCls} />
-          </div>
-          <div>
-            <label className={labelCls}>Montant (expression)</label>
-            <input value={cfg.amountExpr ?? ''} onChange={(e) => upd({ amountExpr: e.target.value })} placeholder="{{answers.f10}} ou 50000" className={inputCls} />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className={labelCls}>Devise</label>
-              <select value={cfg.currency ?? 'F CFA'} onChange={(e) => upd({ currency: e.target.value })} className={inputCls}>
-                {['F CFA', 'USD', 'EURO'].map((c) => <option key={c}>{c}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Modalité</label>
-              <select value={cfg.modality ?? 'Complet'} onChange={(e) => upd({ modality: e.target.value })} className={inputCls}>
-                <option value="Complet">Complet</option>
-                <option value="Partiel">Partiel</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label className={labelCls}>Produit</label>
-            <select value={cfg.product ?? 'ECOM AFRICA PRO'} onChange={(e) => upd({ product: e.target.value })} className={inputCls}>
-              <option value="ECOM AFRICA PRO">ECOM AFRICA PRO</option>
-              <option value="ECOM REVOLUTION">ECOM REVOLUTION</option>
-              <option value="COACHING">COACHING</option>
-            </select>
-          </div>
-          <div>
-            <label className={labelCls}>Gateway (expression)</label>
-            <input value={cfg.gateway ?? ''} onChange={(e) => upd({ gateway: e.target.value })} placeholder="{{answers.f09}} ou FedaPay" className={inputCls} />
-          </div>
-          <p className="rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-300">
-            Le paiement est créé avec le statut NON TRAITÉ. Vous pourrez le traiter depuis la page Paiements.
-          </p>
-        </>
+        <CreatePaymentConfig step={step} onChange={onChange} inputCls={inputCls} labelCls={labelCls} />
       )}
 
       {/* create_student */}
@@ -1006,6 +1393,11 @@ function StepConfig({
         </>
       )}
 
+      {/* create_subscription */}
+      {step.type === 'create_subscription' && (
+        <CreateSubscriptionConfig step={step} onChange={onChange} />
+      )}
+
       {/* ── Conditions d'exécution (toutes étapes) ──────────────────── */}
       <div className="pt-2">
         <ConditionsEditor
@@ -1077,6 +1469,116 @@ function RunItem({ run }: { run: AutomationRun }) {
   )
 }
 
+// ── Builder campaign modal ────────────────────────────────────────────────────
+
+function BuilderCampaignModal({
+  automationId, automationName, audience, onClose,
+}: {
+  automationId: string
+  automationName: string
+  audience?: AudienceConfig
+  onClose: () => void
+}) {
+  const qc = useQueryClient()
+  const [result, setResult] = useState<{ ran: number } | null>(null)
+
+  const { data: preview, isLoading: loadingPreview } = useQuery({
+    queryKey: ['audience-preview', automationId],
+    queryFn: () => previewAudience(automationId),
+  })
+
+  const runMut = useMutation({
+    mutationFn: () => runAudience(automationId),
+    onSuccess: (data) => {
+      setResult(data)
+      qc.invalidateQueries({ queryKey: ['automations'] })
+    },
+  })
+
+  const entityLabel = audience?.entity === 'payment' ? 'paiement(s)' : 'étudiant(s)'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/30">
+            <Users className="h-4 w-4 text-fuchsia-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-100">Lancer la campagne</h2>
+            <p className="text-xs text-gray-500">{automationName}</p>
+          </div>
+        </div>
+
+        {!result ? (
+          <>
+            <div className="rounded-lg border border-gray-800 bg-gray-950 p-4 mb-4">
+              {loadingPreview ? (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="h-3 w-3 animate-spin rounded-full border border-gray-500 border-t-transparent" />
+                  Calcul de l'audience…
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-500">Audience ciblée</span>
+                    <span className="text-sm font-bold text-fuchsia-300">
+                      {preview?.count ?? 0} {entityLabel}
+                    </span>
+                  </div>
+                  {(preview?.sample?.length ?? 0) > 0 && (
+                    <div className="space-y-1">
+                      {preview!.sample.slice(0, 3).map((s, i) => (
+                        <div key={i} className="text-xs text-gray-500">
+                          {s.name ?? s.studentName ?? '—'} · {s.email ?? s.studentEmail ?? '—'}
+                        </div>
+                      ))}
+                      {preview!.count > 3 && (
+                        <p className="text-xs text-gray-600">+ {preview!.count - 3} autre(s)…</p>
+                      )}
+                    </div>
+                  )}
+                  {(preview?.count ?? 0) === 0 && (
+                    <p className="text-xs text-gray-600">Aucune entité ne correspond aux filtres.</p>
+                  )}
+                </>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mb-4">
+              L'automatisation sera exécutée une fois pour chaque entité correspondante.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+                Annuler
+              </button>
+              <button
+                disabled={runMut.isPending || (preview?.count ?? 0) === 0}
+                onClick={() => runMut.mutate()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 text-sm text-white font-medium disabled:opacity-50 transition-colors"
+              >
+                {runMut.isPending ? (
+                  <><div className="h-3.5 w-3.5 animate-spin rounded-full border border-white border-t-transparent" />Exécution…</>
+                ) : (
+                  <><Play className="h-3.5 w-3.5" />Lancer ({preview?.count ?? 0})</>
+                )}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-4">
+            <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-100 mb-1">Campagne lancée</p>
+            <p className="text-xs text-gray-500">{result.ran} {entityLabel} traité(s)</p>
+            <button onClick={onClose} className="mt-4 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-200 transition-colors">
+              Fermer
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function AutomationBuilderPage() {
@@ -1090,6 +1592,7 @@ export function AutomationBuilderPage() {
   const [steps, setSteps] = useState<AutomationStep[]>([])
   const [trigger, setTrigger] = useState<Automation['trigger']>({ type: 'manual', config: {} })
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved')
+  const [showCampaign, setShowCampaign] = useState(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { data: automation, isLoading } = useQuery({
@@ -1195,6 +1698,7 @@ export function AutomationBuilderPage() {
   }
 
   const selectedStep = steps.find((s) => s.id === selected)
+  const selectedStepIndex = selectedStep ? steps.findIndex((s) => s.id === selectedStep.id) : -1
   const isActive = automation?.isActive ?? false
 
   if (isLoading) {
@@ -1203,6 +1707,14 @@ export function AutomationBuilderPage() {
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
+      {showCampaign && automation && (
+        <BuilderCampaignModal
+          automationId={automation._id}
+          automationName={automation.name}
+          audience={trigger.config?.audience}
+          onClose={() => setShowCampaign(false)}
+        />
+      )}
       {/* Top bar */}
       <div className="flex shrink-0 items-center gap-3 border-b border-gray-800 bg-gray-950 px-4 py-3">
         <button
@@ -1233,25 +1745,35 @@ export function AutomationBuilderPage() {
         <button
           onClick={() => toggleMut.mutate()}
           disabled={toggleMut.isPending}
-          className={cn('relative h-5 w-9 shrink-0 rounded-full transition-colors', isActive ? 'bg-indigo-600' : 'bg-gray-700')}
+          className={cn('relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors', isActive ? 'bg-indigo-600' : 'bg-gray-700')}
         >
           <span
             className={cn(
-              'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform',
-              isActive ? 'translate-x-4' : 'translate-x-0.5',
+              'absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform',
+              isActive ? 'translate-x-4' : 'translate-x-0',
             )}
           />
         </button>
         <span className="shrink-0 text-xs text-gray-500">{isActive ? 'Actif' : 'Inactif'}</span>
 
-        <button
-          onClick={() => runMut.mutate()}
-          disabled={runMut.isPending}
-          className="flex shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600/15 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-600/25 disabled:opacity-50"
-        >
-          <Play className="h-3.5 w-3.5" />
-          {runMut.isPending ? 'Exécution…' : 'Exécuter'}
-        </button>
+        {trigger.type === 'audience_based' ? (
+          <button
+            onClick={() => setShowCampaign(true)}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-fuchsia-600/15 px-3 py-1.5 text-xs font-medium text-fuchsia-400 transition-colors hover:bg-fuchsia-600/25"
+          >
+            <Users className="h-3.5 w-3.5" />
+            Lancer campagne
+          </button>
+        ) : (
+          <button
+            onClick={() => runMut.mutate()}
+            disabled={runMut.isPending}
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600/15 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-600/25 disabled:opacity-50"
+          >
+            <Play className="h-3.5 w-3.5" />
+            {runMut.isPending ? 'Exécution…' : 'Exécuter'}
+          </button>
+        )}
       </div>
 
       {/* Tab bar */}
@@ -1329,7 +1851,11 @@ export function AutomationBuilderPage() {
                   Configuration de l'étape
                 </h3>
                 <StepConfig step={selectedStep} onChange={updateStep} circlePlans={circlePlans} />
-                <VariablesPanel triggerType={trigger.type} formFields={selectedForm?.fields} />
+                <VariablesPanel
+                  triggerType={trigger.type}
+                  formFields={selectedForm?.fields}
+                  precedingSteps={steps.slice(0, selectedStepIndex)}
+                />
               </>
             ) : (
               <div className="flex flex-col items-center justify-center py-16 text-center">

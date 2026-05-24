@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import { Form, FormDocument, FormField, FormSettings, FieldCondition } from './schemas/form.schema'
 import { FormResponse, FormResponseDocument } from './schemas/form-response.schema'
-import type { AutomationsService } from '../automations/automations.service'
+import { AutomationsService } from '../automations/automations.service'
 
 function evaluateCondition(condition: FieldCondition, answerMap: Record<string, unknown>): boolean {
   const val = answerMap[condition.fieldId]
@@ -201,11 +201,12 @@ export class FormsService {
       }
     }
 
-    await this.responseModel.create({ formId: form._id, answers, metadata })
+    const savedResponse = await this.responseModel.create({ formId: form._id, answers, metadata })
 
     // Fire automation trigger (non-blocking)
     this.automationsService?.triggerEvent('form_submitted', {
       formId: String(form._id),
+      responseId: String(savedResponse._id),
       form: { title: form.title, slug: form.slug },
       answers: answerMap,
       submittedAt: new Date().toISOString(),

@@ -22,6 +22,7 @@ import { LeadsModule } from './modules/leads/leads.module'
 import { AnalyticsModule } from './modules/analytics/analytics.module'
 import { AppSettingsModule } from './modules/app-settings/app-settings.module'
 import { ContentModule } from './modules/content/content.module'
+import { OffersModule } from './modules/offers/offers.module'
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { ContentModule } from './modules/content/content.module'
     AnalyticsModule,
     AppSettingsModule,
     ContentModule,
+    OffersModule,
   ],
 })
 export class AppModule {}

@@ -99,6 +99,17 @@ export class AutomationsController {
   listRuns(@Param('id') id: string, @Query() q: ListRunsDto) {
     return this.automationsService.listRuns(id, q.page, q.limit)
   }
+
+  @Get(':id/audience-preview')
+  audiencePreview(@Param('id') id: string) {
+    return this.automationsService.previewAudience(id)
+  }
+
+  @Post(':id/run-audience')
+  @HttpCode(HttpStatus.OK)
+  runAudience(@Param('id') id: string) {
+    return this.automationsService.runForAudience(id)
+  }
 }
 
 // ── Public webhook trigger (no auth) ─────────────────────────────────────────

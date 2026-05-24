@@ -13,6 +13,8 @@ import { MailModule } from '../mail/mail.module'
 import { CloudinaryModule } from '../cloudinary/cloudinary.module'
 import { AutomationsModule } from '../automations/automations.module'
 import { OcrModule } from '../ocr/ocr.module'
+import { Offer, OfferSchema } from '../offers/schemas/offer.schema'
+import { Subscription, SubscriptionSchema } from '../offers/schemas/subscription.schema'
 
 @Module({
   imports: [
@@ -21,7 +23,9 @@ import { OcrModule } from '../ocr/ocr.module'
       { name: Payment.name, schema: PaymentSchema },
       { name: FormationDashboard.name, schema: FormationDashboardSchema },
       { name: CoachingDashboard.name, schema: CoachingDashboardSchema },
-      { name: Reminder.name, schema: ReminderSchema },
+      { name: Reminder.name,      schema: ReminderSchema },
+      { name: Offer.name,         schema: OfferSchema },
+      { name: Subscription.name,  schema: SubscriptionSchema },
     ]),
     CircleModule,
     AirtableModule,

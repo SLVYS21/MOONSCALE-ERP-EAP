@@ -79,6 +79,7 @@ export interface Student {
   circleProfile?: string
   circleAvatarUrl?: string | null
   // Debt
+  plan?: string | null
   debtStatus: DebtStatus
   debtSince?: string
   successProofs?: SuccessProof[]
@@ -92,16 +93,10 @@ export interface Student {
 
 export type PaymentStatus = 'NON TRAITÉ' | 'TRAITÉ' | 'REJETÉ'
 export type PaymentModality = 'Complet' | 'Partiel'
-export type PaymentProduct = 'ECOM AFRICA PRO' | 'COACHING' | 'ECOM REVOLUTION'
+export type PaymentProduct = string
 export type PaymentCurrency = 'F CFA' | 'FCFA' | 'USD' | 'EURO'
-export type PaymentGateway = 'STRIPE' | 'PAYPAL' | 'WAVE' | 'ORANGE_MONEY' | 'VIREMENT' | 'AUTRE'
-export type CirclePlan =
-  | 'elite' | 'premium' | 'standard' | 'member'
-  | 'all_in_one_monthly' | 'all_in_one_semester' | 'all_in_one_yearly'
-  | 'produits_gagnants' | 'produits_gagnants_yearly'
-  | 'support_direct' | 'support_direct_yearly'
-  | 'lives_rediffusions' | 'lives_rediffusions_yearly'
-  | 'fin_accompagnement'
+export type PaymentGateway = string
+export type CirclePlan = string
 
 export interface Payment {
   _id: string
@@ -371,6 +366,63 @@ export type TriggerType =
   | 'reminder_due' | 'debt_detected'
   | 'lead_created' | 'lead_stage_changed' | 'lead_won' | 'call_completed'
   | 'cron_schedule'
+  | 'subscription_created' | 'subscription_expiring' | 'partial_payment_due'
+  | 'audience_based'
+
+export type AudienceEntity = 'student' | 'payment'
+
+export interface AudienceFilter {
+  field: string
+  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'is_empty' | 'is_not_empty' | 'gt' | 'lt'
+  value?: string
+}
+
+export interface AudienceConfig {
+  entity: AudienceEntity
+  filters: AudienceFilter[]
+}
+
+export interface OfferPlan {
+  _id: string
+  name: string
+  durationMonths: number
+  price: number
+  currency: string
+  partialDueAfterDays: number
+  isActive: boolean
+}
+
+export interface Offer {
+  _id: string
+  name: string
+  plans: OfferPlan[]
+  isActive: boolean
+  description: string
+  createdAt: string
+}
+
+export interface Subscription {
+  _id: string
+  studentId: string
+  studentEmail: string
+  offerId: string
+  paymentId: string | null
+  offerName: string
+  offerProduct: string
+  offerPlan: string | null
+  durationMonths: number
+  startDate: string
+  endDate: string
+  status: 'active' | 'expired' | 'cancelled'
+  modality: 'Complet' | 'Partiel'
+  paidAmount: number
+  totalAmount: number
+  currency: string
+  nextPaymentDate: string | null
+  remindersSent: number
+  lastReminderAt: string | null
+  createdAt: string
+}
 
 export type StepType =
   | 'send_email'
@@ -386,6 +438,7 @@ export type StepType =
   | 'circle_invite'
   | 'circle_tag_add'
   | 'circle_tag_remove'
+  | 'create_subscription'
 
 export interface AutomationTrigger {
   type: TriggerType
@@ -393,6 +446,7 @@ export interface AutomationTrigger {
     formId?: string
     webhookKey?: string
     schedulePreset?: string
+    audience?: AudienceConfig
   }
 }
 
@@ -440,6 +494,10 @@ export interface AutomationStep {
     circleTagId?: number
     circleTagName?: string
     circlePlanKey?: string
+    // create_subscription
+    matchMode?: 'auto' | 'manual'
+    offerId?: string
+    planName?: string
   }
 }
 
@@ -641,7 +699,7 @@ export interface Lead {
   pipeline_status: PipelineStatus
   closer_id: User | null
   lost_reason: string
-  offer_ids: Offer[]
+  offer_ids: LeadOffer[]
   opportunity_amount: number | null
   notes: string
   created_by: { _id: string; firstName: string; lastName: string } | null
@@ -651,7 +709,7 @@ export interface Lead {
   updatedAt: string
 }
 
-export interface Offer {
+export interface LeadOffer {
   _id: string
   name: string
   description: string
@@ -678,7 +736,7 @@ export interface LeadCall {
   manual_notes: string
   status: CallStatus
   closer_id: User | null
-  offer_proposed_id: Offer | null
+  offer_proposed_id: LeadOffer | null
   createdAt: string
   updatedAt: string
 }

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
 import { ScheduleModule } from '@nestjs/schedule'
+import { ConfigModule } from '@nestjs/config'
 import { AutomationsController, PublicAutomationsController } from './automations.controller'
 import { AutomationsService } from './automations.service'
 import { Automation, AutomationSchema } from './schemas/automation.schema'
@@ -11,6 +12,10 @@ import { Student, StudentSchema } from '../students/schemas/student.schema'
 import { Payment, PaymentSchema } from '../students/schemas/payment.schema'
 import { Task, TaskSchema } from '../tasks/schemas/task.schema'
 import { User, UserSchema } from '../users/schemas/user.schema'
+import { Form, FormSchema } from '../forms/schemas/form.schema'
+import { FormResponse, FormResponseSchema } from '../forms/schemas/form-response.schema'
+import { Offer, OfferSchema } from '../offers/schemas/offer.schema'
+import { Subscription, SubscriptionSchema } from '../offers/schemas/subscription.schema'
 
 @Module({
   imports: [
@@ -21,10 +26,15 @@ import { User, UserSchema } from '../users/schemas/user.schema'
       { name: Payment.name, schema: PaymentSchema },
       { name: Task.name, schema: TaskSchema },
       { name: User.name, schema: UserSchema },
+      { name: Form.name, schema: FormSchema },
+      { name: FormResponse.name, schema: FormResponseSchema },
+      { name: Offer.name, schema: OfferSchema },
+      { name: Subscription.name, schema: SubscriptionSchema },
     ]),
     MailModule,
     CircleModule,
     ScheduleModule,
+    ConfigModule,
   ],
   controllers: [AutomationsController, PublicAutomationsController],
   providers: [AutomationsService],

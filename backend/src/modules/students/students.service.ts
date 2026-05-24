@@ -30,7 +30,9 @@ import { CircleService } from '../circle/circle.service'
 import { AirtableService } from '../airtable/airtable.service'
 import { MailService } from '../mail/mail.service'
 import { OcrService } from '../ocr/ocr.service'
-import type { AutomationsService } from '../automations/automations.service'
+import { AutomationsService } from '../automations/automations.service'
+import { Offer, OfferDocument } from '../offers/schemas/offer.schema'
+import { Subscription, SubscriptionDocument } from '../offers/schemas/subscription.schema'
 
 @Injectable()
 export class StudentsService {
@@ -41,7 +43,9 @@ export class StudentsService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(FormationDashboard.name) private formationModel: Model<FormationDashboardDocument>,
     @InjectModel(CoachingDashboard.name) private coachingModel: Model<CoachingDashboardDocument>,
-    @InjectModel(Reminder.name) private reminderModel: Model<ReminderDocument>,
+    @InjectModel(Reminder.name)      private reminderModel: Model<ReminderDocument>,
+    @InjectModel(Offer.name)         private offerModel: Model<OfferDocument>,
+    @InjectModel(Subscription.name)  private subscriptionModel: Model<SubscriptionDocument>,
     private circleService: CircleService,
     private airtableService: AirtableService,
     private mailService: MailService,
@@ -377,6 +381,7 @@ export class StudentsService {
     notes?: string
     source?: 'tally' | 'chariow' | 'manual'
     airtableId?: string
+    responseId?: string
   }): Promise<PaymentDocument> {
     const student = await this.studentModel.findOne({ email: data.studentEmail.toLowerCase() })
 
@@ -396,6 +401,7 @@ export class StudentsService {
       notes: data.notes ?? '',
       source: (data.source ?? 'manual') as 'tally' | 'chariow' | 'manual',
       airtableId: data.airtableId ?? null,
+      responseId: data.responseId ? new Types.ObjectId(data.responseId) : null,
     })
 
     // Trigger automation event
@@ -417,19 +423,43 @@ export class StudentsService {
       modality?: string
       product?: string
       gateway?: string
+      plan?: string
       amount?: number
       currency?: string
     },
   ): Promise<void> {
     const payment = await this.paymentModel.findById(paymentId)
     if (!payment) throw new NotFoundException('Paiement introuvable')
-    if (fields.status)   payment.status   = fields.status as import('./schemas/payment.schema').PaymentStatus
-    if (fields.modality) payment.modality = fields.modality as import('./schemas/payment.schema').PaymentModality
-    if (fields.product)  payment.product  = fields.product as import('./schemas/payment.schema').PaymentProduct
+
+    const becomesTreated = fields.status === 'TRAITÉ' && payment.status !== 'TRAITÉ'
+
+    if (fields.status)              payment.status   = fields.status as import('./schemas/payment.schema').PaymentStatus
+    if (fields.modality)            payment.modality = fields.modality as import('./schemas/payment.schema').PaymentModality
+    if (fields.product)             payment.product  = fields.product as import('./schemas/payment.schema').PaymentProduct
     if (fields.gateway !== undefined) payment.gateway = fields.gateway
-    if (fields.amount   !== undefined) payment.amount   = fields.amount
-    if (fields.currency) payment.currency = fields.currency as import('./schemas/payment.schema').PaymentCurrency
+    if (fields.plan)                payment.plan     = fields.plan as import('./schemas/payment.schema').CirclePlan
+    if (fields.amount !== undefined) payment.amount  = fields.amount
+    if (fields.currency)            payment.currency = fields.currency as import('./schemas/payment.schema').PaymentCurrency
     await payment.save()
+
+    if (becomesTreated) {
+      const student = await this.studentModel.findOne({ email: payment.studentEmail })
+      this.automationsService?.triggerEvent('payment_treated', {
+        payment: {
+          _id: String(payment._id),
+          amount: payment.amount,
+          currency: payment.currency,
+          plan: payment.plan,
+          product: payment.product,
+        },
+        student: {
+          _id: String(student?._id ?? ''),
+          email: payment.studentEmail,
+          name: payment.studentName,
+          whatsapp: student?.whatsapp,
+        },
+      })
+    }
   }
 
   async rejectPayment(paymentId: string): Promise<void> {
@@ -444,12 +474,14 @@ export class StudentsService {
     processedById: string,
     body?: {
       planKey?: string
+      plan?: string
       modality?: string
       amount?: number
       currency?: string
       product?: string
       gateway?: string
       notes?: string
+      offerId?: string
     },
   ): Promise<void> {
     const payment = await this.paymentModel.findById(paymentId)
@@ -464,6 +496,7 @@ export class StudentsService {
     if (body?.amount !== undefined) payment.amount = body.amount;
     if (body?.currency) payment.currency = body.currency as import('./schemas/payment.schema').PaymentCurrency
     if (body?.product) payment.product = body.product as import('./schemas/payment.schema').PaymentProduct
+    if (body?.plan !== undefined) payment.plan = body.plan as typeof payment.plan
     if (body?.gateway) payment.gateway = body.gateway
     if (body?.notes !== undefined) payment.notes = body.notes
 
@@ -542,12 +575,72 @@ export class StudentsService {
     payment.processedAt = new Date()
     await payment.save()
 
-    // 8. Mirror vers Airtable (async, non-bloquant)
+    // 8. Créer la souscription si une offre est sélectionnée
+    if (body?.offerId) {
+      try {
+        const offer = await this.offerModel.findById(body.offerId).lean<{
+          _id: Types.ObjectId; name: string; plan: string | null
+          durationMonths: number; price: number; currency: string; partialDueAfterDays: number
+        }>()
+        if (offer) {
+          const startDate = new Date()
+          const endDate = new Date(startDate)
+          endDate.setMonth(endDate.getMonth() + offer.durationMonths)
+          const isPartialSub = payment.modality === 'Partiel'
+          const nextPaymentDate = isPartialSub
+            ? new Date(startDate.getTime() + offer.partialDueAfterDays * 24 * 60 * 60 * 1000)
+            : null
+
+          const subscription = await this.subscriptionModel.create({
+            studentId: student._id,
+            studentEmail: payment.studentEmail,
+            offerId: offer._id,
+            paymentId: payment._id,
+            offerName: offer.name,
+            offerProduct: offer.name,
+            offerPlan: offer.plan,
+            durationMonths: offer.durationMonths,
+            startDate,
+            endDate,
+            status: 'active',
+            modality: payment.modality,
+            paidAmount: payment.amount,
+            totalAmount: offer.price,
+            currency: payment.currency,
+            nextPaymentDate,
+            remindersSent: 0,
+          })
+
+          this.automationsService?.triggerEvent('subscription_created', {
+            student: { _id: String(student._id), email: student.email, name: student.name, whatsapp: student.whatsapp },
+            subscription: {
+              _id: String(subscription._id),
+              offerName: offer.name,
+              offerProduct: offer.name,
+              offerPlan: offer.plan,
+              durationMonths: offer.durationMonths,
+              startDate: startDate.toISOString(),
+              endDate: endDate.toISOString(),
+              modality: payment.modality,
+              paidAmount: payment.amount,
+              totalAmount: offer.price,
+              currency: payment.currency,
+              nextPaymentDate: nextPaymentDate?.toISOString() ?? null,
+            },
+            payment: { _id: String(payment._id), amount: payment.amount, currency: payment.currency },
+          })
+        }
+      } catch (err: unknown) {
+        this.logger.error(`Subscription creation failed for payment ${paymentId}: ${(err as Error).message}`)
+      }
+    }
+
+    // 9. Mirror vers Airtable (async, non-bloquant)
     this.syncPaymentToAirtable(payment, student.airtableId ?? undefined, student.circleId ?? undefined).catch(
       (err: unknown) => this.logger.error(`Airtable sync failed: ${(err as Error).message}`),
     )
 
-    // 9. Trigger automation event
+    // 10. Trigger automation event
     this.automationsService?.triggerEvent('payment_treated', {
       payment: { _id: String(payment._id), amount: payment.amount, currency: payment.currency, plan: resolvedPlanKey, product: payment.product },
       student: { _id: String(student._id), email: student.email, name: student.name, whatsapp: student.whatsapp },

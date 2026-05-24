@@ -7,11 +7,11 @@ import {
   ClipboardList, CheckCircle2, GraduationCap, CreditCard, Link2,
   Mail, Globe, Timer, GitBranch, Bell, FileText, Pencil, CheckSquare,
   Sparkles, Layers, RefreshCw, AlarmClock, MessageSquare, Circle, AlertTriangle,
-  Crosshair, TrendingUp, Trophy, Phone, CalendarClock, UserPlus, Send, Tag,
+  Crosshair, TrendingUp, Trophy, Phone, CalendarClock, UserPlus, Send, Tag, Filter, Users, Repeat,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
-import type { Automation, AutomationStep, TriggerType, StepType } from '@/types'
+import type { Automation, AutomationStep, TriggerType, StepType, AudienceConfig } from '@/types'
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -27,6 +27,8 @@ const createAutomation = (data: {
 const deleteAutomation = (id: string) => api.delete(`/automations/${id}`)
 const toggleActive = (id: string) => api.post(`/automations/${id}/toggle`)
 const runManual = (id: string) => api.post(`/automations/${id}/run`)
+const previewAudience = (id: string) => api.get(`/automations/${id}/audience-preview`).then((r) => r.data as { entity: string | null; count: number; sample: { name?: string; email?: string; studentEmail?: string; studentName?: string }[] })
+const runAudience = (id: string) => api.post(`/automations/${id}/run-audience`).then((r) => r.data as { ran: number })
 
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
@@ -43,7 +45,11 @@ const TRIGGER_META: Record<TriggerType, { label: string; Icon: LucideIcon; color
   lead_stage_changed: { label: 'Étape lead changée', Icon: TrendingUp,    color: 'text-cyan-400 bg-cyan-500/15' },
   lead_won:         { label: 'Lead converti (Won)',  Icon: Trophy,         color: 'text-yellow-400 bg-yellow-500/15' },
   call_completed:   { label: 'Appel terminé',        Icon: Phone,          color: 'text-indigo-400 bg-indigo-500/15' },
-  cron_schedule:    { label: 'Planification',         Icon: CalendarClock,  color: 'text-violet-400 bg-violet-500/15' },
+  cron_schedule:         { label: 'Planification',           Icon: CalendarClock,  color: 'text-violet-400 bg-violet-500/15' },
+  subscription_created:  { label: 'Souscription créée',      Icon: CheckCircle2,   color: 'text-emerald-400 bg-emerald-500/15' },
+  subscription_expiring: { label: 'Souscription expirante',  Icon: AlarmClock,     color: 'text-amber-400 bg-amber-500/15' },
+  partial_payment_due:   { label: 'Échéance partielle due',   Icon: AlertTriangle,  color: 'text-red-400 bg-red-500/15' },
+  audience_based:        { label: 'Campagne audience',        Icon: Filter,         color: 'text-fuchsia-400 bg-fuchsia-500/15' },
 }
 
 const STEP_ICONS: Record<StepType, LucideIcon> = {
@@ -58,8 +64,9 @@ const STEP_ICONS: Record<StepType, LucideIcon> = {
   create_payment:    CreditCard,
   create_student:    UserPlus,
   circle_invite:     Send,
-  circle_tag_add:    Tag,
-  circle_tag_remove: X,
+  circle_tag_add:      Tag,
+  circle_tag_remove:   X,
+  create_subscription: Repeat,
 }
 
 const STEP_LABELS: Record<StepType, string> = {
@@ -73,9 +80,10 @@ const STEP_LABELS: Record<StepType, string> = {
   create_task:       'Créer une tâche',
   create_payment:    'Créer un paiement',
   create_student:    'Créer un étudiant',
-  circle_invite:     'Inviter dans Circle',
-  circle_tag_add:    'Ajouter un tag Circle',
-  circle_tag_remove: 'Retirer un tag Circle',
+  circle_invite:       'Inviter dans Circle',
+  circle_tag_add:      'Ajouter un tag Circle',
+  circle_tag_remove:   'Retirer un tag Circle',
+  create_subscription: 'Créer une souscription',
 }
 
 // ── Template definitions ──────────────────────────────────────────────────────
@@ -331,7 +339,10 @@ const TEMPLATES: AutomationTemplate[] = [
 const CATEGORIES = ['Tous', 'Étudiants', 'Paiements', 'Formulaires', 'Intégrations']
 
 const TRIGGER_OPTIONS: TriggerType[] = [
-  'form_submitted', 'payment_created', 'payment_treated', 'student_created', 'manual', 'incoming_webhook',
+  'form_submitted', 'payment_created', 'payment_treated', 'student_created',
+  'manual', 'incoming_webhook', 'cron_schedule',
+  'subscription_created', 'subscription_expiring', 'partial_payment_due',
+  'audience_based',
 ]
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -599,12 +610,132 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
   )
 }
 
+// ── Campaign run modal ────────────────────────────────────────────────────────
+
+function CampaignRunModal({ automation, onClose }: { automation: Automation; onClose: () => void }) {
+  const qc = useQueryClient()
+  const [result, setResult] = useState<{ ran: number } | null>(null)
+
+  const audience = automation.trigger.config?.audience as AudienceConfig | undefined
+
+  const { data: preview, isLoading: loadingPreview } = useQuery({
+    queryKey: ['audience-preview', automation._id],
+    queryFn: () => previewAudience(automation._id),
+  })
+
+  const runMut = useMutation({
+    mutationFn: () => runAudience(automation._id),
+    onSuccess: (data) => {
+      setResult(data)
+      qc.invalidateQueries({ queryKey: ['automations'] })
+    },
+  })
+
+  const entityLabel = audience?.entity === 'payment' ? 'paiement(s)' : 'étudiant(s)'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/30">
+            <Users className="h-4 w-4 text-fuchsia-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-semibold text-gray-100">Lancer la campagne</h2>
+            <p className="text-xs text-gray-500">{automation.name}</p>
+          </div>
+        </div>
+
+        {!result ? (
+          <>
+            <div className="rounded-lg border border-gray-800 bg-gray-950 p-4 mb-4">
+              {loadingPreview ? (
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="h-3 w-3 animate-spin rounded-full border border-gray-500 border-t-transparent" />
+                  Calcul de l'audience…
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-gray-500">Audience ciblée</span>
+                    <span className="text-sm font-bold text-fuchsia-300">
+                      {preview?.count ?? 0} {entityLabel}
+                    </span>
+                  </div>
+                  {(preview?.sample?.length ?? 0) > 0 && (
+                    <div className="space-y-1">
+                      {preview!.sample.slice(0, 3).map((s, i) => (
+                        <div key={i} className="text-xs text-gray-500">
+                          {s.name ?? s.studentName ?? '—'} · {s.email ?? s.studentEmail ?? '—'}
+                        </div>
+                      ))}
+                      {preview!.count > 3 && (
+                        <p className="text-xs text-gray-600">+ {preview!.count - 3} autre(s)…</p>
+                      )}
+                    </div>
+                  )}
+                  {(preview?.count ?? 0) === 0 && (
+                    <p className="text-xs text-gray-600">Aucune entité ne correspond aux filtres.</p>
+                  )}
+                </>
+              )}
+            </div>
+
+            <p className="text-xs text-gray-500 mb-4">
+              L'automatisation sera exécutée une fois pour chaque entité correspondante. Cette action est irréversible.
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+                Annuler
+              </button>
+              <button
+                disabled={runMut.isPending || (preview?.count ?? 0) === 0}
+                onClick={() => runMut.mutate()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 text-sm text-white font-medium disabled:opacity-50 transition-colors"
+              >
+                {runMut.isPending ? (
+                  <>
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border border-white border-t-transparent" />
+                    Exécution…
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-3.5 w-3.5" />
+                    Lancer ({preview?.count ?? 0})
+                  </>
+                )}
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-4">
+            <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-100 mb-1">Campagne lancée</p>
+            <p className="text-xs text-gray-500">
+              {result.ran} {entityLabel} traité(s)
+            </p>
+            <button
+              onClick={onClose}
+              className="mt-4 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-200 transition-colors"
+            >
+              Fermer
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Automation card ───────────────────────────────────────────────────────────
 
 function AutomationCard({ automation }: { automation: Automation }) {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const meta = TRIGGER_META[automation.trigger.type]
+  const isAudience = automation.trigger.type === 'audience_based'
+  const [showCampaign, setShowCampaign] = useState(false)
 
   const toggleMut = useMutation({
     mutationFn: () => toggleActive(automation._id),
@@ -622,69 +753,94 @@ function AutomationCard({ automation }: { automation: Automation }) {
   })
 
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 hover:border-gray-700 transition-colors">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', meta.color)}>
-            <meta.Icon className="h-4 w-4" />
+    <>
+      {showCampaign && (
+        <CampaignRunModal automation={automation} onClose={() => setShowCampaign(false)} />
+      )}
+      <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 hover:border-gray-700 transition-colors">
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', meta.color)}>
+              <meta.Icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="truncate text-sm font-semibold text-gray-100">{automation.name}</h3>
+              <p className="text-xs text-gray-500">{meta.label}</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h3 className="truncate text-sm font-semibold text-gray-100">{automation.name}</h3>
-            <p className="text-xs text-gray-500">{meta.label}</p>
-          </div>
+          <button
+            onClick={(e) => { e.stopPropagation(); toggleMut.mutate() }}
+            disabled={toggleMut.isPending}
+            className={cn('relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors', automation.isActive ? 'bg-indigo-600' : 'bg-gray-700')}
+          >
+            <span className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', automation.isActive ? 'translate-x-4' : 'translate-x-0')} />
+          </button>
         </div>
-        <button
-          onClick={(e) => { e.stopPropagation(); toggleMut.mutate() }}
-          disabled={toggleMut.isPending}
-          className={cn('relative h-5 w-9 shrink-0 rounded-full transition-colors', automation.isActive ? 'bg-indigo-600' : 'bg-gray-700')}
-        >
-          <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', automation.isActive ? 'translate-x-4' : 'translate-x-0.5')} />
-        </button>
-      </div>
 
-      <div className="mb-4 flex items-center gap-3 text-xs text-gray-500">
-        <span className="flex items-center gap-1">
-          <Zap className="h-3.5 w-3.5" />
-          {automation.steps.length} étape{automation.steps.length !== 1 ? 's' : ''}
-        </span>
-        <span className="flex items-center gap-1">
-          <Play className="h-3.5 w-3.5" />
-          {automation.runCount} exécution{automation.runCount !== 1 ? 's' : ''}
-        </span>
-        {automation.lastRunAt && (
+        <div className="mb-4 flex items-center gap-3 text-xs text-gray-500">
           <span className="flex items-center gap-1">
-            <Clock className="h-3.5 w-3.5" />
-            {new Date(automation.lastRunAt).toLocaleDateString('fr-FR')}
+            <Zap className="h-3.5 w-3.5" />
+            {automation.steps.length} étape{automation.steps.length !== 1 ? 's' : ''}
           </span>
-        )}
-      </div>
+          <span className="flex items-center gap-1">
+            <Play className="h-3.5 w-3.5" />
+            {automation.runCount} exécution{automation.runCount !== 1 ? 's' : ''}
+          </span>
+          {automation.lastRunAt && (
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {new Date(automation.lastRunAt).toLocaleDateString('fr-FR')}
+            </span>
+          )}
+          {isAudience && automation.trigger.config?.audience && (
+            <span className="flex items-center gap-1 text-fuchsia-400">
+              <Users className="h-3 w-3" />
+              {automation.trigger.config.audience.entity === 'student' ? 'Étudiants' : 'Paiements'}
+              {(automation.trigger.config.audience.filters?.length ?? 0) > 0 &&
+                ` · ${automation.trigger.config.audience.filters.length} filtre(s)`
+              }
+            </span>
+          )}
+        </div>
 
-      <div className="flex items-center gap-2 border-t border-gray-800 pt-3">
-        <button
-          onClick={() => navigate(`/automations/${automation._id}`)}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600/10 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/20 transition-colors"
-        >
-          Configurer
-          <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-        <button
-          onClick={() => runMut.mutate()}
-          disabled={runMut.isPending}
-          title="Exécuter maintenant"
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-emerald-400 transition-colors"
-        >
-          <Play className="h-4 w-4" />
-        </button>
-        <button
-          onClick={() => { if (confirm('Supprimer cette automatisation ?')) deleteMut.mutate() }}
-          disabled={deleteMut.isPending}
-          title="Supprimer"
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition-colors"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-2 border-t border-gray-800 pt-3">
+          <button
+            onClick={() => navigate(`/automations/${automation._id}`)}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600/10 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/20 transition-colors"
+          >
+            Configurer
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+          {isAudience ? (
+            <button
+              onClick={() => setShowCampaign(true)}
+              title="Lancer la campagne"
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-fuchsia-400 hover:bg-fuchsia-500/10 transition-colors"
+            >
+              <Users className="h-3.5 w-3.5" />
+              Lancer
+            </button>
+          ) : (
+            <button
+              onClick={() => runMut.mutate()}
+              disabled={runMut.isPending}
+              title="Exécuter maintenant"
+              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-emerald-400 transition-colors"
+            >
+              <Play className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={() => { if (confirm('Supprimer cette automatisation ?')) deleteMut.mutate() }}
+            disabled={deleteMut.isPending}
+            title="Supprimer"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 

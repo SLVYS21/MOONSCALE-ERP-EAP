@@ -79,6 +79,10 @@ export class Student {
   @Prop({ type: Date, default: null })
   airtableCreatedAt: Date | null
 
+  // ── Offer plan (ECOM AFRICA PRO: Elite / Premium / Standard) ─────
+  @Prop({ type: String, default: null })
+  plan: string | null
+
   // ── Debt tracking ─────────────────────────────────────────────────
   @Prop({ type: String, enum: ['ok', 'potential', 'confirmed'], default: 'ok' })
   debtStatus: DebtStatus

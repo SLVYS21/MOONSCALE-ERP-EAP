@@ -13,7 +13,7 @@ import { FormResponse, FormResponseDocument } from '../forms/schemas/form-respon
 import { AirtableService } from '../airtable/airtable.service'
 import { CircleService } from '../circle/circle.service'
 import { CloudinaryService } from '../cloudinary/cloudinary.service'
-import type { AutomationsService } from '../automations/automations.service'
+import { AutomationsService } from '../automations/automations.service'
 
 // ── Result types ──────────────────────────────────────────────────────────────
 
@@ -1013,7 +1013,8 @@ export class SyncService {
     type RespDoc = { _id: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }>; metadata: Record<string, unknown> }
     const responses = await this.responseModel
       .find({ formId: localForm._id })
-      .sort({ 'metadata.submittedAt': -1 })
+      .sort({ _id: -1 })   // _id est indexé, encode le timestamp de création
+      .limit(500)           // garde une borne raisonnable
       .lean<RespDoc[]>()
 
     const respondents: PendingRespondent[] = []
@@ -1084,7 +1085,7 @@ export class SyncService {
     type RespDoc = { _id: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }>; metadata: Record<string, unknown> }
     const responses = await this.responseModel
       .find({ formId: localForm._id })
-      .sort({ 'metadata.submittedAt': 1 })
+      .sort({ _id: 1 })    // _id est indexé, ordre chronologique (plus anciens d'abord)
       .lean<RespDoc[]>()
 
     const filterSet = emails?.length ? new Set(emails.map((e) => e.toLowerCase().trim())) : null
@@ -1141,6 +1142,7 @@ export class SyncService {
         proofImages,
         source: 'tally' as const,
         tallySubmissionId: tallySubmissionId ?? null,
+        responseId: resp._id,
         notes: 'Créé par régularisation automatique',
       })
       created++
@@ -1161,8 +1163,8 @@ export class SyncService {
 
     // 20 dernières réponses du formulaire, les plus récentes en premier
     const responses = await this.responseModel
-      .find({ formId: new Types.ObjectId(this.PENDING_FORM_ID) })
-      .sort({ 'metadata.submittedAt': -1 })
+      .find({ formId: this.PENDING_FORM_ID })   // Mongoose caste automatiquement
+      .sort({ _id: -1 })                         // _id est indexé, encode le timestamp
       .limit(20)
       .lean<RespDoc[]>()
 
