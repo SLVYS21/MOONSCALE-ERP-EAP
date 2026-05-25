@@ -115,6 +115,10 @@ export interface AutomationStep {
     matchMode?: 'auto' | 'manual'  // auto = match by payment.product+plan, manual = explicit ids
     offerId?: string
     planName?: string
+    // send_email block editor
+    blocks?: unknown[]
+    // circle_tag_add / circle_tag_remove (shorthand)
+    tag?: string
   }
 }
 

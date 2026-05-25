@@ -3,10 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Settings, Link2, CheckCircle, AlertCircle,
   RefreshCw, ExternalLink, BookOpen, PlayCircle, Bot, Copy, Webhook, X, Plus, Magnet, Share2,
+  CreditCard, Tag, Trash2,
 } from 'lucide-react'
 import api from '@/services/api'
 import { cn } from '@/lib/utils'
-import type { AppSettings } from '@/types'
+import type { AppSettings, FinanceCategory } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -117,7 +118,7 @@ function StringListEditor({
 
 // ── Tabs ─────────────────────────────────────────────────────────────────────
 
-const TABS = ['Intégrations', 'Sources', 'Documentation'] as const
+const TABS = ['Intégrations', 'Sources', 'Finances', 'Documentation'] as const
 type Tab = typeof TABS[number]
 
 // ── Page ─────────────────────────────────────────────────────────────────────
@@ -175,7 +176,7 @@ export function SettingsPage() {
   const appSettings = useQuery<AppSettings>({
     queryKey: ['app-settings'],
     queryFn: () => api.get('/app-settings').then(r => r.data),
-    enabled: tab === 'Sources',
+    enabled: tab === 'Sources' || tab === 'Finances',
   })
 
   const updateSettings = useMutation({
@@ -199,6 +200,40 @@ export function SettingsPage() {
     const current = appSettings.data?.lead_sources ?? []
     updateSettings.mutate({ lead_sources: current.filter(x => x !== v) })
   }
+  function addGateway(v: string) {
+    const current = appSettings.data?.custom_gateways ?? []
+    updateSettings.mutate({ custom_gateways: [...current, v] })
+  }
+  function removeGateway(v: string) {
+    const current = appSettings.data?.custom_gateways ?? []
+    updateSettings.mutate({ custom_gateways: current.filter(x => x !== v) })
+  }
+
+  // Finance categories
+  const financeCategories = useQuery<FinanceCategory[]>({
+    queryKey: ['finance-categories'],
+    queryFn: () => api.get<FinanceCategory[]>('/finances/categories').then(r => r.data),
+    enabled: tab === 'Finances',
+  })
+
+  const seedCategoriesMut = useMutation({
+    mutationFn: () => api.post<{ created: number }>('/finances/categories/seed-defaults').then(r => r.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['finance-categories'] }),
+  })
+
+  const deleteCategoryMut = useMutation({
+    mutationFn: (id: string) => api.delete(`/finances/categories/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['finance-categories'] }),
+  })
+
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatType, setNewCatType] = useState('both')
+  const [newCatIcon, setNewCatIcon] = useState('💰')
+
+  const createCategoryMut = useMutation({
+    mutationFn: (body: object) => api.post('/finances/categories', body),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['finance-categories'] }); setNewCatName('') },
+  })
 
   const webhookUrl = `${window.location.origin.replace(':5173', ':3001')}/api/webhooks/typebot`
 
@@ -556,6 +591,135 @@ export function SettingsPage() {
               <CheckCircle size={14} /> Paramètres enregistrés
             </p>
           )}
+        </div>
+      )}
+
+      {/* ── Finances ─────────────────────────────────────────────────────── */}
+      {tab === 'Finances' && (
+        <div className="space-y-4">
+
+          {/* Gateways / Comptes */}
+          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/15">
+                <CreditCard className="h-5 w-5 text-indigo-400" />
+              </div>
+              <div>
+                <p className="font-semibold text-gray-100">Comptes & Gateways</p>
+                <p className="text-xs text-gray-500">Cartes de crédit, comptes bancaires, wallets à suivre</p>
+              </div>
+            </div>
+            <p className="mb-4 text-xs text-gray-600">
+              Ces comptes s'ajoutent aux gateways système (Stripe, Chariow, etc.) dans le formulaire de transaction.
+            </p>
+            {appSettings.isLoading ? (
+              <p className="text-xs text-gray-600">Chargement...</p>
+            ) : (
+              <StringListEditor
+                label="Comptes personnalisés"
+                icon={CreditCard}
+                items={appSettings.data?.custom_gateways ?? []}
+                onAdd={addGateway}
+                onRemove={removeGateway}
+                placeholder="Carte BNP, Compte CIH, PayPal..."
+              />
+            )}
+          </div>
+
+          {/* Categories */}
+          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/15">
+                  <Tag className="h-5 w-5 text-emerald-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-100">Catégories</p>
+                  <p className="text-xs text-gray-500">Salaire, Loyer, Marketing, Logiciels…</p>
+                </div>
+              </div>
+              <button
+                onClick={() => seedCategoriesMut.mutate()}
+                disabled={seedCategoriesMut.isPending}
+                className="flex items-center gap-1.5 rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:text-gray-200 disabled:opacity-50 transition-colors"
+              >
+                <RefreshCw className={cn('h-3.5 w-3.5', seedCategoriesMut.isPending && 'animate-spin')} />
+                Seed par défaut
+              </button>
+            </div>
+
+            {seedCategoriesMut.isSuccess && (
+              <p className="mb-3 flex items-center gap-1.5 text-xs text-emerald-400">
+                <CheckCircle size={12} />
+                {seedCategoriesMut.data?.created === 0 ? 'Toutes les catégories par défaut existent déjà' : `${seedCategoriesMut.data?.created} catégorie(s) créée(s)`}
+              </p>
+            )}
+
+            {/* New category form */}
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="text"
+                value={newCatIcon}
+                onChange={(e) => setNewCatIcon(e.target.value)}
+                maxLength={2}
+                className="w-11 rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1.5 text-center text-base focus:outline-none"
+              />
+              <input
+                type="text"
+                value={newCatName}
+                onChange={(e) => setNewCatName(e.target.value)}
+                placeholder="Nom de la catégorie"
+                className="flex-1 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                onKeyDown={(e) => { if (e.key === 'Enter' && newCatName.trim()) createCategoryMut.mutate({ name: newCatName, type: newCatType, icon: newCatIcon }) }}
+              />
+              <select
+                value={newCatType}
+                onChange={(e) => setNewCatType(e.target.value)}
+                className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1.5 text-xs text-gray-100 focus:outline-none"
+              >
+                <option value="income">Revenu</option>
+                <option value="expense">Dépense</option>
+                <option value="both">Les deux</option>
+              </select>
+              <button
+                disabled={!newCatName.trim() || createCategoryMut.isPending}
+                onClick={() => createCategoryMut.mutate({ name: newCatName, type: newCatType, icon: newCatIcon })}
+                className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs text-white hover:bg-indigo-700 disabled:opacity-40 transition-colors"
+              >
+                <Plus size={12} /> Ajouter
+              </button>
+            </div>
+
+            {/* Category list */}
+            <div className="max-h-80 space-y-1 overflow-y-auto">
+              {financeCategories.isLoading ? (
+                <p className="py-3 text-xs text-gray-600">Chargement…</p>
+              ) : (financeCategories.data ?? []).length === 0 ? (
+                <p className="py-3 text-xs text-gray-600">Aucune catégorie. Cliquez sur "Seed par défaut" pour commencer.</p>
+              ) : (
+                (financeCategories.data ?? []).map((c) => (
+                  <div key={c._id} className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-800/40">
+                    <span className="text-base w-6 text-center">{c.icon}</span>
+                    <span className="flex-1 text-sm text-gray-200">{c.name}</span>
+                    <span className={cn(
+                      'rounded-full px-2 py-0.5 text-[10px] font-medium',
+                      c.type === 'income' ? 'bg-emerald-900/30 text-emerald-400'
+                      : c.type === 'expense' ? 'bg-red-900/30 text-red-400'
+                      : 'bg-gray-800 text-gray-400',
+                    )}>
+                      {c.type === 'income' ? 'Revenu' : c.type === 'expense' ? 'Dépense' : 'Les deux'}
+                    </span>
+                    <button
+                      onClick={() => deleteCategoryMut.mutate(c._id)}
+                      className="text-gray-600 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
 

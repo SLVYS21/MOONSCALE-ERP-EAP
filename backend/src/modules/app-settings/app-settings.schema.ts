@@ -16,6 +16,9 @@ export class AppSettings {
     default: ['YouTube', 'TikTok', 'Facebook', 'Instagram'],
   })
   lead_sources: string[]
+
+  @Prop({ type: [String], default: [] })
+  custom_gateways: string[]
 }
 
 export const AppSettingsSchema = SchemaFactory.createForClass(AppSettings)

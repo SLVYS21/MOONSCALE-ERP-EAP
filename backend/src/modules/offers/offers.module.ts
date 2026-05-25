@@ -22,6 +22,6 @@ import { AutomationsModule } from '../automations/automations.module'
   ],
   controllers: [OffersController],
   providers: [OffersService],
-  exports: [OffersService],
+  exports: [OffersService, MongooseModule],
 })
 export class OffersModule {}

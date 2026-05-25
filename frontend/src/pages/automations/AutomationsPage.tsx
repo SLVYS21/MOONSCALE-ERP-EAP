@@ -6,7 +6,7 @@ import {
   Plus, Zap, Trash2, Play, Clock, ChevronRight, X,
   ClipboardList, CheckCircle2, GraduationCap, CreditCard, Link2,
   Mail, Globe, Timer, GitBranch, Bell, FileText, Pencil, CheckSquare,
-  Sparkles, Layers, RefreshCw, AlarmClock, MessageSquare, Circle, AlertTriangle,
+  Sparkles, Layers, RefreshCw, AlarmClock, Circle, AlertTriangle,
   Crosshair, TrendingUp, Trophy, Phone, CalendarClock, UserPlus, Send, Tag, Filter, Users, Repeat,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -100,249 +100,411 @@ interface AutomationTemplate {
 
 const TEMPLATES: AutomationTemplate[] = [
   // ── Étudiants ──────────────────────────────────────────────────────────────
+  // {
+  //   id: 'welcome-email',
+  //   name: 'Email de bienvenue',
+  //   description: "Envoyer un email de bienvenue personnalisé dès qu'un étudiant est ajouté au système.",
+  //   category: 'Étudiants',
+  //   Icon: Sparkles,
+  //   triggerType: 'student_created',
+  //   steps: [
+  //     {
+  //       type: 'send_email',
+  //       name: 'Email de bienvenue',
+  //       config: {
+  //         to: '{{student.email}}',
+  //         subject: 'Bienvenue {{student.name}} !',
+  //         body: 'Bonjour {{student.name}},\n\nNous sommes ravis de vous accueillir dans notre communauté.\n\nVotre inscription a bien été prise en compte et votre dossier est en cours de traitement.\n\nÀ bientôt,\nL\'équipe',
+  //       },
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: 'full-onboarding',
+  //   name: 'Onboarding complet',
+  //   description: "Email de bienvenue + alerte équipe + note sur le dossier automatiquement à l'inscription.",
+  //   category: 'Étudiants',
+  //   Icon: Layers,
+  //   triggerType: 'student_created',
+  //   steps: [
+  //     {
+  //       type: 'send_email',
+  //       name: 'Email de bienvenue',
+  //       config: {
+  //         to: '{{student.email}}',
+  //         subject: 'Bienvenue dans la communauté, {{student.name}} !',
+  //         body: 'Bonjour {{student.name}},\n\nVotre inscription est confirmée. Bienvenue !\n\nNous reviendrons vers vous très prochainement avec les prochaines étapes.',
+  //       },
+  //     },
+  //     {
+  //       type: 'notify_team',
+  //       name: "Alerte équipe",
+  //       config: {
+  //         recipients: 'all_admins',
+  //         subject: 'Nouvel étudiant inscrit : {{student.name}}',
+  //         body: "Un nouvel étudiant vient de s'inscrire :\n\nNom : {{student.name}}\nEmail : {{student.email}}\nWhatsApp : {{student.whatsapp}}\nSource : {{student.source}}",
+  //       },
+  //     },
+  //     {
+  //       type: 'add_note',
+  //       name: "Note d'onboarding",
+  //       config: { note: 'Onboarding automatique envoyé.' },
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: 'sync-crm',
+  //   name: 'Synchroniser un CRM externe',
+  //   description: 'Créer automatiquement un contact dans votre CRM (HubSpot, Pipedrive…) lors de chaque inscription.',
+  //   category: 'Étudiants',
+  //   Icon: RefreshCw,
+  //   triggerType: 'student_created',
+  //   steps: [
+  //     {
+  //       type: 'http_request',
+  //       name: 'Créer contact CRM',
+  //       config: {
+  //         url: 'https://api.votre-crm.com/contacts',
+  //         method: 'POST',
+  //         headers: [{ key: 'Authorization', value: 'Bearer VOTRE_API_KEY' }],
+  //         requestBody: '{\n  "name": "{{student.name}}",\n  "email": "{{student.email}}",\n  "phone": "{{student.whatsapp}}"\n}',
+  //       },
+  //     },
+  //   ],
+  // },
+
+  // // ── Paiements ──────────────────────────────────────────────────────────────
+  // {
+  //   id: 'payment-confirmation',
+  //   name: 'Confirmation de paiement',
+  //   description: "Envoyer un reçu par email à l'étudiant dès qu'un paiement est traité.",
+  //   category: 'Paiements',
+  //   Icon: CreditCard,
+  //   triggerType: 'payment_treated',
+  //   steps: [
+  //     {
+  //       type: 'condition',
+  //       name: "Vérifier l'email",
+  //       config: { field: 'student.email', operator: 'is_not_empty' },
+  //     },
+  //     {
+  //       type: 'send_email',
+  //       name: 'Reçu de paiement',
+  //       config: {
+  //         to: '{{student.email}}',
+  //         subject: 'Confirmation de votre paiement — {{payment.amount}} {{payment.currency}}',
+  //         body: 'Bonjour {{student.name}},\n\nVotre paiement de {{payment.amount}} {{payment.currency}} a bien été validé.\n\nPlan : {{payment.plan}}\nPasserelle : {{payment.gateway}}\n\nMerci de votre confiance.',
+  //       },
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: 'payment-alert',
+  //   name: 'Alerte nouveau paiement',
+  //   description: "Notifier toute l'équipe admin dès qu'un paiement arrive en attente de traitement.",
+  //   category: 'Paiements',
+  //   Icon: AlarmClock,
+  //   triggerType: 'payment_created',
+  //   steps: [
+  //     {
+  //       type: 'notify_team',
+  //       name: 'Alerte nouveau paiement',
+  //       config: {
+  //         recipients: 'all_admins',
+  //         subject: 'Nouveau paiement à traiter — {{student.name}}',
+  //         body: 'Un nouveau paiement vient d\'arriver :\n\nÉtudiant : {{student.name}} ({{student.email}})\nMontant : {{payment.amount}} {{payment.currency}}\nSource : {{payment.source}}\n\nConnectez-vous pour le traiter.',
+  //       },
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: 'payment-slack',
+  //   name: 'Notifier Slack / Discord',
+  //   description: "Envoyer une notification dans Slack ou Discord à chaque nouveau paiement.",
+  //   category: 'Paiements',
+  //   Icon: MessageSquare,
+  //   triggerType: 'payment_created',
+  //   steps: [
+  //     {
+  //       type: 'http_request',
+  //       name: 'Notification Slack',
+  //       config: {
+  //         url: 'https://hooks.slack.com/services/VOTRE/WEBHOOK/URL',
+  //         method: 'POST',
+  //         requestBody: '{"text": "Nouveau paiement de {{student.name}} : {{payment.amount}} {{payment.currency}} via {{payment.source}}"}',
+  //       },
+  //     },
+  //   ],
+  // },
+
+  // // ── Formulaires ────────────────────────────────────────────────────────────
+  // {
+  //   id: 'form-lead',
+  //   name: 'Suivi de lead formulaire',
+  //   description: 'Créer une tâche de suivi et envoyer un accusé de réception après chaque soumission.',
+  //   category: 'Formulaires',
+  //   Icon: ClipboardList,
+  //   triggerType: 'form_submitted',
+  //   steps: [
+  //     {
+  //       type: 'create_task',
+  //       name: 'Créer tâche de suivi',
+  //       config: {
+  //         taskTitle: 'Suivi formulaire — {{form.title}}',
+  //         taskDescription: 'Formulaire soumis le {{submittedAt}}.\nÀ contacter rapidement.',
+  //         taskPriority: 'medium',
+  //       },
+  //     },
+  //     {
+  //       type: 'notify_team',
+  //       name: 'Alerter équipe',
+  //       config: {
+  //         recipients: 'all_admins',
+  //         subject: 'Nouveau formulaire soumis : {{form.title}}',
+  //         body: 'Un formulaire a été soumis le {{submittedAt}}.\n\nFormulaire : {{form.title}}\n\nConnectez-vous pour consulter les réponses.',
+  //       },
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: 'form-notification',
+  //   name: 'Notification de soumission',
+  //   description: "Envoyer un email à l'équipe à chaque soumission d'un formulaire spécifique.",
+  //   category: 'Formulaires',
+  //   Icon: Mail,
+  //   triggerType: 'form_submitted',
+  //   steps: [
+  //     {
+  //       type: 'notify_team',
+  //       name: 'Email soumission',
+  //       config: {
+  //         recipients: 'all_admins',
+  //         subject: 'Nouvelle soumission : {{form.title}}',
+  //         body: 'Un nouveau formulaire {{form.title}} vient d\'être soumis le {{submittedAt}}.',
+  //       },
+  //     },
+  //   ],
+  // },
+
+  // // ── Intégrations ───────────────────────────────────────────────────────────
+  // {
+  //   id: 'webhook-to-team',
+  //   name: 'Webhook entrant → équipe',
+  //   description: "Recevoir un appel HTTP externe et notifier l'équipe avec les données reçues.",
+  //   category: 'Intégrations',
+  //   Icon: Link2,
+  //   triggerType: 'incoming_webhook',
+  //   steps: [
+  //     {
+  //       type: 'notify_team',
+  //       name: 'Notifier équipe',
+  //       config: {
+  //         recipients: 'all_admins',
+  //         subject: 'Webhook reçu',
+  //         body: 'Un appel webhook vient d\'être reçu. Consultez les logs pour plus de détails.',
+  //       },
+  //     },
+  //   ],
+  // },
+  // {
+  //   id: 'circle-sync',
+  //   name: 'Synchroniser Circle',
+  //   description: "Envoyer les informations d'un étudiant vers Circle.so après traitement du paiement.",
+  //   category: 'Intégrations',
+  //   Icon: Circle,
+  //   triggerType: 'payment_treated',
+  //   steps: [
+  //     {
+  //       type: 'condition',
+  //       name: 'Produit Formation uniquement',
+  //       config: { field: 'payment.product', operator: 'equals', value: 'FORMATION' },
+  //     },
+  //     {
+  //       type: 'http_request',
+  //       name: 'Mettre à jour Circle',
+  //       config: {
+  //         url: 'https://app.circle.so/api/v1/community_members',
+  //         method: 'POST',
+  //         headers: [
+  //           { key: 'Authorization', value: 'Token VOTRE_TOKEN_CIRCLE' },
+  //           { key: 'Content-Type', value: 'application/json' },
+  //         ],
+  //         requestBody: '{\n  "email": "{{student.email}}",\n  "name": "{{student.name}}"\n}',
+  //       },
+  //     },
+  //   ],
+  // },
+
+  // ── Cycle de vie ───────────────────────────────────────────────────────────
   {
-    id: 'welcome-email',
-    name: 'Email de bienvenue',
-    description: "Envoyer un email de bienvenue personnalisé dès qu'un étudiant est ajouté au système.",
-    category: 'Étudiants',
+    id: 'lifecycle-welcome-circle',
+    name: 'Bienvenue + lien Circle',
+    description: "Envoyer un email de bienvenue avec le lien d'accès Circle dès qu'un paiement Formation est traité.",
+    category: 'Cycle de vie',
     Icon: Sparkles,
-    triggerType: 'student_created',
-    steps: [
-      {
-        type: 'send_email',
-        name: 'Email de bienvenue',
-        config: {
-          to: '{{student.email}}',
-          subject: 'Bienvenue {{student.name}} !',
-          body: 'Bonjour {{student.name}},\n\nNous sommes ravis de vous accueillir dans notre communauté.\n\nVotre inscription a bien été prise en compte et votre dossier est en cours de traitement.\n\nÀ bientôt,\nL\'équipe',
-        },
-      },
-    ],
-  },
-  {
-    id: 'full-onboarding',
-    name: 'Onboarding complet',
-    description: "Email de bienvenue + alerte équipe + note sur le dossier automatiquement à l'inscription.",
-    category: 'Étudiants',
-    Icon: Layers,
-    triggerType: 'student_created',
-    steps: [
-      {
-        type: 'send_email',
-        name: 'Email de bienvenue',
-        config: {
-          to: '{{student.email}}',
-          subject: 'Bienvenue dans la communauté, {{student.name}} !',
-          body: 'Bonjour {{student.name}},\n\nVotre inscription est confirmée. Bienvenue !\n\nNous reviendrons vers vous très prochainement avec les prochaines étapes.',
-        },
-      },
-      {
-        type: 'notify_team',
-        name: "Alerte équipe",
-        config: {
-          recipients: 'all_admins',
-          subject: 'Nouvel étudiant inscrit : {{student.name}}',
-          body: "Un nouvel étudiant vient de s'inscrire :\n\nNom : {{student.name}}\nEmail : {{student.email}}\nWhatsApp : {{student.whatsapp}}\nSource : {{student.source}}",
-        },
-      },
-      {
-        type: 'add_note',
-        name: "Note d'onboarding",
-        config: { note: 'Onboarding automatique envoyé.' },
-      },
-    ],
-  },
-  {
-    id: 'sync-crm',
-    name: 'Synchroniser un CRM externe',
-    description: 'Créer automatiquement un contact dans votre CRM (HubSpot, Pipedrive…) lors de chaque inscription.',
-    category: 'Étudiants',
-    Icon: RefreshCw,
-    triggerType: 'student_created',
-    steps: [
-      {
-        type: 'http_request',
-        name: 'Créer contact CRM',
-        config: {
-          url: 'https://api.votre-crm.com/contacts',
-          method: 'POST',
-          headers: [{ key: 'Authorization', value: 'Bearer VOTRE_API_KEY' }],
-          requestBody: '{\n  "name": "{{student.name}}",\n  "email": "{{student.email}}",\n  "phone": "{{student.whatsapp}}"\n}',
-        },
-      },
-    ],
-  },
-
-  // ── Paiements ──────────────────────────────────────────────────────────────
-  {
-    id: 'payment-confirmation',
-    name: 'Confirmation de paiement',
-    description: "Envoyer un reçu par email à l'étudiant dès qu'un paiement est traité.",
-    category: 'Paiements',
-    Icon: CreditCard,
     triggerType: 'payment_treated',
     steps: [
       {
         type: 'condition',
-        name: "Vérifier l'email",
-        config: { field: 'student.email', operator: 'is_not_empty' },
+        name: 'Formation uniquement',
+        config: { field: 'payment.product', operator: 'not_equals', value: 'COACHING' },
       },
       {
         type: 'send_email',
-        name: 'Reçu de paiement',
+        name: 'Email de bienvenue Circle',
         config: {
           to: '{{student.email}}',
-          subject: 'Confirmation de votre paiement — {{payment.amount}} {{payment.currency}}',
-          body: 'Bonjour {{student.name}},\n\nVotre paiement de {{payment.amount}} {{payment.currency}} a bien été validé.\n\nPlan : {{payment.plan}}\nPasserelle : {{payment.gateway}}\n\nMerci de votre confiance.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'payment-alert',
-    name: 'Alerte nouveau paiement',
-    description: "Notifier toute l'équipe admin dès qu'un paiement arrive en attente de traitement.",
-    category: 'Paiements',
-    Icon: AlarmClock,
-    triggerType: 'payment_created',
-    steps: [
-      {
-        type: 'notify_team',
-        name: 'Alerte nouveau paiement',
-        config: {
-          recipients: 'all_admins',
-          subject: 'Nouveau paiement à traiter — {{student.name}}',
-          body: 'Un nouveau paiement vient d\'arriver :\n\nÉtudiant : {{student.name}} ({{student.email}})\nMontant : {{payment.amount}} {{payment.currency}}\nSource : {{payment.source}}\n\nConnectez-vous pour le traiter.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'payment-slack',
-    name: 'Notifier Slack / Discord',
-    description: "Envoyer une notification dans Slack ou Discord à chaque nouveau paiement.",
-    category: 'Paiements',
-    Icon: MessageSquare,
-    triggerType: 'payment_created',
-    steps: [
-      {
-        type: 'http_request',
-        name: 'Notification Slack',
-        config: {
-          url: 'https://hooks.slack.com/services/VOTRE/WEBHOOK/URL',
-          method: 'POST',
-          requestBody: '{"text": "Nouveau paiement de {{student.name}} : {{payment.amount}} {{payment.currency}} via {{payment.source}}"}',
-        },
-      },
-    ],
-  },
-
-  // ── Formulaires ────────────────────────────────────────────────────────────
-  {
-    id: 'form-lead',
-    name: 'Suivi de lead formulaire',
-    description: 'Créer une tâche de suivi et envoyer un accusé de réception après chaque soumission.',
-    category: 'Formulaires',
-    Icon: ClipboardList,
-    triggerType: 'form_submitted',
-    steps: [
-      {
-        type: 'create_task',
-        name: 'Créer tâche de suivi',
-        config: {
-          taskTitle: 'Suivi formulaire — {{form.title}}',
-          taskDescription: 'Formulaire soumis le {{submittedAt}}.\nÀ contacter rapidement.',
-          taskPriority: 'medium',
-        },
-      },
-      {
-        type: 'notify_team',
-        name: 'Alerter équipe',
-        config: {
-          recipients: 'all_admins',
-          subject: 'Nouveau formulaire soumis : {{form.title}}',
-          body: 'Un formulaire a été soumis le {{submittedAt}}.\n\nFormulaire : {{form.title}}\n\nConnectez-vous pour consulter les réponses.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'form-notification',
-    name: 'Notification de soumission',
-    description: "Envoyer un email à l'équipe à chaque soumission d'un formulaire spécifique.",
-    category: 'Formulaires',
-    Icon: Mail,
-    triggerType: 'form_submitted',
-    steps: [
-      {
-        type: 'notify_team',
-        name: 'Email soumission',
-        config: {
-          recipients: 'all_admins',
-          subject: 'Nouvelle soumission : {{form.title}}',
-          body: 'Un nouveau formulaire {{form.title}} vient d\'être soumis le {{submittedAt}}.',
-        },
-      },
-    ],
-  },
-
-  // ── Intégrations ───────────────────────────────────────────────────────────
-  {
-    id: 'webhook-to-team',
-    name: 'Webhook entrant → équipe',
-    description: "Recevoir un appel HTTP externe et notifier l'équipe avec les données reçues.",
-    category: 'Intégrations',
-    Icon: Link2,
-    triggerType: 'incoming_webhook',
-    steps: [
-      {
-        type: 'notify_team',
-        name: 'Notifier équipe',
-        config: {
-          recipients: 'all_admins',
-          subject: 'Webhook reçu',
-          body: 'Un appel webhook vient d\'être reçu. Consultez les logs pour plus de détails.',
-        },
-      },
-    ],
-  },
-  {
-    id: 'circle-sync',
-    name: 'Synchroniser Circle',
-    description: "Envoyer les informations d'un étudiant vers Circle.so après traitement du paiement.",
-    category: 'Intégrations',
-    Icon: Circle,
-    triggerType: 'payment_treated',
-    steps: [
-      {
-        type: 'condition',
-        name: 'Produit Formation uniquement',
-        config: { field: 'payment.product', operator: 'equals', value: 'FORMATION' },
-      },
-      {
-        type: 'http_request',
-        name: 'Mettre à jour Circle',
-        config: {
-          url: 'https://app.circle.so/api/v1/community_members',
-          method: 'POST',
-          headers: [
-            { key: 'Authorization', value: 'Token VOTRE_TOKEN_CIRCLE' },
-            { key: 'Content-Type', value: 'application/json' },
+          subject: 'Bienvenue {{student.name}} — votre accès est prêt !',
+          blocks: [
+            { type: 'text', content: 'Bonjour {{student.name}},\n\nVotre paiement a bien été validé. Voici votre lien d\'accès à la communauté Circle :', align: 'left' },
+            { type: 'button', label: 'Rejoindre la communauté', url: 'https://app.circle.so', color: '#6366f1', textColor: '#ffffff', radius: 'md', align: 'center' },
+            { type: 'text', content: 'À très bientôt,\nL\'équipe', align: 'left' },
           ],
-          requestBody: '{\n  "email": "{{student.email}}",\n  "name": "{{student.name}}"\n}',
+        },
+      },
+    ],
+  },
+  {
+    id: 'lifecycle-circle-tag',
+    name: 'Tag Circle selon le plan',
+    description: 'Appliquer automatiquement le tag Circle correspondant au plan de l\'étudiant après paiement.',
+    category: 'Cycle de vie',
+    Icon: Layers,
+    triggerType: 'payment_treated',
+    steps: [
+      {
+        type: 'condition',
+        name: 'Plan Elite',
+        config: { field: 'payment.plan', operator: 'equals', value: 'Elite' },
+      },
+      {
+        type: 'circle_tag_add',
+        name: 'Tag Elite',
+        config: { tag: 'Elite' },
+      },
+    ],
+  },
+  {
+    id: 'lifecycle-reminder',
+    name: 'Rappel paiement partiel',
+    description: 'Envoyer un email de relance avec bouton de paiement lorsqu\'un rappel est déclenché.',
+    category: 'Cycle de vie',
+    Icon: AlarmClock,
+    triggerType: 'reminder_due',
+    steps: [
+      {
+        type: 'send_email',
+        name: 'Email de relance',
+        config: {
+          to: '{{student.email}}',
+          subject: 'Rappel — votre prochain paiement arrive bientôt',
+          blocks: [
+            { type: 'text', content: 'Bonjour {{student.name}},\n\nNous vous rappelons que votre prochain paiement est prévu le {{reminder.nextPaymentDate}} pour un montant de {{reminder.amountDue}} pour l\'offre {{subscription.offerName}}.', align: 'left' },
+            { type: 'button', label: 'Payer maintenant', url: 'https://lien-de-paiement.com', color: '#10b981', textColor: '#ffffff', radius: 'full', align: 'center' },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'lifecycle-debt-suspension',
+    name: 'Suspension accès débiteur',
+    description: 'Retirer l\'accès Circle et notifier l\'étudiant lorsqu\'une dette est confirmée.',
+    category: 'Cycle de vie',
+    Icon: Circle,
+    triggerType: 'debt_detected',
+    steps: [
+      {
+        type: 'circle_tag_remove',
+        name: 'Retirer tag actif',
+        config: { tag: 'Premium' },
+      },
+      {
+        type: 'circle_tag_add',
+        name: 'Tag suspendu',
+        config: { tag: 'Suspendu' },
+      },
+      {
+        type: 'send_email',
+        name: 'Email suspension',
+        config: {
+          to: '{{student.email}}',
+          subject: 'Votre accès a été suspendu',
+          blocks: [
+            { type: 'text', content: 'Bonjour {{student.name}},\n\nSuite au non-paiement de votre solde dû, votre accès à la communauté a été temporairement suspendu.\n\nPour le restaurer, veuillez régulariser votre situation :', align: 'left' },
+            { type: 'button', label: 'Régulariser mon compte', url: 'https://lien-de-paiement.com', color: '#ef4444', textColor: '#ffffff', radius: 'md', align: 'center' },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'lifecycle-restore-access',
+    name: 'Restauration après paiement',
+    description: 'Restaurer l\'accès Circle et envoyer un email de confirmation après régularisation d\'un débiteur.',
+    category: 'Cycle de vie',
+    Icon: RefreshCw,
+    triggerType: 'payment_treated',
+    steps: [
+      {
+        type: 'condition',
+        name: 'Étudiant débiteur',
+        config: { field: 'student.debtStatus', operator: 'equals', value: 'confirmed' },
+      },
+      {
+        type: 'circle_tag_remove',
+        name: 'Retirer tag suspendu',
+        config: { tag: 'Suspendu' },
+      },
+      {
+        type: 'circle_tag_add',
+        name: 'Tag plan restauré',
+        config: { tag: '{{payment.plan}}' },
+      },
+      {
+        type: 'send_email',
+        name: 'Email restauration',
+        config: {
+          to: '{{student.email}}',
+          subject: 'Votre accès a été restauré',
+          blocks: [
+            { type: 'text', content: 'Bonjour {{student.name}},\n\nVotre paiement a bien été reçu et votre accès à la communauté a été restauré. Bon retour parmi nous !', align: 'left' },
+            { type: 'button', label: 'Accéder à la communauté', url: 'https://app.circle.so', color: '#6366f1', textColor: '#ffffff', radius: 'md', align: 'center' },
+          ],
+        },
+      },
+    ],
+  },
+  {
+    id: 'lifecycle-lead-won',
+    name: 'Lead converti en étudiant',
+    description: 'Notifier l\'équipe et mettre à jour le CRM lorsqu\'un lead devient étudiant suite à un paiement.',
+    category: 'Cycle de vie',
+    Icon: CreditCard,
+    triggerType: 'lead_won',
+    steps: [
+      {
+        type: 'notify_team',
+        name: 'Alerte conversion',
+        config: {
+          recipients: 'all_admins',
+          subject: '🎉 {{lead.name}} est maintenant étudiant !',
+          body: 'Le lead {{lead.name}} ({{lead.email}}) vient d\'être converti en étudiant suite à un paiement traité.',
         },
       },
     ],
   },
 ]
 
-const CATEGORIES = ['Tous', 'Étudiants', 'Paiements', 'Formulaires', 'Intégrations']
+const CATEGORIES = ['Tous', 'Étudiants', 'Paiements', 'Formulaires', 'Intégrations', 'Cycle de vie']
 
 const TRIGGER_OPTIONS: TriggerType[] = [
   'form_submitted', 'payment_created', 'payment_treated', 'student_created',
   'manual', 'incoming_webhook', 'cron_schedule',
   'subscription_created', 'subscription_expiring', 'partial_payment_due',
   'audience_based',
+  'lead_created', 'lead_stage_changed', 'lead_won',
+  'reminder_due', 'debt_detected',
 ]
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -759,13 +921,13 @@ function AutomationCard({ automation }: { automation: Automation }) {
       )}
       <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 hover:border-gray-700 transition-colors">
         <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', meta.color)}>
               <meta.Icon className="h-4 w-4" />
             </div>
-            <div className="min-w-0">
-              <h3 className="truncate text-sm font-semibold text-gray-100">{automation.name}</h3>
-              <p className="text-xs text-gray-500">{meta.label}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-sm font-semibold text-gray-100" title={automation.name}>{automation.name}</h3>
+              <p className="truncate text-xs text-gray-500">{meta.label}</p>
             </div>
           </div>
           <button

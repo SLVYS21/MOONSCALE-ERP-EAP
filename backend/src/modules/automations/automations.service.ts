@@ -43,6 +43,44 @@ function interpolate(template: string, ctx: Record<string, unknown>): string {
   })
 }
 
+type EmailBlock =
+  | { type: 'text';    content: string; align?: string }
+  | { type: 'image';   url: string; alt?: string; width?: string }
+  | { type: 'button';  label: string; url: string; color: string; textColor: string; radius?: string; align?: string }
+  | { type: 'divider' }
+  | { type: 'spacer';  height?: number }
+
+function renderBlocks(blocks: EmailBlock[], ctx: Record<string, unknown>): string {
+  const toAlign = (a?: string) => a === 'center' ? 'center' : a === 'right' ? 'right' : 'left'
+  const toRadius = (r?: string) => r === 'full' ? '9999px' : r === 'md' ? '6px' : '0px'
+
+  const parts = blocks.map((block) => {
+    switch (block.type) {
+      case 'text': {
+        const text = interpolate(block.content, ctx).replace(/\n/g, '<br>')
+        return `<p style="text-align:${toAlign(block.align)};margin:0 0 12px 0;font-size:14px;line-height:1.6;color:#374151;">${text}</p>`
+      }
+      case 'image': {
+        const url = interpolate(block.url, ctx)
+        if (!url) return ''
+        return `<div style="text-align:center;margin:0 0 12px 0;"><img src="${url}" alt="${block.alt ?? ''}" style="max-width:${block.width ?? '100%'};height:auto;border-radius:4px;" /></div>`
+      }
+      case 'button': {
+        const label = interpolate(block.label, ctx)
+        const url = interpolate(block.url, ctx)
+        const align = toAlign(block.align)
+        return `<div style="text-align:${align};margin:0 0 16px 0;"><a href="${url}" style="display:inline-block;background:${block.color};color:${block.textColor};text-decoration:none;padding:12px 24px;border-radius:${toRadius(block.radius)};font-size:14px;font-weight:600;">${label}</a></div>`
+      }
+      case 'divider':
+        return `<hr style="border:none;border-top:1px solid #e5e7eb;margin:16px 0;" />`
+      case 'spacer':
+        return `<div style="height:${block.height ?? 16}px;"></div>`
+    }
+  })
+
+  return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">${parts.join('')}</div>`
+}
+
 function resolvePath(path: string, ctx: Record<string, unknown>): unknown {
   // Strip template delimiters {{ }} so "{{payment.plan}}" and "payment.plan" both work
   const clean = path.trim().replace(/^\{\{/, '').replace(/\}\}$/, '').trim()
@@ -612,7 +650,9 @@ export class AutomationsService {
         case 'send_email': {
           const to = interpolate(step.config.to ?? '', ctx)
           const subject = interpolate(step.config.subject ?? '', ctx)
-          const body = interpolate(step.config.body ?? '', ctx)
+          const body = step.config.blocks?.length
+            ? renderBlocks(step.config.blocks as EmailBlock[], ctx)
+            : interpolate(step.config.body ?? '', ctx)
           if (!to) return { status: 'skipped', message: 'Destinataire vide — étape ignorée' }
           await this.mailService.sendCustom(to, subject, body)
           return { status: 'ok', message: `Email envoyé à ${to}` }

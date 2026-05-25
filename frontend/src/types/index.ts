@@ -87,6 +87,8 @@ export interface Student {
   isAdmin?: boolean
   createdAt: string
   updatedAt: string
+  // Audit history
+  history?: Array<{ event: string; detail: string; actor: string | null; date: string }>
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────
@@ -206,6 +208,14 @@ export interface Transaction {
   createdBy: User
   createdAt: string
   updatedAt: string
+  customerEmail?: string | null
+  customerName?: string | null
+  customerPhone?: string | null
+  productName?: string | null
+  offerId?: string | null
+  offerName?: string | null
+  studentId?: string | null
+  leadId?: string | null
 }
 
 export interface MonthStat {
@@ -398,6 +408,7 @@ export interface Offer {
   plans: OfferPlan[]
   isActive: boolean
   description: string
+  features: string[]
   createdAt: string
 }
 
@@ -423,6 +434,13 @@ export interface Subscription {
   lastReminderAt: string | null
   createdAt: string
 }
+
+export type EmailBlock =
+  | { type: 'text';    content: string; align: 'left' | 'center' | 'right' }
+  | { type: 'image';   url: string; alt?: string; width?: string }
+  | { type: 'button';  label: string; url: string; color: string; textColor: string; radius: 'none' | 'md' | 'full'; align: 'left' | 'center' | 'right' }
+  | { type: 'divider' }
+  | { type: 'spacer';  height: number }
 
 export type StepType =
   | 'send_email'
@@ -498,6 +516,9 @@ export interface AutomationStep {
     matchMode?: 'auto' | 'manual'
     offerId?: string
     planName?: string
+    // send_email block editor
+    blocks?: EmailBlock[]
+    tag?: string
   }
 }
 
@@ -777,6 +798,7 @@ export interface AppSettings {
   _id: string
   lead_magnets: string[]
   lead_sources: string[]
+  custom_gateways: string[]
 }
 
 export interface LeadFunnelStats {

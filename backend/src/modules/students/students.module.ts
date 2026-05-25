@@ -15,6 +15,8 @@ import { AutomationsModule } from '../automations/automations.module'
 import { OcrModule } from '../ocr/ocr.module'
 import { Offer, OfferSchema } from '../offers/schemas/offer.schema'
 import { Subscription, SubscriptionSchema } from '../offers/schemas/subscription.schema'
+import { Lead, LeadSchema } from '../leads/schemas/lead.schema'
+import { ProductMapping, ProductMappingSchema } from '../finances/schemas/product-mapping.schema'
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { Subscription, SubscriptionSchema } from '../offers/schemas/subscription
       { name: Reminder.name,      schema: ReminderSchema },
       { name: Offer.name,         schema: OfferSchema },
       { name: Subscription.name,  schema: SubscriptionSchema },
+      { name: Lead.name,          schema: LeadSchema },
+      { name: ProductMapping.name, schema: ProductMappingSchema },
     ]),
     CircleModule,
     AirtableModule,

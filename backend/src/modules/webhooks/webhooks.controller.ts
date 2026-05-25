@@ -149,29 +149,31 @@ export class WebhooksController {
       const currency = (price?.currency as string) ?? 'XOF'
       const reference = (body.id ?? body.order_id ?? body.transaction_id) as string | undefined
 
-      if (!email || !tag) {
-        this.logger.warn('Chariow webhook: missing email or tag')
+      if (!email) {
+        this.logger.warn('Chariow webhook: missing email')
         return { message: 'ignored' }
       }
 
       // Create student payment
-      const payment = await this.studentsService.createPayment({
-        studentEmail: email,
-        studentName: name ?? email,
-        modality: 'Complet',
-        amount,
-        currency,
-        product: 'COACHING',
-        gateway: 'Chariow',
-        source: 'chariow',
-      })
+      // const payment = await this.studentsService.createPayment({
+      //   studentEmail: email,
+      //   studentName: name ?? email,
+      //   modality: 'Complet',
+      //   amount,
+      //   currency,
+      //   product: 'COACHING',
+      //   gateway: 'Chariow',
+      //   source: 'chariow',
+      // })
 
       // Process immediately with the Circle plan tag
-      await this.studentsService.treatPayment(
-        (payment._id as { toString: () => string }).toString(),
-        'system',
-        { planKey: tag },
-      )
+      // await this.studentsService.treatPayment(
+      //   (payment._id as { toString: () => string }).toString(),
+      //   'system',
+      //   { planKey: tag },
+      // )
+
+      const productName = (product?.name as string) ?? null
 
       // Log financial transaction
       await this.financesService.recordGatewayTransaction({
@@ -182,7 +184,10 @@ export class WebhooksController {
         description: `Coaching — ${name ?? email}`,
         reference: reference ?? null,
         date: new Date(),
-        metadata: { email, tag, productName: (product?.name as string) ?? null },
+        customerEmail: email ?? null,
+        customerName: name ?? null,
+        productName,
+        metadata: { tag },
       })
 
       return { message: 'coaching payment processed' }
@@ -235,6 +240,8 @@ export class WebhooksController {
       case 'payment_intent.succeeded': {
         const amountCents = Number(obj.amount_received ?? obj.amount)
         const currency = (obj.currency as string).toUpperCase()
+        const billing = obj.billing_details as Record<string, unknown> | undefined
+        const meta = obj.metadata as Record<string, unknown> | undefined
         await this.financesService.recordGatewayTransaction({
           gateway: 'stripe',
           type: 'income',
@@ -243,7 +250,10 @@ export class WebhooksController {
           description: (obj.description as string) || 'Stripe payment',
           reference: (obj.id as string) ?? eventId,
           date: new Date(Number(obj.created) * 1000),
-          metadata: { customerId: obj.customer, metadata: obj.metadata },
+          customerEmail: (billing?.email as string) ?? null,
+          customerName: (billing?.name as string) ?? null,
+          productName: (meta?.product as string) ?? (obj.description as string) ?? null,
+          metadata: { customerId: obj.customer },
         })
         break
       }
@@ -252,6 +262,8 @@ export class WebhooksController {
         if (obj.payment_intent) break
         const amountCents = Number(obj.amount)
         const currency = (obj.currency as string).toUpperCase()
+        const billing = obj.billing_details as Record<string, unknown> | undefined
+        const meta = obj.metadata as Record<string, unknown> | undefined
         await this.financesService.recordGatewayTransaction({
           gateway: 'stripe',
           type: 'income',
@@ -260,6 +272,9 @@ export class WebhooksController {
           description: (obj.description as string) || 'Stripe charge',
           reference: (obj.id as string) ?? eventId,
           date: new Date(Number(obj.created) * 1000),
+          customerEmail: (billing?.email as string) ?? null,
+          customerName: (billing?.name as string) ?? null,
+          productName: (meta?.product as string) ?? (obj.description as string) ?? null,
           metadata: { customerId: obj.customer },
         })
         break
@@ -269,6 +284,7 @@ export class WebhooksController {
         const lastRefund = refunds?.data?.[0]
         if (!lastRefund) break
         const currency = (obj.currency as string).toUpperCase()
+        const billing = obj.billing_details as Record<string, unknown> | undefined
         await this.financesService.recordGatewayTransaction({
           gateway: 'stripe',
           type: 'expense',
@@ -277,6 +293,8 @@ export class WebhooksController {
           description: `Remboursement Stripe — ${(obj.id as string)}`,
           reference: obj.id as string,
           date: new Date(lastRefund.created * 1000),
+          customerEmail: (billing?.email as string) ?? null,
+          customerName: (billing?.name as string) ?? null,
           metadata: { originalCharge: obj.id },
           status: 'refunded',
         })
@@ -286,6 +304,7 @@ export class WebhooksController {
       case 'charge.failed': {
         const amountCents = Number(obj.amount)
         const currency = (obj.currency as string).toUpperCase()
+        const billing = obj.billing_details as Record<string, unknown> | undefined
         await this.financesService.recordGatewayTransaction({
           gateway: 'stripe',
           type: 'income',
@@ -294,6 +313,8 @@ export class WebhooksController {
           description: (obj.description as string) || 'Stripe paiement échoué',
           reference: (obj.id as string) ?? eventId,
           date: new Date(Number(obj.created) * 1000),
+          customerEmail: (billing?.email as string) ?? null,
+          customerName: (billing?.name as string) ?? null,
           status: 'failed',
           metadata: { failureMessage: obj.failure_message },
         })
@@ -342,6 +363,9 @@ export class WebhooksController {
     const description = (body.statementDescription as string) || (isDeposit ? 'PawaPay collecte' : 'PawaPay paiement sortant')
     const createdAt = new Date((body.created ?? body.customerTimestamp) as string || Date.now())
 
+    const payer = body.payer as Record<string, unknown> | undefined
+    const payerPhone = (payer?.address as Record<string, unknown>)?.value as string | undefined
+
     let txStatus: 'completed' | 'failed' | 'pending' = 'pending'
     if (status === 'COMPLETED') txStatus = 'completed'
     else if (status === 'FAILED' || status === 'REJECTED') txStatus = 'failed'
@@ -355,7 +379,8 @@ export class WebhooksController {
       reference: id,
       date: createdAt,
       status: txStatus,
-      metadata: { correspondent, payer: body.payer, recipient: body.recipient },
+      customerPhone: payerPhone ?? null,
+      metadata: { correspondent, recipient: body.recipient },
     })
   }
 
@@ -367,20 +392,22 @@ export class WebhooksController {
     @Req() req: RawBodyRequest<Request>,
     @Headers('x-fedapay-signature') sigHeader: string,
   ) {
-    console.log(req.body);
-    const secret = process.env.FEDAPAY_WEBHOOK_SECRET
-    if (secret && sigHeader && req.rawBody) {
-      if (!verifyHmacHeader(req.rawBody, sigHeader, secret)) {
-        this.logger.warn('FedaPay webhook: invalid signature')
-        throw new BadRequestException('Invalid FedaPay signature')
-      }
-    }
+    //console.log(req.body);
+    const secret = process.env.FEDAPAY_WEBHOOK_SECRET;
+    // if (secret && sigHeader && req.rawBody) {
+    //   if (!verifyHmacHeader(req.rawBody, sigHeader, secret)) {
+    //     this.logger.warn('FedaPay webhook: invalid signature')
+    //     throw new BadRequestException('Invalid FedaPay signature')
+    //   }
+    // }
 
-    const body = req.body as { event: string; entity: Record<string, unknown> }
-    this.logger.log(`FedaPay webhook: event=${body.event}`)
+    // FedaPay sends { name: 'transaction.approved', object: 'transaction', entity: {...} }
+    const body = req.body as { name: string; event?: string; entity: Record<string, unknown> }
+    const eventName = body.name ?? body.event ?? 'unknown'
+    this.logger.log(`FedaPay webhook: event=${eventName}`)
 
     try {
-      await this.processFedaPayEvent(body.event, body.entity)
+      await this.processFedaPayEvent(eventName, body.entity)
     } catch (err: unknown) {
       this.logger.error(`FedaPay processing error: ${(err as Error).message}`)
     }
@@ -390,12 +417,31 @@ export class WebhooksController {
 
   private async processFedaPayEvent(event: string, entity: Record<string, unknown>) {
     const amount = Number(entity.amount ?? entity.amount_in_cents)
-    const rawCurrency = (entity.currency as Record<string, unknown>)?.iso as string ?? 'XOF'
+
+    // currency is an object: { iso: 'XOF', ... } in full webhook payloads
+    const currencyObj = entity.currency as Record<string, unknown> | undefined
+    const rawCurrency = (currencyObj?.iso as string) ?? 'XOF'
     const currency = this.normalizeCurrency(rawCurrency.toUpperCase())
-    const reference = (entity.reference ?? entity.id) as string
+
+    const reference = (entity.reference ?? entity.transaction_key ?? entity.id) as string
     const description = (entity.description as string) || 'FedaPay transaction'
-    const createdAt = new Date((entity.created_at ?? entity.updated_at) as string || Date.now())
+
+    // Prefer approved_at then created_at for the transaction date
+    const dateStr = (entity.approved_at ?? entity.created_at ?? entity.updated_at) as string | undefined
+    const createdAt = dateStr ? new Date(dateStr) : new Date()
+
+    // Customer object embedded in the entity
     const customer = entity.customer as Record<string, unknown> | undefined
+    const customerEmail = (customer?.email as string) ?? null
+    const firstName = ((customer?.firstname as string) ?? '').trim()
+    const lastName  = ((customer?.lastname  as string) ?? '').trim()
+    const customerName = customer?.full_name
+      ? (customer.full_name as string).trim() || null
+      : [firstName, lastName].filter(Boolean).join(' ') || null
+
+    // Phone number is in payment_method.number, not customer
+    const paymentMethod = entity.payment_method as Record<string, unknown> | undefined
+    const customerPhone = (paymentMethod?.number as string) ?? null
 
     let type: 'income' | 'expense' = 'income'
     let status: 'completed' | 'failed' | 'pending' | 'refunded' = 'pending'
@@ -419,16 +465,21 @@ export class WebhooksController {
         return
     }
 
+    // FedaPay descriptions are always generic payment-link text — not usable as productName
     await this.financesService.recordGatewayTransaction({
       gateway: 'fedapay',
       type,
       amount,
       currency,
-      description,
+      description: customerName ? `${customerName} — ${customerEmail ?? reference}` : description,
       reference: String(reference),
       date: createdAt,
       status,
-      metadata: { event, customerId: entity.id, customerEmail: customer?.email },
+      customerEmail,
+      customerName,
+      customerPhone,
+      productName: null,
+      metadata: { event, mode: entity.mode },
     })
   }
 

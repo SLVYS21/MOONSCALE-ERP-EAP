@@ -43,6 +43,9 @@ export class Offer {
 
   @Prop({ default: '' })
   description: string
+
+  @Prop({ type: [String], default: [] })
+  features: string[]
 }
 
 export const OfferSchema = SchemaFactory.createForClass(Offer)

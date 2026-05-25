@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   ArrowLeft, ExternalLink, Clock, Zap, CheckCircle2, AlertTriangle,
   RefreshCw, Lock, Unlock, Calendar, MapPin, Phone, Mail,
-  /*ShieldOff, ShieldCheck,*/ User, Repeat, TrendingUp,
+  /*ShieldOff, ShieldCheck,*/ User, Repeat, TrendingUp, Pencil, Plus, History,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -308,7 +308,7 @@ function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string;
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-type Tab = 'profil' | 'payments' | 'subscriptions'
+type Tab = 'profil' | 'payments' | 'subscriptions' | 'history'
 
 export function StudentDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -321,6 +321,10 @@ export function StudentDetailPage() {
   const [note, setNote] = useState('')
   const [lightbox, setLightbox] = useState<{ images: string[]; idx: number } | null>(null)
   const [treatPayment, setTreatPayment] = useState<Payment | null>(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [showComplementModal, setShowComplementModal] = useState(false)
+  const [complement, setComplement] = useState({ amount: '', currency: 'F CFA', gateway: '', notes: '' })
 
   const { data, isLoading } = useQuery<StudentDetail>({
     queryKey: ['student', id],
@@ -366,6 +370,26 @@ export function StudentDetailPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['student', id] }),
   })
 
+  const changeEmailMutation = useMutation({
+    mutationFn: (email: string) => api.patch(`/students/${id}/email`, { email }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['student', id] }); setShowEmailModal(false); setNewEmail('') },
+  })
+
+  const complementMutation = useMutation({
+    mutationFn: () => api.post('/payments', {
+      studentEmail: data?.student?.email,
+      studentName: data?.student?.name,
+      modality: 'Partiel',
+      amount: Number(complement.amount),
+      currency: complement.currency,
+      product: 'COMPLEMENT',
+      gateway: complement.gateway || undefined,
+      notes: complement.notes || undefined,
+      source: 'manual',
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['student', id] }); setShowComplementModal(false); setComplement({ amount: '', currency: 'F CFA', gateway: '', notes: '' }) },
+  })
+
   if (isLoading) return <div className="p-6 py-12 text-center text-sm text-gray-500">Chargement…</div>
   if (!data) return <div className="p-6 py-12 text-center text-sm text-gray-500">Étudiant introuvable.</div>
 
@@ -383,6 +407,7 @@ export function StudentDetailPage() {
     { key: 'profil', label: 'Profil' },
     { key: 'payments', label: 'Paiements', count: payments.length },
     { key: 'subscriptions', label: 'Souscriptions', count: subscriptions.length || undefined },
+    { key: 'history', label: 'Historique', count: student.history?.length || undefined },
   ]
 
   return (
@@ -472,17 +497,19 @@ export function StudentDetailPage() {
             </div>
           </div>
 
-          {isAdmin && (true
-            // <div className="flex gap-2 shrink-0">
-            //   <Button variant="danger" size="sm" loading={restrictMutation.isPending} onClick={() => restrictMutation.mutate()}>
-            //     <ShieldOff className="h-4 w-4" />
-            //     Restreindre
-            //   </Button>
-            //   <Button variant="secondary" size="sm" loading={restoreMutation.isPending} onClick={() => restoreMutation.mutate()}>
-            //     <ShieldCheck className="h-4 w-4" />
-            //     Restaurer
-            //   </Button>
-            // </div>
+          {isAdmin && (
+            <div className="flex gap-2 shrink-0 flex-wrap">
+              <Button size="sm" variant="secondary" onClick={() => { setNewEmail(student.email); setShowEmailModal(true) }}>
+                <Pencil className="h-3.5 w-3.5" />
+                Email
+              </Button>
+              {student.debtStatus !== 'ok' && (
+                <Button size="sm" variant="secondary" onClick={() => setShowComplementModal(true)}>
+                  <Plus className="h-3.5 w-3.5" />
+                  Complément
+                </Button>
+              )}
+            </div>
           )}
         </div>
 
@@ -898,9 +925,99 @@ export function StudentDetailPage() {
         </div>
       )}
 
+      {/* ── Tab: Historique ────────────────────────────────────────────── */}
+      {activeTab === 'history' && (
+        <Card>
+          {!student.history?.length ? (
+            <div className="py-12 flex flex-col items-center gap-3 text-center">
+              <History className="h-8 w-8 text-gray-600" />
+              <p className="text-sm text-gray-500">Aucun événement enregistré.</p>
+            </div>
+          ) : (
+            <div className="space-y-0">
+              {[...student.history].reverse().map((h, i) => (
+                <div key={i} className="flex gap-3 py-3 border-b border-gray-800/50 last:border-0">
+                  <div className="mt-1 h-2 w-2 rounded-full bg-indigo-500 shrink-0 mt-2" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-medium text-gray-300">{h.event.replace(/_/g, ' ')}</span>
+                      <span className="text-xs text-gray-500 tabular-nums">{formatDate(h.date)}</span>
+                    </div>
+                    {h.detail && <p className="text-xs text-gray-500 mt-0.5">{h.detail}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
+
       {treatPayment && <TreatModal payment={treatPayment} onClose={() => setTreatPayment(null)} />}
       {lightbox && (
         <ImageLightbox images={lightbox.images} initialIndex={lightbox.idx} onClose={() => setLightbox(null)} />
+      )}
+
+      {/* ── Change email modal ──────────────────────────────────────────── */}
+      {showEmailModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
+            <h3 className="mb-4 text-base font-semibold text-gray-100">Changer l'email</h3>
+            <input
+              type="email"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              placeholder="nouvel@email.com"
+              className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none mb-1"
+            />
+            <p className="text-xs text-gray-500 mb-4">Cela mettra à jour les paiements, abonnements et enverra une nouvelle invitation Circle.</p>
+            {changeEmailMutation.isError && (
+              <p className="text-xs text-red-400 mb-3">{(changeEmailMutation.error as { response?: { data?: { message?: string } } })?.response?.data?.message ?? 'Erreur'}</p>
+            )}
+            <div className="flex gap-2 justify-end">
+              <Button variant="secondary" size="sm" onClick={() => setShowEmailModal(false)}>Annuler</Button>
+              <Button size="sm" loading={changeEmailMutation.isPending} disabled={!newEmail.trim() || newEmail === student.email} onClick={() => changeEmailMutation.mutate(newEmail.trim())}>
+                Confirmer
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Complement payment modal ────────────────────────────────────── */}
+      {showComplementModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
+            <h3 className="mb-4 text-base font-semibold text-gray-100">Créer un paiement complément</h3>
+            <div className="space-y-3 mb-4">
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="text-xs text-gray-500 mb-1 block">Montant</label>
+                  <input type="number" value={complement.amount} onChange={(e) => setComplement((p) => ({ ...p, amount: e.target.value }))} placeholder="0" className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none" />
+                </div>
+                <div className="w-24">
+                  <label className="text-xs text-gray-500 mb-1 block">Devise</label>
+                  <select value={complement.currency} onChange={(e) => setComplement((p) => ({ ...p, currency: e.target.value }))} className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none">
+                    {['F CFA', 'EUR', 'USD', 'MAD'].map((c) => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Passerelle</label>
+                <input value={complement.gateway} onChange={(e) => setComplement((p) => ({ ...p, gateway: e.target.value }))} placeholder="FedaPay, Wave…" className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1 block">Notes</label>
+                <textarea value={complement.notes} onChange={(e) => setComplement((p) => ({ ...p, notes: e.target.value }))} rows={2} className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none resize-none" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="secondary" size="sm" onClick={() => setShowComplementModal(false)}>Annuler</Button>
+              <Button size="sm" loading={complementMutation.isPending} disabled={!complement.amount} onClick={() => complementMutation.mutate()}>
+                Créer
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

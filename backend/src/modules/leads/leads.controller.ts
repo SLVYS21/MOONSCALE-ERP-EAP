@@ -7,7 +7,7 @@ import { FileInterceptor } from '@nestjs/platform-express'
 import type { Response } from 'express'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
-import { LeadsService, CreateLeadDto, UpdateLeadDto, ListLeadsQuery, CreateCallDto, UpdateCallDto, CreateOfferDto, CreateScoringRuleDto, CreateTrackingLinkDto } from './leads.service'
+import { LeadsService, CreateLeadDto, UpdateLeadDto, ListLeadsQuery, CreateCallDto, UpdateCallDto, CreateScoringRuleDto, CreateTrackingLinkDto } from './leads.service'
 import type { UserDocument } from '../users/schemas/user.schema'
 import { IsOptional as IOpt, IsString as IStr, IsNumber as INum, IsBoolean as IBool, IsIn as IIn } from 'class-validator'
 import { Type } from 'class-transformer'
@@ -96,27 +96,6 @@ class UpdateCallBody implements UpdateCallDto {
   @IOpt() @IStr() offer_proposed_id?: string
 }
 
-class CreateOfferBody implements CreateOfferDto {
-  @IStr() name: string
-  @IOpt() @IStr() description?: string
-  @IOpt() features?: string[]
-  @IOpt() @IStr() type?: 'online' | 'presentiel' | 'one_to_one' | 'bootcamp'
-  @IOpt() @Type(() => Number) @INum() price?: number
-  @IOpt() @IStr() currency?: string
-  @IOpt() @IBool() is_active?: boolean
-  @IOpt() @IBool() can_be_coupled?: boolean
-}
-
-class UpdateOfferBody {
-  @IOpt() @IStr() name?: string
-  @IOpt() @IStr() description?: string
-  @IOpt() features?: string[]
-  @IOpt() @IStr() type?: 'online' | 'presentiel' | 'one_to_one' | 'bootcamp'
-  @IOpt() @Type(() => Number) @INum() price?: number
-  @IOpt() @IStr() currency?: string
-  @IOpt() @IBool() is_active?: boolean
-  @IOpt() @IBool() can_be_coupled?: boolean
-}
 
 class CreateScoringRuleBody implements CreateScoringRuleDto {
   @IStr() name: string
@@ -338,35 +317,6 @@ export class LeadsController {
   @Post(':id/convert')
   convertToStudent(@Param('id') id: string) {
     return this.leadsService.convertToStudent(id)
-  }
-}
-
-// ── Controller: Offers ────────────────────────────────────────────────────────
-
-@Controller('offers')
-@UseGuards(JwtAuthGuard)
-export class OffersController {
-  constructor(private leadsService: LeadsService) {}
-
-  @Get()
-  listOffers(@Query('active_only') activeOnly?: string) {
-    return this.leadsService.listOffers(activeOnly === 'true')
-  }
-
-  @Post()
-  createOffer(@Body() body: CreateOfferBody) {
-    return this.leadsService.createOffer(body)
-  }
-
-  @Patch(':id')
-  updateOffer(@Param('id') id: string, @Body() body: UpdateOfferBody) {
-    return this.leadsService.updateOffer(id, body)
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  deleteOffer(@Param('id') id: string) {
-    return this.leadsService.deleteOffer(id)
   }
 }
 

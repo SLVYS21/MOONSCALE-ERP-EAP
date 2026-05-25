@@ -10,14 +10,19 @@ import { RolesGuard } from '../../common/guards/roles.guard'
 import { Roles } from '../../common/decorators/roles.decorator'
 import { OffersService } from './offers.service'
 
+import { IsArray } from 'class-validator'
+
 class CreateOfferDto {
   @IsString() name: string
   @IsOptional() @IsString() description?: string
+  @IsOptional() @IsArray() features?: string[]
 }
 
 class UpdateOfferDto {
+  @IsOptional() @IsString() name?: string
   @IsOptional() @IsString() description?: string
   @IsOptional() @IsBoolean() isActive?: boolean
+  @IsOptional() @IsArray() features?: string[]
 }
 
 class CreatePlanDto {

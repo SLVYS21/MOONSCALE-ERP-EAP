@@ -23,11 +23,7 @@ export class Transaction {
   @Prop({ type: Date, required: true })
   date: Date
 
-  @Prop({
-    type: String,
-    enum: ['stripe', 'chariow', 'pawapay', 'fedapay', 'wave', 'orange_money', 'virement', 'manual', 'bank_import'],
-    default: 'manual',
-  })
+  @Prop({ type: String, default: 'manual' })
   gateway: string
 
   @Prop({ type: String, enum: ['pending', 'completed', 'failed', 'refunded'], default: 'completed' })
@@ -44,6 +40,20 @@ export class Transaction {
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   createdBy: Types.ObjectId
+
+  // ── Customer info ──────────────────────────────────────────────────────────
+  @Prop({ type: String, default: null }) customerEmail: string | null
+  @Prop({ type: String, default: null }) customerName: string | null
+  @Prop({ type: String, default: null }) customerPhone: string | null
+
+  // ── Product / offer link ───────────────────────────────────────────────────
+  @Prop({ type: String, default: null }) productName: string | null
+  @Prop({ type: Types.ObjectId, ref: 'Offer', default: null }) offerId: Types.ObjectId | null
+  @Prop({ type: String, default: null }) offerName: string | null
+
+  // ── Entity links ───────────────────────────────────────────────────────────
+  @Prop({ type: Types.ObjectId, ref: 'Student', default: null }) studentId: Types.ObjectId | null
+  @Prop({ type: Types.ObjectId, ref: 'Lead', default: null }) leadId: Types.ObjectId | null
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction)
@@ -52,3 +62,8 @@ TransactionSchema.index({ categoryId: 1 })
 TransactionSchema.index({ date: -1 })
 TransactionSchema.index({ gateway: 1 })
 TransactionSchema.index({ status: 1 })
+TransactionSchema.index({ productName: 1 })
+TransactionSchema.index({ offerId: 1 })
+TransactionSchema.index({ customerEmail: 1 })
+TransactionSchema.index({ studentId: 1 })
+TransactionSchema.index({ leadId: 1 })

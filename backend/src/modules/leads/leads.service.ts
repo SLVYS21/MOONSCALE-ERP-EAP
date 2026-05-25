@@ -4,15 +4,15 @@ import { Cron } from '@nestjs/schedule'
 import { Model, Types } from 'mongoose'
 import axios from 'axios'
 import { Lead, LeadDocument, PipelineStatus, QualificationStatus, LeadSourceType } from './schemas/lead.schema'
-import { Offer, OfferDocument } from './schemas/offer.schema'
 import { Call, CallDocument } from './schemas/call.schema'
 import { ScoringRule, ScoringRuleDocument } from './schemas/scoring-rule.schema'
 import { ScoringConfig, ScoringConfigDocument } from './schemas/scoring-config.schema'
 import { WhatsAppLink, WhatsAppLinkDocument } from './schemas/whatsapp-link.schema'
 import { WhatsAppClick, WhatsAppClickDocument } from './schemas/whatsapp-click.schema'
 import { AutomationsService } from '../automations/automations.service'
+import { OffersService } from '../offers/offers.service'
 import { Student, StudentDocument } from '../students/schemas/student.schema'
-import { DEFAULT_OFFERS, DEFAULT_SCORING_RULES } from './leads.seed'
+import { DEFAULT_SCORING_RULES } from './leads.seed'
 
 // ── CSV Parser ────────────────────────────────────────────────────────────────
 
@@ -188,7 +188,6 @@ export class LeadsService implements OnApplicationBootstrap {
 
   constructor(
     @InjectModel(Lead.name) private leadModel: Model<LeadDocument>,
-    @InjectModel(Offer.name) private offerModel: Model<OfferDocument>,
     @InjectModel(Call.name) private callModel: Model<CallDocument>,
     @InjectModel(ScoringRule.name) private scoringRuleModel: Model<ScoringRuleDocument>,
     @InjectModel(ScoringConfig.name) private scoringConfigModel: Model<ScoringConfigDocument>,
@@ -196,14 +195,10 @@ export class LeadsService implements OnApplicationBootstrap {
     @InjectModel(WhatsAppClick.name) private whatsappClickModel: Model<WhatsAppClickDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
     private automationsService: AutomationsService,
+    private offersService: OffersService,
   ) {}
 
   async onApplicationBootstrap() {
-    const offerCount = await this.offerModel.countDocuments()
-    if (offerCount === 0) {
-      await this.offerModel.insertMany(DEFAULT_OFFERS)
-      this.logger.log('Seeded 4 default offers')
-    }
     const ruleCount = await this.scoringRuleModel.countDocuments()
     if (ruleCount === 0) {
       await this.scoringRuleModel.insertMany(DEFAULT_SCORING_RULES)
@@ -274,7 +269,7 @@ export class LeadsService implements OnApplicationBootstrap {
       this.leadModel
         .find(filter)
         .populate('closer_id', 'firstName lastName email')
-        .populate('offer_ids', 'name type price currency')
+        .populate('offer_ids', 'name description features isActive')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
@@ -289,7 +284,7 @@ export class LeadsService implements OnApplicationBootstrap {
     const lead = await this.leadModel
       .findById(id)
       .populate('closer_id', 'firstName lastName email avatar')
-      .populate('offer_ids', 'name type price currency can_be_coupled')
+      .populate('offer_ids', 'name description features isActive plans')
       .populate('created_by', 'firstName lastName')
       .lean() as unknown as LeadDocument
 
@@ -459,7 +454,7 @@ export class LeadsService implements OnApplicationBootstrap {
     return this.callModel
       .find({ lead_id: new Types.ObjectId(leadId) })
       .populate('closer_id', 'firstName lastName email')
-      .populate('offer_proposed_id', 'name type price currency')
+      .populate('offer_proposed_id', 'name description features isActive')
       .sort({ createdAt: -1 })
       .lean() as unknown as CallDocument[]
   }
@@ -546,26 +541,22 @@ Sois concis et factuel. Réponds en français.`
     return { ai_summary: content }
   }
 
-  // ── Offers ────────────────────────────────────────────────────────────────
+  // ── Offers (delegated to OffersService / subscription-offers) ────────────────
 
-  async listOffers(activeOnly = false): Promise<OfferDocument[]> {
-    const filter = activeOnly ? { is_active: true } : {}
-    return this.offerModel.find(filter).sort({ name: 1 }).lean() as unknown as OfferDocument[]
+  async listOffers(activeOnly = false) {
+    return this.offersService.listOffers(activeOnly)
   }
 
-  async createOffer(dto: CreateOfferDto): Promise<OfferDocument> {
-    return this.offerModel.create(dto)
+  async createOffer(dto: CreateOfferDto) {
+    return this.offersService.createOffer({ name: dto.name, description: dto.description, features: dto.features })
   }
 
-  async updateOffer(id: string, dto: Partial<CreateOfferDto>): Promise<OfferDocument> {
-    const offer = await this.offerModel.findByIdAndUpdate(id, dto, { new: true }).lean() as unknown as OfferDocument
-    if (!offer) throw new NotFoundException('Offre introuvable')
-    return offer
+  async updateOffer(id: string, dto: Partial<CreateOfferDto>) {
+    return this.offersService.updateOffer(id, { name: dto.name, description: dto.description, features: dto.features, isActive: dto.is_active })
   }
 
-  async deleteOffer(id: string): Promise<void> {
-    const result = await this.offerModel.findByIdAndUpdate(id, { is_active: false }, { new: true })
-    if (!result) throw new NotFoundException('Offre introuvable')
+  async deleteOffer(id: string) {
+    return this.offersService.deleteOffer(id)
   }
 
   // ── Scoring Rules ─────────────────────────────────────────────────────────

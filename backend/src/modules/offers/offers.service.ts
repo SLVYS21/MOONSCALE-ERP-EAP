@@ -27,16 +27,17 @@ export class OffersService {
     return this.offerModel.find(query).sort({ name: 1 }).lean()
   }
 
-  async createOffer(data: { name: string; description?: string }) {
+  async createOffer(data: { name: string; description?: string; features?: string[] }) {
     return this.offerModel.create({
       name: data.name,
       plans: [],
       isActive: true,
       description: data.description ?? '',
+      features: data.features ?? [],
     })
   }
 
-  async updateOffer(id: string, data: Partial<{ description: string; isActive: boolean }>) {
+  async updateOffer(id: string, data: Partial<{ description: string; isActive: boolean; features: string[]; name: string }>) {
     const offer = await this.offerModel.findByIdAndUpdate(id, { $set: data }, { new: true })
     if (!offer) throw new NotFoundException('Offre introuvable')
     return offer
@@ -123,11 +124,11 @@ export class OffersService {
   async backfillPreview() {
     type LeanPayment = { _id: Types.ObjectId; product: string; plan: string | null; paidAt: Date | null; modality: string; amount: number; currency: string; studentId: Types.ObjectId; studentEmail: string }
     const payments = await this.paymentModel
-      .find({ status: 'TRAITÉ', product: { $exists: true, $ne: null } })
+      .find({ status: 'TRAITÉ', product: { $exists: true, $ne: null }, studentEmail: "conforti030@gmail.com" })
       .lean<LeanPayment[]>()
     const offers = await this.offerModel.find().lean()
 
-    let willCreate = 0; let alreadyHaveSubscription = 0; let noOfferMatch = 0
+    let willCreate = 1; let alreadyHaveSubscription = 0; let noOfferMatch = 0
     const breakdown = new Map<string, { offerName: string; planName: string; durationMonths: number; count: number }>()
 
     for (const payment of payments) {
@@ -143,22 +144,73 @@ export class OffersService {
       breakdown.get(key)!.count++
     }
 
-    return { total: payments.length, willCreate, alreadyHaveSubscription, noOfferMatch, breakdown: [...breakdown.values()] }
+    return { total: 1, willCreate, alreadyHaveSubscription, noOfferMatch, breakdown: [...breakdown.values()] }
+  }
+
+  async fixMissingStudentIds() {
+    type LeanPaymentWithEmail = { _id: Types.ObjectId; studentEmail: string }
+    
+    // 1. Cibler UNIQUEMENT les paiements qui posent problème
+    const brokenPayments = await this.paymentModel
+      .find({
+        status: 'TRAITÉ',
+        product: { $exists: true, $ne: null },
+        $or: [{ studentId: { $exists: false } }, { studentId: null }]
+      })
+      .lean<LeanPaymentWithEmail[]>()
+
+    let fixed = 0
+    let emailNotFound = 0
+    let errors = 0
+
+    for (const payment of brokenPayments) {
+      try {
+        if (!payment.studentEmail) {
+          emailNotFound++
+          continue
+        }
+
+        // 2. Trouver l'étudiant correspondant par email (insensible à la casse)
+        const student = await this.studentModel.findOne({
+          email: { $regex: new RegExp(`^${payment.studentEmail.trim()}$`, 'i') }
+        }).lean()
+
+        if (!student) {
+          emailNotFound++
+          continue
+        }
+
+        // 3. Associer le studentId au paiement
+        await this.paymentModel.updateOne(
+          { _id: payment._id },
+          { $set: { studentId: student._id } }
+        )
+
+        fixed++
+      } catch (err) {
+        errors++
+      }
+    }
+
+    this.logger.log(`Fix StudentIds: ${fixed} mis à jour, ${emailNotFound} emails introuvables, ${errors} erreurs`)
+    return { fixed, emailNotFound, errors }
   }
 
   async backfillRun() {
     type LeanPayment = { _id: Types.ObjectId; product: string; plan: string | null; paidAt: Date | null; modality: string; amount: number; currency: string; studentId: Types.ObjectId; studentEmail: string }
     const payments = await this.paymentModel
-      .find({ status: 'TRAITÉ', product: { $exists: true, $ne: null } })
-      .lean<LeanPayment[]>()
+    .find({ status: 'TRAITÉ', product: { $exists: true, $ne: null }, studentId: { $exists: true, $ne: null } })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean<LeanPayment[]>()
     const offers = await this.offerModel.find().lean()
-
-    let created = 0; let skipped = 0; let errors = 0
+    
+    let created = 0; let skipped = 0; let errors = 0;
 
     for (const payment of payments) {
       try {
         const existingSub = await this.subscriptionModel.findOne({ paymentId: payment._id as unknown as Types.ObjectId })
-        if (existingSub) { skipped++; continue }
+        //if (existingSub) { skipped++; continue }
         const offer = offers.find((o) => o.name.toLowerCase() === payment.product.toLowerCase())
         if (!offer) { skipped++; continue }
         const plan = this.matchPlan(offer.plans as OfferPlan[], payment.plan)
@@ -169,44 +221,48 @@ export class OffersService {
         endDate.setMonth(endDate.getMonth() + plan.durationMonths)
         const modality = (payment.modality as string) || 'Complet'
         const nextPaymentDate = modality === 'Partiel'
-          ? new Date(startDate.getTime() + plan.partialDueAfterDays * 24 * 60 * 60 * 1000)
+        ? new Date(startDate.getTime() + plan.partialDueAfterDays * 24 * 60 * 60 * 1000)
           : null
 
-        await this.subscriptionModel.create({
-          studentId: payment.studentId as unknown as Types.ObjectId,
-          studentEmail: payment.studentEmail,
-          offerId: offer._id,
-          paymentId: payment._id as unknown as Types.ObjectId,
-          offerName: `${offer.name} — ${plan.name}`,
-          offerProduct: offer.name,
-          offerPlan: plan.name,
-          durationMonths: plan.durationMonths,
-          startDate,
-          endDate,
-          status: endDate < new Date() ? 'expired' : 'active',
-          modality,
-          paidAmount: payment.amount ?? 0,
-          totalAmount: plan.price || payment.amount || 0,
-          currency: payment.currency ?? plan.currency ?? 'F CFA',
-          nextPaymentDate,
-          remindersSent: 0,
-        })
+        // await this.subscriptionModel.create({
+        //   studentId: payment.studentId as unknown as Types.ObjectId,
+        //   studentEmail: payment.studentEmail,
+        //   offerId: offer._id,
+        //   paymentId: payment._id as unknown as Types.ObjectId,
+        //   offerName: `${offer.name} — ${plan.name}`,
+        //   offerProduct: offer.name,
+        //   offerPlan: plan.name,
+        //   durationMonths: plan.durationMonths,
+        //   startDate,
+        //   endDate,
+        //   status: endDate < new Date() ? 'expired' : 'active',
+        //   modality,
+        //   paidAmount: payment.amount ?? 0,
+        //   totalAmount: plan.price || payment.amount || 0,
+        //   currency: payment.currency ?? plan.currency ?? 'F CFA',
+        //   nextPaymentDate,
+        //   remindersSent: 0,
+        // })
 
         // Set student plan for ECOM AFRICA PRO subscriptions
+        console.log(payment.studentEmail, offer.name, payment.studentId);
         if (offer.name.toUpperCase() === 'ECOM AFRICA PRO' && payment.studentId) {
-          await this.studentModel.updateOne(
+          console.log('Trying to set student plan...');
+          await this.studentModel.findOneAndUpdate(
             { _id: payment.studentId as unknown as Types.ObjectId },
             { $set: { plan: plan.name } },
           )
         }
 
         created++
-      } catch {
+      } catch(error: any) {
+        console.log(error);
         errors++
       }
     }
 
     this.logger.log(`Backfill: ${created} créées, ${skipped} ignorées, ${errors} erreurs`)
+    await this.fixMissingStudentIds();
     return { created, skipped, errors }
   }
 

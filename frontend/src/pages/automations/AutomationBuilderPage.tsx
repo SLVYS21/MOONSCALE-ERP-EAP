@@ -9,11 +9,12 @@ import {
   Mail, Globe, Timer, GitBranch, Bell, FileText, Pencil, CheckSquare,
   AlarmClock, AlertTriangle, Crosshair, TrendingUp, Trophy, Phone,
   CalendarClock, UserPlus, Send, Tag, X as TagX, Filter, Users, Repeat,
+  AlignLeft, AlignCenter, AlignRight, Image, MousePointerClick, Minus, MoveUp, MoveDown,
 } from 'lucide-react'
 import type { StepCondition, AudienceFilter, AudienceConfig } from '@/types'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
-import type { Automation, AutomationStep, AutomationRun, StepType, TriggerType, Form, Offer } from '@/types'
+import type { Automation, AutomationStep, AutomationRun, StepType, TriggerType, Form, Offer, EmailBlock } from '@/types'
 
 // ── API ───────────────────────────────────────────────────────────────────────
 
@@ -941,6 +942,185 @@ function CreateSubscriptionConfig({
   )
 }
 
+// ── EmailBlockEditor ──────────────────────────────────────────────────────────
+
+function EmailBlockEditor({ blocks, onChange }: { blocks: EmailBlock[]; onChange: (b: EmailBlock[]) => void }) {
+  const upd = (i: number, patch: Partial<EmailBlock>) =>
+    onChange(blocks.map((b, idx) => idx === i ? { ...b, ...patch } as EmailBlock : b))
+  const remove = (i: number) => onChange(blocks.filter((_, idx) => idx !== i))
+  const move = (i: number, dir: -1 | 1) => {
+    const next = [...blocks]
+    const j = i + dir
+    if (j < 0 || j >= next.length) return
+    ;[next[i], next[j]] = [next[j], next[i]]
+    onChange(next)
+  }
+  const add = (type: EmailBlock['type']) => {
+    const defaults: Record<string, EmailBlock> = {
+      text:    { type: 'text', content: '', align: 'left' },
+      image:   { type: 'image', url: '' },
+      button:  { type: 'button', label: 'Cliquez ici', url: '', color: '#6366f1', textColor: '#ffffff', radius: 'md', align: 'center' },
+      divider: { type: 'divider' },
+      spacer:  { type: 'spacer', height: 16 },
+    }
+    onChange([...blocks, defaults[type]])
+  }
+
+  const inputCls = 'w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+
+  return (
+    <div className="space-y-2">
+      {/* Block list */}
+      <div className="space-y-2">
+        {blocks.map((block, i) => (
+          <div key={i} className="rounded-lg border border-white/10 bg-white/5 p-2.5 space-y-2">
+            {/* Block header */}
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500 flex-1">
+                {block.type === 'text' ? 'Texte' : block.type === 'image' ? 'Image' : block.type === 'button' ? 'Bouton' : block.type === 'divider' ? 'Séparateur' : 'Espacement'}
+              </span>
+              <button onClick={() => move(i, -1)} className="text-gray-600 hover:text-gray-400 transition-colors"><MoveUp className="h-3 w-3" /></button>
+              <button onClick={() => move(i, 1)} className="text-gray-600 hover:text-gray-400 transition-colors"><MoveDown className="h-3 w-3" /></button>
+              <button onClick={() => remove(i)} className="text-gray-600 hover:text-red-400 transition-colors"><Trash2 className="h-3 w-3" /></button>
+            </div>
+
+            {/* Text block */}
+            {block.type === 'text' && (
+              <>
+                <textarea
+                  value={block.content}
+                  onChange={(e) => upd(i, { content: e.target.value })}
+                  placeholder="Bonjour {{student.name}}, ..."
+                  rows={3}
+                  className={cn(inputCls, 'resize-y')}
+                />
+                <div className="flex gap-1">
+                  {(['left', 'center', 'right'] as const).map((a) => {
+                    const Icon = a === 'left' ? AlignLeft : a === 'center' ? AlignCenter : AlignRight
+                    return (
+                      <button
+                        key={a}
+                        onClick={() => upd(i, { align: a })}
+                        className={cn('p-1 rounded transition-colors', block.align === a ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300')}
+                      >
+                        <Icon className="h-3 w-3" />
+                      </button>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Image block */}
+            {block.type === 'image' && (
+              <div className="space-y-1.5">
+                <input value={block.url} onChange={(e) => upd(i, { url: e.target.value })} placeholder="https://..." className={inputCls} />
+                <input value={block.alt ?? ''} onChange={(e) => upd(i, { alt: e.target.value })} placeholder="Texte alternatif" className={inputCls} />
+                {block.url && <img src={block.url} alt={block.alt ?? ''} className="max-h-24 rounded opacity-70 object-contain" onError={() => {}} />}
+              </div>
+            )}
+
+            {/* Button block */}
+            {block.type === 'button' && (
+              <div className="space-y-1.5">
+                <input value={block.label} onChange={(e) => upd(i, { label: e.target.value })} placeholder="Label du bouton" className={inputCls} />
+                <input value={block.url} onChange={(e) => upd(i, { url: e.target.value })} placeholder="https://..." className={inputCls} />
+                <div className="flex gap-2">
+                  <div className="flex-1 space-y-1">
+                    <span className="text-[10px] text-gray-500">Couleur fond</span>
+                    <div className="flex gap-1.5 items-center">
+                      <input type="color" value={block.color} onChange={(e) => upd(i, { color: e.target.value })} className="h-6 w-8 rounded cursor-pointer bg-transparent border-0" />
+                      <input value={block.color} onChange={(e) => upd(i, { color: e.target.value })} className={cn(inputCls, 'flex-1 font-mono')} />
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <span className="text-[10px] text-gray-500">Couleur texte</span>
+                    <div className="flex gap-1.5 items-center">
+                      <input type="color" value={block.textColor} onChange={(e) => upd(i, { textColor: e.target.value })} className="h-6 w-8 rounded cursor-pointer bg-transparent border-0" />
+                      <input value={block.textColor} onChange={(e) => upd(i, { textColor: e.target.value })} className={cn(inputCls, 'flex-1 font-mono')} />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 items-center">
+                  <span className="text-[10px] text-gray-500 shrink-0">Forme :</span>
+                  {(['none', 'md', 'full'] as const).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => upd(i, { radius: r })}
+                      className={cn('px-2 py-0.5 text-[10px] rounded border transition-colors', block.radius === r ? 'border-indigo-500 bg-indigo-600/30 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-300')}
+                    >
+                      {r === 'none' ? 'Carré' : r === 'md' ? 'Arrondi' : 'Pill'}
+                    </button>
+                  ))}
+                  <span className="text-[10px] text-gray-500 shrink-0 ml-2">Alignement :</span>
+                  {(['left', 'center', 'right'] as const).map((a) => {
+                    const Icon = a === 'left' ? AlignLeft : a === 'center' ? AlignCenter : AlignRight
+                    return (
+                      <button
+                        key={a}
+                        onClick={() => upd(i, { align: a })}
+                        className={cn('p-1 rounded transition-colors', block.align === a ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300')}
+                      >
+                        <Icon className="h-3 w-3" />
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* Preview */}
+                <div className={cn('pt-1', block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left')}>
+                  <span
+                    style={{ background: block.color, color: block.textColor, borderRadius: block.radius === 'full' ? '9999px' : block.radius === 'md' ? '6px' : '0px' }}
+                    className="inline-block px-3 py-1.5 text-xs font-medium"
+                  >
+                    {block.label || 'Aperçu bouton'}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Spacer block */}
+            {block.type === 'spacer' && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-gray-500">Hauteur (px)</span>
+                <input
+                  type="number"
+                  value={block.height}
+                  min={4}
+                  max={80}
+                  onChange={(e) => upd(i, { height: Number(e.target.value) })}
+                  className={cn(inputCls, 'w-20')}
+                />
+              </div>
+            )}
+
+            {/* Divider block — no config needed */}
+            {block.type === 'divider' && <div className="border-t border-white/10 my-1" />}
+          </div>
+        ))}
+      </div>
+
+      {/* Add block buttons */}
+      <div className="flex flex-wrap gap-1.5 pt-1">
+        <button onClick={() => add('text')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+          <Mail className="h-3 w-3" /> Texte
+        </button>
+        <button onClick={() => add('image')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+          <Image className="h-3 w-3" /> Image
+        </button>
+        <button onClick={() => add('button')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+          <MousePointerClick className="h-3 w-3" /> Bouton
+        </button>
+        <button onClick={() => add('divider')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+          <Minus className="h-3 w-3" /> Séparateur
+        </button>
+        <button onClick={() => add('spacer')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+          <Plus className="h-3 w-3" /> Espacement
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── StepConfig ────────────────────────────────────────────────────────────────
 
 function StepConfig({
@@ -1000,14 +1180,37 @@ function StepConfig({
             <input value={cfg.subject ?? ''} onChange={(e) => upd({ subject: e.target.value })} placeholder="Bienvenue {{student.name}}" className={inputCls} />
           </div>
           <div>
-            <label className={labelCls}>Corps du message</label>
-            <textarea
-              value={cfg.body ?? ''}
-              onChange={(e) => upd({ body: e.target.value })}
-              placeholder={"Bonjour {{student.name}},\n\nVotre paiement a bien été reçu."}
-              rows={6}
-              className={cn(inputCls, 'resize-y font-mono text-xs')}
-            />
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className={cn(labelCls, 'mb-0')}>Contenu de l'email</label>
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => upd({ blocks: cfg.blocks ?? [], body: undefined })}
+                  className={cn('text-[10px] px-2 py-0.5 rounded border transition-colors', !cfg.body && cfg.blocks !== undefined ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-300')}
+                >
+                  Éditeur blocs
+                </button>
+                <button
+                  onClick={() => upd({ body: cfg.body ?? '', blocks: undefined })}
+                  className={cn('text-[10px] px-2 py-0.5 rounded border transition-colors', cfg.body !== undefined || cfg.blocks === undefined ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-300')}
+                >
+                  Texte brut
+                </button>
+              </div>
+            </div>
+            {cfg.blocks !== undefined && !cfg.body ? (
+              <EmailBlockEditor
+                blocks={cfg.blocks ?? []}
+                onChange={(b) => upd({ blocks: b })}
+              />
+            ) : (
+              <textarea
+                value={cfg.body ?? ''}
+                onChange={(e) => upd({ body: e.target.value })}
+                placeholder={"Bonjour {{student.name}},\n\nVotre paiement a bien été reçu."}
+                rows={6}
+                className={cn(inputCls, 'resize-y font-mono text-xs')}
+              />
+            )}
           </div>
         </>
       )}

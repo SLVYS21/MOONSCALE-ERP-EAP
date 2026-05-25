@@ -104,6 +104,19 @@ export class Student {
   // ── Admin flag ────────────────────────────────────────────────────
   @Prop({ type: Boolean, default: false })
   isAdmin: boolean
+
+  // ── Audit history ─────────────────────────────────────────────────
+  @Prop({
+    type: [{
+      _id: false,
+      event:  { type: String, required: true },
+      detail: { type: String, default: '' },
+      actor:  { type: Types.ObjectId, ref: 'User', default: null },
+      date:   { type: Date, default: () => new Date() },
+    }],
+    default: [],
+  })
+  history: Array<{ event: string; detail: string; actor: Types.ObjectId | null; date: Date }>
 }
 
 export const StudentSchema = SchemaFactory.createForClass(Student)

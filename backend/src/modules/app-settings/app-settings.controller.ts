@@ -11,7 +11,7 @@ export class AppSettingsController {
   get() { return this.service.get() }
 
   @Patch()
-  update(@Body() body: { lead_magnets?: string[]; lead_sources?: string[] }) {
+  update(@Body() body: { lead_magnets?: string[]; lead_sources?: string[]; custom_gateways?: string[] }) {
     return this.service.update(body)
   }
 }

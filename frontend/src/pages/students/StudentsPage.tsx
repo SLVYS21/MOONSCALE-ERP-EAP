@@ -76,29 +76,6 @@ const DEBT_OPTIONS = [
 
 // ── Badges ────────────────────────────────────────────────────────────────────
 
-const PLAN_PRIORITY = ['Elite', 'Premium', 'All-In-One', 'Standard', 'Produits Gagnants', 'Support Direct', 'Lives']
-const PLAN_BADGE: Record<string, { variant: 'info' | 'warning' | 'success' | 'default'; label: string }> = {
-  'Elite':             { variant: 'info',    label: 'Elite' },
-  'Premium':           { variant: 'success', label: 'Premium' },
-  'All-In-One':        { variant: 'warning', label: 'All-In-One' },
-  'Standard':          { variant: 'default', label: 'Standard' },
-  'Produits Gagnants': { variant: 'default', label: 'Prod. Gagnants' },
-  'Support Direct':    { variant: 'default', label: 'Support' },
-  'Lives':             { variant: 'default', label: 'Lives' },
-}
-
-function planBadge(tags?: { id: number; name: string }[]) {
-  if (!tags || tags.length === 0) return null
-  for (const key of PLAN_PRIORITY) {
-    const found = tags.find((t) => t.name.toLowerCase().includes(key.toLowerCase()))
-    if (found) {
-      const cfg = PLAN_BADGE[key] ?? { variant: 'default' as const, label: found.name }
-      return <Badge variant={cfg.variant}>{cfg.label}</Badge>
-    }
-  }
-  return <Badge variant="default">{tags[0].name}</Badge>
-}
-
 function statusBadge(status?: CirclePaymentStatus) {
   if (status === 'EN RÈGLE') return <Badge variant="success">EN RÈGLE</Badge>
   if (status === 'EN RETARD') return <Badge variant="danger">EN RETARD</Badge>
@@ -386,7 +363,7 @@ export function StudentsPage() {
                         </div>
                       </td>
                       <td className="py-3 pr-4">
-                        {planBadge(s.circleTags) ?? <span className="text-gray-600">—</span>}
+                        {s.plan ? <Badge variant="default">{s.plan}</Badge> : <span className="text-gray-600">—</span>}
                       </td>
                       <td className="py-3 pr-4">
                         {(s.payments?.length ?? 0) === 0 ? (

@@ -40,6 +40,11 @@ class AddNoteDto {
   note: string
 }
 
+class ChangeEmailDto {
+  @IsString()
+  email: string
+}
+
 class UpdateFormationStatusDto {
   @IsString() @IsIn(['EN RÈGLE', 'EN RETARD'])
   paymentStatus: 'EN RÈGLE' | 'EN RETARD'
@@ -85,6 +90,19 @@ export class StudentsController {
   @Patch('students/:id/notes')
   addNote(@Param('id') id: string, @Body() dto: AddNoteDto) {
     return this.studentsService.addNote(id, dto.note)
+  }
+
+  @Patch('students/:id/email')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  @HttpCode(HttpStatus.OK)
+  async changeEmail(
+    @Param('id') id: string,
+    @Body() dto: ChangeEmailDto,
+    @CurrentUser() user: UserDocument,
+  ) {
+    await this.studentsService.changeStudentEmail(id, dto.email, user._id.toString())
+    return { message: 'Email mis à jour' }
   }
 
   @Post('students/:id/restrict')

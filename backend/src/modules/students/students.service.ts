@@ -33,6 +33,8 @@ import { OcrService } from '../ocr/ocr.service'
 import { AutomationsService } from '../automations/automations.service'
 import { Offer, OfferDocument } from '../offers/schemas/offer.schema'
 import { Subscription, SubscriptionDocument } from '../offers/schemas/subscription.schema'
+import { Lead, LeadDocument } from '../leads/schemas/lead.schema'
+import { ProductMapping, ProductMappingDocument } from '../finances/schemas/product-mapping.schema'
 
 @Injectable()
 export class StudentsService {
@@ -44,8 +46,10 @@ export class StudentsService {
     @InjectModel(FormationDashboard.name) private formationModel: Model<FormationDashboardDocument>,
     @InjectModel(CoachingDashboard.name) private coachingModel: Model<CoachingDashboardDocument>,
     @InjectModel(Reminder.name)      private reminderModel: Model<ReminderDocument>,
-    @InjectModel(Offer.name)         private offerModel: Model<OfferDocument>,
-    @InjectModel(Subscription.name)  private subscriptionModel: Model<SubscriptionDocument>,
+    @InjectModel(Offer.name)            private offerModel: Model<OfferDocument>,
+    @InjectModel(Subscription.name)     private subscriptionModel: Model<SubscriptionDocument>,
+    @InjectModel(Lead.name)             private leadModel: Model<LeadDocument>,
+    @InjectModel(ProductMapping.name)   private productMappingModel: Model<ProductMappingDocument>,
     private circleService: CircleService,
     private airtableService: AirtableService,
     private mailService: MailService,
@@ -502,6 +506,15 @@ export class StudentsService {
 
     const resolvedPlanKey = body?.planKey ?? this.inferPlanKey(payment.plan, payment.modality)
 
+    // 2D. Auto-suggest offerId from confirmed ProductMapping if not provided
+    let resolvedOfferId = body?.offerId
+    if (!resolvedOfferId && payment.product) {
+      const mapping = await this.productMappingModel
+        .findOne({ productName: payment.product, status: 'confirmed' })
+        .lean<{ offerId: Types.ObjectId | null }>()
+      if (mapping?.offerId) resolvedOfferId = String(mapping.offerId)
+    }
+
     // 1. Trouver/créer l'étudiant
     let student = await this.studentModel.findOne({ email: payment.studentEmail })
     if (!student) {
@@ -509,6 +522,22 @@ export class StudentsService {
         email: payment.studentEmail,
         name: payment.studentName ?? payment.studentEmail,
       })
+    }
+
+    // 2E. Lead → Student conversion
+    try {
+      const lead = await this.leadModel.findOne({ email: payment.studentEmail })
+      if (lead && !lead.student_id) {
+        lead.student_id = String(student._id)
+        lead.pipeline_status = 'won'
+        await lead.save()
+        this.automationsService?.triggerEvent('lead_won', {
+          student: { _id: String(student._id), email: student.email, name: student.name, whatsapp: student.whatsapp },
+          lead: { _id: String(lead._id), name: lead.name, email: lead.email },
+        })
+      }
+    } catch (err: unknown) {
+      this.logger.error(`Lead→won conversion failed for ${payment.studentEmail}: ${(err as Error).message}`)
     }
 
     // 2. Circle : inviter si nouveau + tagger + donner l'accès
@@ -575,10 +604,18 @@ export class StudentsService {
     payment.processedAt = new Date()
     await payment.save()
 
+    // 2F. Append history: payment treated
+    try {
+      await this.studentModel.updateOne(
+        { _id: student._id },
+        { $push: { history: { event: 'payment_treated', detail: `Paiement ${payment._id} traité (${payment.product}, ${payment.amount} ${payment.currency})`, actor: new Types.ObjectId(processedById), date: new Date() } } },
+      )
+    } catch { /* non-bloquant */ }
+
     // 8. Créer la souscription si une offre est sélectionnée
-    if (body?.offerId) {
+    if (resolvedOfferId) {
       try {
-        const offer = await this.offerModel.findById(body.offerId).lean<{
+        const offer = await this.offerModel.findById(resolvedOfferId).lean<{
           _id: Types.ObjectId; name: string; plan: string | null
           durationMonths: number; price: number; currency: string; partialDueAfterDays: number
         }>()
@@ -729,6 +766,24 @@ export class StudentsService {
             status: 'TRAITÉ',
           }).lean()
           const totalPaid = payments.reduce((s, p) => s + (p.amount ?? 0), 0)
+
+          // Fetch subscription for enriched context
+          const subscription = await this.subscriptionModel
+            .findOne({ studentEmail: reminder.email, status: 'active' })
+            .lean<{ offerName?: string; totalAmount?: number; currency?: string; nextPaymentDate?: Date }>()
+
+          this.automationsService?.triggerEvent('reminder_due', {
+            student: { email: reminder.email, name: reminder.studentName },
+            reminder: {
+              nextPaymentDate: rd.date.toISOString().split('T')[0],
+              amountDue: subscription?.totalAmount ?? totalPaid,
+              daysBeforePayment: rd.daysBeforePayment,
+            },
+            subscription: {
+              offerName: subscription?.offerName ?? '',
+              currency: subscription?.currency ?? 'F CFA',
+            },
+          })
 
           await this.mailService.sendPaymentReminder(
             reminder.email,
@@ -1042,6 +1097,37 @@ export class StudentsService {
       await payment.save()
       throw err
     }
+  }
+
+  // ── Changement d'email ───────────────────────────────────────────
+
+  async changeStudentEmail(studentId: string, newEmail: string, actorId: string): Promise<void> {
+    const student = await this.studentModel.findById(studentId)
+    if (!student) throw new NotFoundException('Étudiant introuvable')
+
+    const normalized = newEmail.toLowerCase().trim()
+    const conflict = await this.studentModel.findOne({ email: normalized, _id: { $ne: studentId } })
+    if (conflict) throw new ConflictException('Cet email est déjà utilisé par un autre étudiant')
+
+    const oldEmail = student.email
+    student.email = normalized
+    await student.save()
+
+    // Mettre à jour les paiements et abonnements liés
+    await Promise.all([
+      this.paymentModel.updateMany({ studentEmail: oldEmail }, { studentEmail: normalized }),
+      this.subscriptionModel.updateMany({ studentEmail: oldEmail }, { studentEmail: normalized }),
+    ])
+
+    // Invitation Circle avec le nouvel email (non-bloquant)
+    this.circleService.inviteMember(normalized, student.name).catch(
+      (err: unknown) => this.logger.error(`Circle re-invite failed for ${normalized}: ${(err as Error).message}`),
+    )
+
+    await this.studentModel.updateOne(
+      { _id: student._id },
+      { $push: { history: { event: 'email_changed', detail: `${oldEmail} → ${normalized}`, actor: new Types.ObjectId(actorId), date: new Date() } } },
+    )
   }
 
   // ── Helpers privés ───────────────────────────────────────────────

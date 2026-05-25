@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { Plus, Trash2, ChevronRight, FileText, BookOpen } from 'lucide-react'
+import { Plus, Trash2, ChevronRight, FileText, BookOpen, Save } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { cn } from '@/lib/utils'
@@ -230,13 +230,14 @@ export function WikiPage() {
     enabled: !!slug,
   })
 
-  // Sync local state when page loads
+  // Sync local state when page loads — open in preview mode
   useEffect(() => {
     if (page) {
       isFirstLoad.current = true
       setContent(page.content ?? '')
       setTitle(page.title)
       setSaveStatus('idle')
+      setEditorTab('preview')
     }
   }, [page?._id])
 
@@ -249,6 +250,12 @@ export function WikiPage() {
       qc.invalidateQueries({ queryKey: ['wiki-tree'] })
     },
   })
+
+  // Save immediately (cancel pending debounce first)
+  const saveNow = useCallback(() => {
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+    saveMutation.mutate({ content, title })
+  }, [content, title, slug])
 
   // Debounced auto-save
   const scheduleSave = useCallback(
@@ -354,7 +361,7 @@ export function WikiPage() {
             {/* Toolbar */}
             <div className="flex items-center justify-between border-b border-gray-800 px-5 py-2.5">
               <div className="flex gap-1">
-                {(['edit', 'preview'] as const).map((t) => (
+                {(['preview', 'edit'] as const).map((t) => (
                   <button
                     key={t}
                     onClick={() => setEditorTab(t)}
@@ -369,10 +376,25 @@ export function WikiPage() {
                   </button>
                 ))}
               </div>
-              <span className="text-xs text-gray-600">
-                {saveStatus === 'pending' && 'Modification en cours…'}
-                {saveStatus === 'saved' && '✓ Enregistré'}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className={cn('text-xs transition-opacity', saveStatus === 'idle' ? 'opacity-0' : 'opacity-100',
+                  saveStatus === 'pending' ? 'text-amber-400' : 'text-emerald-400',
+                )}>
+                  {saveStatus === 'pending' && 'Modification en cours…'}
+                  {saveStatus === 'saved' && '✓ Enregistré'}
+                </span>
+                {editorTab === 'edit' && (
+                  <button
+                    onClick={saveNow}
+                    disabled={saveMutation.isPending || saveStatus === 'idle'}
+                    className="flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-800 px-2.5 py-1 text-xs text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Sauvegarder maintenant (Ctrl+S)"
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                    Sauvegarder
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Title */}
@@ -392,6 +414,12 @@ export function WikiPage() {
                 <textarea
                   value={content}
                   onChange={(e) => handleContentChange(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                      e.preventDefault()
+                      saveNow()
+                    }
+                  }}
                   placeholder="Écrivez en Markdown…"
                   className="h-full w-full resize-none bg-transparent p-5 font-mono text-sm text-gray-300 placeholder-gray-600 focus:outline-none"
                 />
