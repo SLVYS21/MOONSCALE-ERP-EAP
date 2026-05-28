@@ -10,6 +10,7 @@ import { LeadsService } from './leads.service'
 import { LeadsController, TrackingRedirectController } from './leads.controller'
 import { AutomationsModule } from '../automations/automations.module'
 import { OffersModule } from '../offers/offers.module'
+import { MailModule } from '../mail/mail.module'
 import { Student, StudentSchema } from '../students/schemas/student.schema'
 
 @Module({
@@ -25,6 +26,7 @@ import { Student, StudentSchema } from '../students/schemas/student.schema'
     ]),
     AutomationsModule,
     OffersModule,
+    MailModule,
   ],
   controllers: [LeadsController, TrackingRedirectController],
   providers: [LeadsService],

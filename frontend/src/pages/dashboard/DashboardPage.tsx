@@ -7,7 +7,7 @@ import {
 import {
   TrendingUp, Trophy, Users, CreditCard, ChevronRight,
   Zap, FileText, AlertTriangle, CheckCircle, Clock,
-  ArrowUpRight, Activity, GraduationCap,
+  ArrowUpRight, Activity, GraduationCap, ArrowDownLeft, ArrowUpRight as ArrowUpRightTx,
 } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
@@ -61,16 +61,19 @@ interface Form {
   isPublished: boolean
 }
 
-interface Payment {
+interface Transaction {
   _id: string
-  studentName: string
-  studentEmail: string
+  type: 'income' | 'expense'
   amount: number
   currency: string
+  description: string
+  customerName?: string | null
+  customerEmail?: string | null
+  productName?: string | null
+  gateway: string
   status: string
-  processedAt: string | null
+  date: string
   createdAt: string
-  product?: string
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -222,7 +225,7 @@ export function DashboardPage() {
     financeStatsQ,
     automationsQ,
     formsQ,
-    recentPaymentsQ,
+    recentTransactionsQ,
   ] = useQueries({
     queries: [
       {
@@ -251,10 +254,10 @@ export function DashboardPage() {
         queryFn: () => api.get('/forms').then((r) => r.data as Form[]),
       },
       {
-        queryKey: ['recent-payments-dash'],
+        queryKey: ['recent-transactions-dash'],
         queryFn: () =>
-          api.get('/payments', { params: { status: 'TRAITÉ', limit: 6 } })
-            .then((r) => (r.data as { data: Payment[] }).data),
+          api.get('/finances/transactions', { params: { limit: 8 } })
+            .then((r) => (r.data as { data: Transaction[] }).data),
       },
     ],
   })
@@ -265,7 +268,7 @@ export function DashboardPage() {
   const fin    = financeStatsQ.data
   const autos  = automationsQ.data ?? []
   const forms  = formsQ.data ?? []
-  const recent = recentPaymentsQ.data ?? []
+  const recent = recentTransactionsQ.data ?? []
 
   // Today's revenue — pick XOF or fallback to first
   const todayXOF    = pStats?.todayByAmount.find((a) => a.currency === 'XOF')?.total ?? 0
@@ -398,48 +401,60 @@ export function DashboardPage() {
             )}
           </div>
 
-          {/* Activity feed — recent treated payments */}
+          {/* Activity feed — dernières transactions toutes devises */}
           <div className="lg:col-span-2 rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
-            <SectionTitle href="/payments">Activité récente</SectionTitle>
-            {recentPaymentsQ.isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4].map((i) => (
+            <SectionTitle href="/finances">Dernières transactions</SectionTitle>
+            {recentTransactionsQ.isLoading ? (
+              <div className="space-y-2.5">
+                {[1, 2, 3, 4, 5].map((i) => (
                   <div key={i} className="flex items-center gap-3 rounded-xl bg-gray-800/40 p-3 animate-pulse">
-                    <div className="h-8 w-8 rounded-full bg-gray-700 shrink-0" />
+                    <div className="h-7 w-7 rounded-full bg-gray-700 shrink-0" />
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3 w-24 rounded bg-gray-700" />
+                      <div className="h-3 w-28 rounded bg-gray-700" />
                       <div className="h-2.5 w-16 rounded bg-gray-800" />
                     </div>
+                    <div className="h-3 w-16 rounded bg-gray-800" />
                   </div>
                 ))}
               </div>
             ) : recent.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 gap-2">
-                <CheckCircle className="h-8 w-8 text-gray-700" />
-                <p className="text-sm text-gray-600">Aucun paiement traité récemment</p>
+                <CreditCard className="h-8 w-8 text-gray-700" />
+                <p className="text-sm text-gray-600">Aucune transaction enregistrée</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {recent.map((p) => (
-                  <div
-                    key={p._id}
-                    className="flex items-center gap-3 rounded-xl bg-gray-800/30 px-3 py-2.5 hover:bg-gray-800/60 transition-colors"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-                      <CreditCard className="h-3.5 w-3.5 text-emerald-400" />
+              <div className="space-y-1.5">
+                {recent.map((tx) => {
+                  const isIncome = tx.type === 'income'
+                  const label = tx.customerName ?? tx.description ?? tx.productName ?? '—'
+                  const sub = tx.productName && tx.customerName ? tx.productName : tx.gateway
+                  return (
+                    <div
+                      key={tx._id}
+                      className="flex items-center gap-3 rounded-xl bg-gray-800/20 px-3 py-2 hover:bg-gray-800/50 transition-colors"
+                    >
+                      <div className={cn(
+                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
+                        isIncome ? 'bg-emerald-500/10' : 'bg-rose-500/10',
+                      )}>
+                        {isIncome
+                          ? <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-400" />
+                          : <ArrowUpRightTx className="h-3.5 w-3.5 text-rose-400" />
+                        }
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-200 truncate">{label}</p>
+                        <p className="text-xs text-gray-600 truncate">{sub}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className={cn('text-xs font-semibold', isIncome ? 'text-emerald-400' : 'text-rose-400')}>
+                          {isIncome ? '+' : '−'}{fmt(tx.amount)} {tx.currency}
+                        </p>
+                        <p className="text-xs text-gray-700">{relativeTime(tx.date ?? tx.createdAt)}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-200 truncate">{p.studentName}</p>
-                      <p className="text-xs text-emerald-400 font-medium">
-                        {fmt(p.amount)} {p.currency}
-                        {p.product && <span className="ml-1.5 text-gray-600 font-normal">· {p.product}</span>}
-                      </p>
-                    </div>
-                    <span className="text-xs text-gray-600 shrink-0 whitespace-nowrap">
-                      {relativeTime(p.processedAt ?? p.createdAt)}
-                    </span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

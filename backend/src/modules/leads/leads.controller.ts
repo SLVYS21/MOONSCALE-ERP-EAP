@@ -314,6 +314,15 @@ export class LeadsController {
     return this.leadsService.generateCallSummary(id, callId)
   }
 
+  @Post(':id/send-call-link')
+  @HttpCode(HttpStatus.OK)
+  sendCallLink(
+    @Param('id') id: string,
+    @Body() body: { bookingUrl: string; message?: string },
+  ) {
+    return this.leadsService.sendCallLink(id, body.bookingUrl, body.message ?? '')
+  }
+
   @Post(':id/convert')
   convertToStudent(@Param('id') id: string) {
     return this.leadsService.convertToStudent(id)

@@ -418,97 +418,97 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
 
 // ── Backfill panel ────────────────────────────────────────────────────────────
 
-interface BackfillPreview {
-  total: number
-  willCreate: number
-  alreadyHaveSubscription: number
-  noOfferMatch: number
-  breakdown: { offerName: string; planName: string; durationMonths: number; count: number }[]
-}
-
+// interface BackfillPreview {
+//   total: number
+//   willCreate: number
+//   alreadyHaveSubscription: number
+//   noOfferMatch: number
+//   breakdown: { offerName: string; planName: string; durationMonths: number; count: number }[]
+// }
+// 1
 function BackfillPanel() {
-  const [preview, setPreview] = useState<BackfillPreview | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<{ created: number; skipped: number; errors: number } | null>(null)
+  // const [preview, setPreview] = useState<BackfillPreview | null>(null)
+  // const [loading, setLoading] = useState(false)
+  // const [result, setResult] = useState<{ created: number; skipped: number; errors: number } | null>(null)
 
-  const loadPreview = async () => {
-    setLoading(true)
-    try {
-      const res = await api.get<BackfillPreview>('/subscription-offers/backfill/preview')
-      setPreview(res.data)
-      setResult(null)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // const loadPreview = async () => {
+  //   setLoading(true)
+  //   try {
+  //     const res = await api.get<BackfillPreview>('/subscription-offers/backfill/preview')
+  //     setPreview(res.data)
+  //     setResult(null)
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
-  const runBackfill = async () => {
-    if (!confirm(`Créer ${preview?.willCreate} souscription(s) à partir des paiements traités ?`)) return
-    setLoading(true)
-    try {
-      const res = await api.post<{ created: number; skipped: number; errors: number }>('/subscription-offers/backfill/run')
-      setResult(res.data)
-      setPreview(null)
-    } finally {
-      setLoading(false)
-    }
-  }
+  // const runBackfill = async () => {
+  //   if (!confirm(`Créer ${preview?.willCreate} souscription(s) à partir des paiements traités ?`)) return
+  //   setLoading(true)
+  //   try {
+  //     const res = await api.post<{ created: number; skipped: number; errors: number }>('/subscription-offers/backfill/run')
+  //     setResult(res.data)
+  //     setPreview(null)
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
-  return (
-    <div className="mt-8 rounded-xl border border-gray-800 bg-gray-900/40 p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-sm font-semibold text-gray-200">Retracer les souscriptions</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Crée des souscriptions à partir des paiements traités existants</p>
-        </div>
-        <Button variant="secondary" onClick={loadPreview} loading={loading && !preview}>
-          <RefreshCw className="h-3.5 w-3.5" />
-          Analyser
-        </Button>
-      </div>
+  // return (
+  //   <div className="mt-8 rounded-xl border border-gray-800 bg-gray-900/40 p-5">
+  //     <div className="flex items-center justify-between mb-4">
+  //       {/* <div>
+  //         <h2 className="text-sm font-semibold text-gray-200">Retracer les souscriptions</h2>
+  //         <p className="text-xs text-gray-500 mt-0.5">Crée des souscriptions à partir des paiements traités existants</p>
+  //       </div> */}
+  //       {/* <Button variant="secondary" onClick={loadPreview} loading={loading && !preview}>
+  //         <RefreshCw className="h-3.5 w-3.5" />
+  //         Analyser
+  //       </Button> */}
+  //     </div>
 
-      {result && (
-        <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-300">
-          ✓ {result.created} souscription{result.created !== 1 ? 's' : ''} créée{result.created !== 1 ? 's' : ''} · {result.skipped} ignorées · {result.errors} erreur{result.errors !== 1 ? 's' : ''}
-        </div>
-      )}
+  //     {/* {result && (
+  //       <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-300">
+  //         ✓ {result.created} souscription{result.created !== 1 ? 's' : ''} créée{result.created !== 1 ? 's' : ''} · {result.skipped} ignorées · {result.errors} erreur{result.errors !== 1 ? 's' : ''}
+  //       </div>
+  //     )}
 
-      {preview && (
-        <div className="space-y-3">
-          <div className="grid grid-cols-3 gap-3 text-center">
-            {[
-              { label: 'À créer', value: preview.willCreate, cls: 'text-indigo-400' },
-              { label: 'Déjà liées', value: preview.alreadyHaveSubscription, cls: 'text-gray-400' },
-              { label: 'Sans offre', value: preview.noOfferMatch, cls: 'text-amber-400' },
-            ].map((s) => (
-              <div key={s.label} className="rounded-lg border border-gray-800 bg-gray-800/40 py-3">
-                <p className={`text-xl font-bold tabular-nums ${s.cls}`}>{s.value}</p>
-                <p className="text-[11px] text-gray-500 mt-0.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
+  //     {preview && (
+  //       <div className="space-y-3">
+  //         <div className="grid grid-cols-3 gap-3 text-center">
+  //           {[
+  //             { label: 'À créer', value: preview.willCreate, cls: 'text-indigo-400' },
+  //             { label: 'Déjà liées', value: preview.alreadyHaveSubscription, cls: 'text-gray-400' },
+  //             { label: 'Sans offre', value: preview.noOfferMatch, cls: 'text-amber-400' },
+  //           ].map((s) => (
+  //             <div key={s.label} className="rounded-lg border border-gray-800 bg-gray-800/40 py-3">
+  //               <p className={`text-xl font-bold tabular-nums ${s.cls}`}>{s.value}</p>
+  //               <p className="text-[11px] text-gray-500 mt-0.5">{s.label}</p>
+  //             </div>
+  //           ))}
+  //         </div>
 
-          {preview.breakdown.length > 0 && (
-            <div className="rounded-lg border border-gray-800 divide-y divide-gray-800 overflow-hidden">
-              {preview.breakdown.map((b) => (
-                <div key={`${b.offerName}::${b.planName}`} className="flex items-center justify-between px-3 py-2 text-xs">
-                  <span className="text-gray-300 font-medium">{b.offerName} — {b.planName}</span>
-                  <span className="text-gray-500">{b.durationMonths} mois · <span className="text-indigo-400 font-semibold">{b.count} paiement{b.count !== 1 ? 's' : ''}</span></span>
-                </div>
-              ))}
-            </div>
-          )}
+  //         {preview.breakdown.length > 0 && (
+  //           <div className="rounded-lg border border-gray-800 divide-y divide-gray-800 overflow-hidden">
+  //             {preview.breakdown.map((b) => (
+  //               <div key={`${b.offerName}::${b.planName}`} className="flex items-center justify-between px-3 py-2 text-xs">
+  //                 <span className="text-gray-300 font-medium">{b.offerName} — {b.planName}</span>
+  //                 <span className="text-gray-500">{b.durationMonths} mois · <span className="text-indigo-400 font-semibold">{b.count} paiement{b.count !== 1 ? 's' : ''}</span></span>
+  //               </div>
+  //             ))}
+  //           </div>
+  //         )}
 
-          {preview.willCreate > 0 && (
-            <Button onClick={runBackfill} loading={loading} className="w-full">
-              <Play className="h-3.5 w-3.5" />
-              Créer {preview.willCreate} souscription{preview.willCreate !== 1 ? 's' : ''}
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
-  )
+  //         {preview.willCreate > 0 && (
+  //           <Button onClick={runBackfill} loading={loading} className="w-full">
+  //             <Play className="h-3.5 w-3.5" />
+  //             Créer {preview.willCreate} souscription{preview.willCreate !== 1 ? 's' : ''}
+  //           </Button>
+  //         )}
+  //       </div> */}
+      
+  //   </div>
+  // )
 }
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -567,7 +567,7 @@ export function SubscriptionOffersPage() {
         </div>
       )}
 
-      <BackfillPanel />
+      {/* <BackfillPanel /> */}
 
       {modal.open && (
         <OfferModal

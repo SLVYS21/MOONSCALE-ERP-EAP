@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, type QueryKey } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
   Plus, Search, Kanban, LayoutList,
@@ -192,7 +192,7 @@ function LeadCard({ lead }: { lead: Lead }) {
 
       {lead.opportunity_amount != null && (
         <p className="mt-1 text-xs font-medium text-green-400">
-          {lead.opportunity_amount.toLocaleString()} {lead.offer_ids[0]?.currency ?? 'XOF'}
+          {lead.opportunity_amount.toLocaleString()} {lead.offer_ids[0]?.plans?.[0]?.currency ?? 'XOF'}
         </p>
       )}
     </Link>
@@ -201,39 +201,105 @@ function LeadCard({ lead }: { lead: Lead }) {
 
 // ── Kanban View ───────────────────────────────────────────────────────────────
 
-function KanbanView({ leads, pipelineFilter }: { leads: Lead[]; pipelineFilter: string }) {
+function KanbanView({
+  leads,
+  pipelineFilter,
+  onStatusChange,
+}: {
+  leads: Lead[]
+  pipelineFilter: string
+  onStatusChange: (leadId: string, status: PipelineStatus) => void
+}) {
+  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const [overCol, setOverCol] = useState<PipelineStatus | null>(null)
+
   const grouped = PIPELINE_COLUMNS.reduce<Record<string, Lead[]>>((acc, col) => {
     acc[col.status] = leads.filter((l) => l.pipeline_status === col.status)
     return acc
   }, {})
 
-  // When a status filter is active, show only that column; otherwise show all
   const visibleCols = pipelineFilter
     ? PIPELINE_COLUMNS.filter((c) => c.status === pipelineFilter)
     : PIPELINE_COLUMNS
 
+  const draggingLead = draggingId ? leads.find((l) => l._id === draggingId) : null
+
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4" style={{ minWidth: 0 }}>
-      {visibleCols.map((col) => (
-        <div key={col.status} className="shrink-0 w-64">
-          <div className={cn('rounded-t-lg px-3 py-2 flex items-center justify-between', col.bg)}>
-            <span className={cn('text-xs font-semibold uppercase tracking-wide', col.color)}>
-              {col.label}
-            </span>
-            <span className={cn('text-xs font-bold', col.color)}>
-              {grouped[col.status]?.length ?? 0}
-            </span>
+    <div className="flex gap-3 overflow-x-auto pb-4 select-none" style={{ minWidth: 0 }}>
+      {visibleCols.map((col) => {
+        const isTarget = overCol === col.status && draggingId !== null && draggingLead?.pipeline_status !== col.status
+        const colLeads = grouped[col.status] ?? []
+
+        return (
+          <div key={col.status} className="shrink-0 w-64 flex flex-col">
+            {/* Header */}
+            <div className={cn(
+              'rounded-t-lg px-3 py-2 flex items-center justify-between transition-colors',
+              isTarget ? 'bg-indigo-600/25' : col.bg,
+            )}>
+              <span className={cn('text-xs font-semibold uppercase tracking-wide transition-colors', isTarget ? 'text-indigo-300' : col.color)}>
+                {col.label}
+              </span>
+              <span className={cn('text-xs font-bold transition-colors', isTarget ? 'text-indigo-300' : col.color)}>
+                {colLeads.length}
+              </span>
+            </div>
+
+            {/* Drop zone */}
+            <div
+              className={cn(
+                'flex-1 rounded-b-lg border border-t-0 p-2 space-y-2 min-h-[200px] transition-colors',
+                isTarget ? 'bg-indigo-900/10 border-indigo-600/40' : 'bg-gray-950 border-gray-800',
+              )}
+              onDragOver={(e) => { e.preventDefault(); if (overCol !== col.status) setOverCol(col.status) }}
+              onDragEnter={(e) => { e.preventDefault(); setOverCol(col.status) }}
+              onDrop={(e) => {
+                e.preventDefault()
+                if (draggingId && draggingLead?.pipeline_status !== col.status) {
+                  onStatusChange(draggingId, col.status)
+                }
+                setDraggingId(null)
+                setOverCol(null)
+              }}
+            >
+              {colLeads.map((lead) => (
+                <div
+                  key={lead._id}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.effectAllowed = 'move'
+                    setDraggingId(lead._id)
+                  }}
+                  onDragEnd={() => { setDraggingId(null); setOverCol(null) }}
+                  className={cn(
+                    'cursor-grab active:cursor-grabbing transition-opacity',
+                    draggingId === lead._id && 'opacity-25',
+                  )}
+                >
+                  <LeadCard lead={lead} />
+                </div>
+              ))}
+
+              {colLeads.length === 0 && (
+                <div className={cn(
+                  'flex items-center justify-center rounded-lg border-2 border-dashed min-h-[80px] transition-colors',
+                  isTarget ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-gray-800/60',
+                )}>
+                  <p className={cn('text-xs', isTarget ? 'text-indigo-400' : 'text-gray-700')}>
+                    {isTarget ? '↓ Déposer ici' : 'Vide'}
+                  </p>
+                </div>
+              )}
+
+              {colLeads.length > 0 && isTarget && (
+                <div className="h-12 rounded-lg border-2 border-dashed border-indigo-500/40 bg-indigo-500/5 flex items-center justify-center">
+                  <span className="text-xs text-indigo-400">↓ Déposer ici</span>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="rounded-b-lg bg-gray-950 border border-t-0 border-gray-800 p-2 space-y-2 min-h-[200px]">
-            {(grouped[col.status] ?? []).map((lead) => (
-              <LeadCard key={lead._id} lead={lead} />
-            ))}
-            {(grouped[col.status] ?? []).length === 0 && (
-              <p className="text-center text-xs text-gray-600 py-4">Aucun lead</p>
-            )}
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -388,6 +454,26 @@ export function LeadsPage() {
 
   const activeFilters = [pipeline, source, period].filter(Boolean).length
 
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: PipelineStatus }) =>
+      api.patch(`/leads/${id}/pipeline`, { status }),
+    onMutate: async ({ id, status }) => {
+      await qc.cancelQueries({ queryKey: ['leads'] })
+      const prevData = qc.getQueriesData<{ data: Lead[]; total: number }>({ queryKey: ['leads'] })
+      qc.setQueriesData<{ data: Lead[]; total: number }>(
+        { queryKey: ['leads'] },
+        (old) => old
+          ? { ...old, data: old.data.map((l) => l._id === id ? { ...l, pipeline_status: status } : l) }
+          : old,
+      )
+      return { prevData }
+    },
+    onError: (_err, _vars, ctx) => {
+      ctx?.prevData.forEach(([key, data]) => qc.setQueryData(key as QueryKey, data))
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['leads'] }),
+  })
+
   const importCsv = useMutation({
     mutationFn: (file: File) => {
       const fd = new FormData()
@@ -449,7 +535,7 @@ export function LeadsPage() {
             <Upload size={14} />
             {importCsv.isPending ? 'Import...' : 'Import CSV'}
           </button>
-          <Link to="/leads/offers" className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 transition-colors">
+          <Link to="/payments/offers" className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 transition-colors">
             Offres
           </Link>
           <Link to="/leads/scoring" className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 transition-colors">
@@ -594,7 +680,11 @@ export function LeadsPage() {
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
         </div>
       ) : view === 'kanban' ? (
-        <KanbanView leads={leads} pipelineFilter={pipeline} />
+        <KanbanView
+          leads={leads}
+          pipelineFilter={pipeline}
+          onStatusChange={(leadId, status) => updateStatusMutation.mutate({ id: leadId, status })}
+        />
       ) : (
         <TableView leads={leads} />
       )}

@@ -19,6 +19,9 @@ export class AppSettings {
 
   @Prop({ type: [String], default: [] })
   custom_gateways: string[]
+
+  @Prop({ default: '' })
+  callBookingUrl: string
 }
 
 export const AppSettingsSchema = SchemaFactory.createForClass(AppSettings)

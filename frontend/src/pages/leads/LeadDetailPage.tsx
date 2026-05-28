@@ -6,9 +6,10 @@ import {
   Plus, ExternalLink, Sparkles, CheckCircle, XCircle,
   Clock, ChevronDown, Trash2, GraduationCap,
   GitBranch, Star, PhoneCall, PhoneOff, UserCheck, ChevronUp,
+  CalendarClock, Send, X,
 } from 'lucide-react'
 import api from '@/services/api'
-import type { Lead, LeadCall, LeadOffer, PipelineStatus, QualificationStatus } from '@/types'
+import type { Lead, LeadCall, SubscriptionOffer, PipelineStatus, QualificationStatus, AppSettings } from '@/types'
 import { cn } from '@/lib/utils'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -131,7 +132,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
 function CallCard({ leadId, call, offers, onUpdate }: {
   leadId: string
   call: LeadCall
-  offers: LeadOffer[]
+  offers: SubscriptionOffer[]
   onUpdate: () => void
 }) {
   const [expanded, setExpanded] = useState(false)
@@ -201,7 +202,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
               <label className="block text-xs text-gray-500 mb-1">Offre proposée</label>
               <select
                 className="rounded-lg bg-gray-800 border border-gray-700 px-2 py-1.5 text-xs text-gray-200 focus:outline-none"
-                value={(call.offer_proposed_id as LeadOffer | null)?._id ?? ''}
+                value={(call.offer_proposed_id as SubscriptionOffer | null)?._id ?? ''}
                 onChange={(e) => updateMutation.mutate({ offer_proposed_id: e.target.value || undefined })}
               >
                 <option value="">— aucune —</option>
@@ -352,6 +353,9 @@ export function LeadDetailPage() {
   const [editNotes, setEditNotes] = useState(false)
   const [notes, setNotes] = useState('')
   const [showAddCall, setShowAddCall] = useState(false)
+  const [showCallLink, setShowCallLink] = useState(false)
+  const [callLinkUrl, setCallLinkUrl] = useState('')
+  const [callLinkMsg, setCallLinkMsg] = useState('')
 
   const { data: lead, isLoading } = useQuery({
     queryKey: ['lead', id],
@@ -366,8 +370,19 @@ export function LeadDetailPage() {
   })
 
   const { data: offers = [] } = useQuery({
-    queryKey: ['offers'],
-    queryFn: () => api.get('/offers', { params: { active_only: 'true' } }).then((r) => r.data as LeadOffer[]),
+    queryKey: ['subscription-offers-active'],
+    queryFn: () => api.get('/subscription-offers', { params: { activeOnly: 'true' } }).then((r) => r.data as SubscriptionOffer[]),
+  })
+
+  const { data: appSettings } = useQuery<AppSettings>({
+    queryKey: ['app-settings'],
+    queryFn: () => api.get('/app-settings').then((r) => r.data),
+  })
+
+  const sendCallLinkMutation = useMutation({
+    mutationFn: ({ bookingUrl, message }: { bookingUrl: string; message: string }) =>
+      api.post(`/leads/${id}/send-call-link`, { bookingUrl, message }),
+    onSuccess: () => setShowCallLink(false),
   })
 
   const pipelineMutation = useMutation({
@@ -415,6 +430,86 @@ export function LeadDetailPage() {
     <div className="p-6 max-w-5xl mx-auto">
       {showAddCall && id && <AddCallModal leadId={id} onClose={() => setShowAddCall(false)} />}
 
+      {/* Send call link modal */}
+      {showCallLink && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6 shadow-xl">
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-2">
+                <CalendarClock className="h-4 w-4 text-indigo-400" />
+                <h2 className="text-base font-semibold text-gray-100">Envoyer un lien de RDV</h2>
+              </div>
+              <button onClick={() => setShowCallLink(false)} className="text-gray-500 hover:text-gray-300">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Destinataire</p>
+                <p className="text-sm text-gray-300 rounded-lg bg-gray-800 px-3 py-2">
+                  {lead.email ?? <span className="text-red-400">Ce lead n'a pas d'email</span>}
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Lien de réservation *</label>
+                <input
+                  type="url"
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                  placeholder="https://calendly.com/votre-lien"
+                  value={callLinkUrl}
+                  onChange={(e) => setCallLinkUrl(e.target.value)}
+                  autoFocus
+                />
+                {appSettings?.callBookingUrl && !callLinkUrl && (
+                  <button
+                    onClick={() => setCallLinkUrl(appSettings.callBookingUrl ?? '')}
+                    className="mt-1 text-xs text-indigo-400 hover:text-indigo-300"
+                  >
+                    Utiliser le lien par défaut
+                  </button>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Message personnalisé</label>
+                <textarea
+                  rows={3}
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none resize-none"
+                  placeholder="Bonjour, suite à notre échange, je vous invite à réserver votre appel diagnostic..."
+                  value={callLinkMsg}
+                  onChange={(e) => setCallLinkMsg(e.target.value)}
+                />
+              </div>
+
+              {sendCallLinkMutation.isError && (
+                <p className="text-xs text-red-400">
+                  Erreur lors de l'envoi. Vérifiez que le lead a un email valide.
+                </p>
+              )}
+              {sendCallLinkMutation.isSuccess && (
+                <p className="text-xs text-emerald-400">Email envoyé avec succès ✓</p>
+              )}
+            </div>
+
+            <div className="mt-5 flex justify-end gap-3">
+              <button onClick={() => setShowCallLink(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+                Annuler
+              </button>
+              <button
+                disabled={!callLinkUrl.trim() || !lead.email || sendCallLinkMutation.isPending}
+                onClick={() => sendCallLinkMutation.mutate({ bookingUrl: callLinkUrl, message: callLinkMsg })}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm text-white font-medium disabled:opacity-50 transition-colors"
+              >
+                <Send size={14} />
+                {sendCallLinkMutation.isPending ? 'Envoi...' : 'Envoyer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-start gap-3">
@@ -426,12 +521,27 @@ export function LeadDetailPage() {
             <p className="text-sm text-gray-500 mt-0.5">Entré le {formatDate(lead.createdAt)}</p>
           </div>
         </div>
-        <button
-          onClick={() => { if (confirm('Supprimer ce lead ?')) deleteMutation.mutate() }}
-          className="text-gray-600 hover:text-red-400 transition-colors"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              setCallLinkUrl(appSettings?.callBookingUrl ?? '')
+              setCallLinkMsg('')
+              sendCallLinkMutation.reset()
+              setShowCallLink(true)
+            }}
+            className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors"
+            title={!lead.email ? 'Ce lead n\'a pas d\'email' : 'Envoyer un lien de réservation'}
+          >
+            <CalendarClock size={14} />
+            Lien de RDV
+          </button>
+          <button
+            onClick={() => { if (confirm('Supprimer ce lead ?')) deleteMutation.mutate() }}
+            className="text-gray-600 hover:text-red-400 transition-colors"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-5">
@@ -533,17 +643,24 @@ export function LeadDetailPage() {
             </div>
           )}
 
-          {/* LeadOffers */}
+          {/* Offres liées */}
           <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Offres liées</h3>
             {lead.offer_ids.length > 0 ? (
               <div className="space-y-1.5">
-                {lead.offer_ids.map((offer) => (
-                  <div key={offer._id} className="flex items-center justify-between rounded-lg bg-gray-800 px-3 py-2">
-                    <span className="text-sm text-gray-200">{offer.name}</span>
-                    <span className="text-xs text-gray-400">{offer.price.toLocaleString()} {offer.currency}</span>
-                  </div>
-                ))}
+                {lead.offer_ids.map((offer) => {
+                  const plan = offer.plans?.find((p) => p.isActive) ?? offer.plans?.[0]
+                  return (
+                    <div key={offer._id} className="flex items-center justify-between rounded-lg bg-gray-800 px-3 py-2">
+                      <span className="text-sm text-gray-200">{offer.name}</span>
+                      {plan && (
+                        <span className="text-xs text-gray-400">
+                          {plan.price.toLocaleString()} {plan.currency}
+                        </span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             ) : (
               <p className="text-xs text-gray-600">Aucune offre liée.</p>

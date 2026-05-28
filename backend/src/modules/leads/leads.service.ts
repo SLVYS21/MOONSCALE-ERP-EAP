@@ -11,6 +11,7 @@ import { WhatsAppLink, WhatsAppLinkDocument } from './schemas/whatsapp-link.sche
 import { WhatsAppClick, WhatsAppClickDocument } from './schemas/whatsapp-click.schema'
 import { AutomationsService } from '../automations/automations.service'
 import { OffersService } from '../offers/offers.service'
+import { MailService } from '../mail/mail.service'
 import { Student, StudentDocument } from '../students/schemas/student.schema'
 import { DEFAULT_SCORING_RULES } from './leads.seed'
 
@@ -196,6 +197,7 @@ export class LeadsService implements OnApplicationBootstrap {
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
     private automationsService: AutomationsService,
     private offersService: OffersService,
+    private mailService: MailService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -301,6 +303,35 @@ export class LeadsService implements OnApplicationBootstrap {
     const lead = await this.leadModel.findByIdAndUpdate(id, update, { new: true }).lean() as unknown as LeadDocument
     if (!lead) throw new NotFoundException('Lead introuvable')
     return lead
+  }
+
+  async sendCallLink(leadId: string, bookingUrl: string, message: string): Promise<{ sent: boolean; to: string }> {
+    const lead = await this.leadModel.findById(leadId).lean()
+    if (!lead) throw new NotFoundException('Lead introuvable')
+    if (!lead.email) throw new BadRequestException('Ce lead n\'a pas d\'adresse email')
+
+    const safeMessage = message
+      ? `<p style="color:#4b5563;line-height:1.6;margin-bottom:24px">${message}</p>`
+      : '<p style="color:#4b5563">Nous vous invitons à réserver un créneau pour votre appel avec notre équipe.</p>'
+
+    const html = `
+      <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:32px 24px;background:#ffffff">
+        <h2 style="color:#111827;margin-bottom:12px">Bonjour ${lead.name},</h2>
+        ${safeMessage}
+        <div style="text-align:center;margin:32px 0">
+          <a href="${bookingUrl}" style="display:inline-block;padding:14px 32px;background:#6366f1;color:#ffffff;text-decoration:none;border-radius:8px;font-weight:600;font-size:15px">
+            📅 Réserver mon créneau
+          </a>
+        </div>
+        <p style="color:#9ca3af;font-size:12px;margin-top:32px;border-top:1px solid #f3f4f6;padding-top:16px">
+          Si le bouton ne fonctionne pas, copiez ce lien :<br>
+          <a href="${bookingUrl}" style="color:#6366f1">${bookingUrl}</a>
+        </p>
+      </div>
+    `
+
+    await this.mailService.sendCustom(lead.email, 'Réservez votre appel — Moonscale', html)
+    return { sent: true, to: lead.email }
   }
 
   async deleteLead(id: string): Promise<void> {

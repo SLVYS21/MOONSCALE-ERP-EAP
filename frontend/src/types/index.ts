@@ -720,7 +720,7 @@ export interface Lead {
   pipeline_status: PipelineStatus
   closer_id: User | null
   lost_reason: string
-  offer_ids: LeadOffer[]
+  offer_ids: SubscriptionOffer[]
   opportunity_amount: number | null
   notes: string
   created_by: { _id: string; firstName: string; lastName: string } | null
@@ -730,18 +730,25 @@ export interface Lead {
   updatedAt: string
 }
 
-export interface LeadOffer {
+export interface OfferPlan {
+  _id: string
+  name: string
+  price: number
+  currency: string
+  durationMonths: number
+  partialDueAfterDays: number
+  isActive: boolean
+}
+
+export interface SubscriptionOffer {
   _id: string
   name: string
   description: string
   features: string[]
-  type: 'online' | 'presentiel' | 'one_to_one' | 'bootcamp'
-  price: number
-  currency: string
-  is_active: boolean
-  can_be_coupled: boolean
-  createdAt: string
-  updatedAt: string
+  isActive: boolean
+  plans: OfferPlan[]
+  createdAt?: string
+  updatedAt?: string
 }
 
 export type CallStatus = 'planned' | 'completed' | 'cancelled'
@@ -757,7 +764,7 @@ export interface LeadCall {
   manual_notes: string
   status: CallStatus
   closer_id: User | null
-  offer_proposed_id: LeadOffer | null
+  offer_proposed_id: SubscriptionOffer | null
   createdAt: string
   updatedAt: string
 }
@@ -799,6 +806,7 @@ export interface AppSettings {
   lead_magnets: string[]
   lead_sources: string[]
   custom_gateways: string[]
+  callBookingUrl?: string
 }
 
 export interface LeadFunnelStats {
