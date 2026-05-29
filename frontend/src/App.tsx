@@ -14,7 +14,7 @@ import { ProjectPage } from '@/pages/tasks/ProjectPage'
 import { FinancesPage } from '@/pages/finances/FinancesPage'
 import { FormsPage } from '@/pages/forms/FormsPage'
 import { FormBuilderPage } from '@/pages/forms/FormBuilderPage'
-import { PublicFormPage } from '@/pages/forms/PublicFormPage'
+import { PublicFormPage } from '@/pages/forms/PublicFormPage';
 import { AutomationsPage } from '@/pages/automations/AutomationsPage'
 import { AutomationBuilderPage } from '@/pages/automations/AutomationBuilderPage'
 import { SyncPage } from '@/pages/sync/SyncPage'
