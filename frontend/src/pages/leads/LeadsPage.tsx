@@ -157,6 +157,9 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
 // ── Lead Card (kanban) ─────────────────────────────────────────────────────────
 
 function LeadCard({ lead }: { lead: Lead }) {
+  const pays   = lead.pays   ?? (lead.dynamic_fields?.pays   as string | undefined) ?? null
+  const budget = lead.budget ?? (lead.dynamic_fields?.budget as number | undefined) ?? null
+
   return (
     <Link
       to={`/leads/${lead._id}`}
@@ -171,17 +174,30 @@ function LeadCard({ lead }: { lead: Lead }) {
         <p className="mt-1 text-xs text-gray-500 truncate">{lead.email}</p>
       )}
 
+      {/* Age · Pays · Budget */}
+      {(lead.age || pays || budget != null) && (
+        <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-gray-500">
+          {lead.age && <span>{lead.age} ans</span>}
+          {pays && <span>📍 {pays}</span>}
+          {budget != null && <span className="text-emerald-400/80">💰 {Number(budget).toLocaleString()}</span>}
+        </div>
+      )}
+
       <div className="mt-2 flex flex-wrap gap-1.5">
         {lead.qualification_status && (
           <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', QUAL_BADGE[lead.qualification_status])}>
             {lead.qualification_status.toUpperCase()}
           </span>
         )}
-        {lead.utm_source && (
+        {lead.source_form_name ? (
+          <span className="rounded-full bg-violet-900/30 px-2 py-0.5 text-xs text-violet-300 truncate max-w-[120px]" title={lead.source_form_name}>
+            {lead.source_form_name}
+          </span>
+        ) : lead.utm_source ? (
           <span className="rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-400">
             {lead.utm_source}
           </span>
-        )}
+        ) : null}
       </div>
 
       {lead.closer_id && (

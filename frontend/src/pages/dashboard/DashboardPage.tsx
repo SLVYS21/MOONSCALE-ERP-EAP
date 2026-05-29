@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
@@ -5,37 +6,27 @@ import {
   ResponsiveContainer, Cell,
 } from 'recharts'
 import {
-  TrendingUp, Trophy, Users, CreditCard, ChevronRight,
-  Zap, FileText, AlertTriangle, CheckCircle, Clock,
-  ArrowUpRight, Activity, GraduationCap, ArrowDownLeft, ArrowUpRight as ArrowUpRightTx,
+  TrendingUp, Trophy, Users, ChevronRight,
+  Zap, FileText, CheckCircle, Clock,
+  Activity, ArrowDownLeft, ArrowUpRight as ArrowUpRightTx,
+  CreditCard,
 } from 'lucide-react'
 import api from '@/services/api'
 import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
+import type { AppSettings } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-
-interface PaymentStats {
-  nonTraite: number
-  traite: number
-  todayByAmount: { currency: string; total: number }[]
-  monthByAmount: { currency: string; total: number }[]
-}
-
-interface StudentStats {
-  total: number
-  withDebt: number
-  newThisMonth: number
-  enRegle: number
-  enRetard: number
-}
 
 interface AcquisitionKpis {
   total: number
   won: number
   new_last_7d: number
+  new_last_30d: number
   conversion_rate: number
   by_pipeline: Record<string, number>
+  period_new: number | null
+  period_won: number | null
 }
 
 interface FinanceStats {
@@ -78,6 +69,19 @@ interface Transaction {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+const DEFAULT_RATES: Record<string, number> = { XOF: 1, EUR: 655.957, USD: 610, MAD: 63.5, CAD: 450 }
+const DISPLAY_CURRENCIES = ['XOF', 'EUR', 'USD', 'MAD', 'CAD']
+
+function convertAmount(amount: number, from: string, to: string, rates: Record<string, number>): number {
+  if (from === to) return amount
+  const r = rates
+  return amount * (r[from] ?? 1) / (r[to] ?? 1)
+}
+
+function formatCurrency(n: number, currency: string): string {
+  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' ' + currency
+}
+
 const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n))
 
 function relativeTime(dateStr: string | null): string {
@@ -96,6 +100,42 @@ function todayDate(): string {
   return new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
+}
+
+// ── Period logic ──────────────────────────────────────────────────────────────
+
+type Period = 'today' | 'yesterday' | '7d' | '30d' | '3m' | '12m' | 'year'
+
+const PERIODS: { key: Period; label: string }[] = [
+  { key: 'today',     label: "Aujourd'hui" },
+  { key: 'yesterday', label: 'Hier' },
+  { key: '7d',        label: '7 jours' },
+  { key: '30d',       label: '30 jours' },
+  { key: '3m',        label: '3 mois' },
+  { key: '12m',       label: '12 mois' },
+  { key: 'year',      label: 'Cette année' },
+]
+
+function periodToDates(period: Period): { dateFrom: string; dateTo: string } {
+  const now = new Date()
+  const today = now.toISOString().slice(0, 10)
+  const shift = (days: number) => {
+    const d = new Date(now); d.setDate(now.getDate() - days)
+    return d.toISOString().slice(0, 10)
+  }
+  const shiftMonths = (months: number) => {
+    const d = new Date(now); d.setMonth(now.getMonth() - months)
+    return d.toISOString().slice(0, 10)
+  }
+  switch (period) {
+    case 'today':     return { dateFrom: today, dateTo: today }
+    case 'yesterday': { const y = shift(1); return { dateFrom: y, dateTo: y } }
+    case '7d':        return { dateFrom: shift(7), dateTo: today }
+    case '30d':       return { dateFrom: shift(30), dateTo: today }
+    case '3m':        return { dateFrom: shiftMonths(3), dateTo: today }
+    case '12m':       return { dateFrom: shiftMonths(12), dateTo: today }
+    case 'year':      return { dateFrom: `${now.getFullYear()}-01-01`, dateTo: today }
+  }
 }
 
 // ── Metric Card ───────────────────────────────────────────────────────────────
@@ -141,11 +181,6 @@ function MetricCard({
           <Icon className={cn('h-5 w-5', a.icon)} />
         </div>
       </div>
-      {href && (
-        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-          <ArrowUpRight className="h-3.5 w-3.5 text-gray-600" />
-        </div>
-      )}
     </div>
   )
 
@@ -217,10 +252,14 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user)
+  const [period, setPeriod] = useState<Period>('today')
+  const [displayCurrency, setDisplayCurrency] = useState('XOF')
+
+  const { dateFrom, dateTo } = useMemo(() => periodToDates(period), [period])
 
   const [
-    paymentStatsQ,
-    studentStatsQ,
+    appSettingsQ,
+    periodTransactionsQ,
     leadKpisQ,
     financeStatsQ,
     automationsQ,
@@ -229,55 +268,60 @@ export function DashboardPage() {
   ] = useQueries({
     queries: [
       {
-        queryKey: ['payment-stats-dash'],
-        queryFn: () => api.get('/payments/stats').then((r) => r.data as PaymentStats),
+        queryKey: ['app-settings'],
+        queryFn: () => api.get<AppSettings>('/app-settings').then((r) => r.data),
+        staleTime: 60_000,
       },
       {
-        queryKey: ['student-stats-dash'],
-        queryFn: () => api.get('/students/stats').then((r) => r.data as StudentStats),
+        queryKey: ['period-transactions-dash', dateFrom, dateTo],
+        queryFn: () =>
+          api.get<{ data: Transaction[]; total: number }>('/finances/transactions', {
+            params: { type: 'income', dateFrom, dateTo, limit: 5000, page: 1 },
+          }).then((r) => r.data),
       },
       {
-        queryKey: ['lead-kpis-dash'],
-        queryFn: () => api.get('/leads/kpis').then((r) => r.data as AcquisitionKpis),
+        queryKey: ['lead-kpis-dash', dateFrom, dateTo],
+        queryFn: () =>
+          api.get<AcquisitionKpis>('/leads/kpis', { params: { dateFrom, dateTo } }).then((r) => r.data),
       },
       {
         queryKey: ['finance-stats-dash'],
         queryFn: () =>
-          api.get('/finances/stats', { params: { currency: 'XOF' } }).then((r) => r.data as FinanceStats),
+          api.get<FinanceStats>('/finances/stats', { params: { currency: 'XOF' } }).then((r) => r.data),
       },
       {
         queryKey: ['automations-dash'],
-        queryFn: () => api.get('/automations').then((r) => r.data as Automation[]),
+        queryFn: () => api.get<Automation[]>('/automations').then((r) => r.data),
       },
       {
         queryKey: ['forms-dash'],
-        queryFn: () => api.get('/forms').then((r) => r.data as Form[]),
+        queryFn: () => api.get<Form[]>('/forms').then((r) => r.data),
       },
       {
         queryKey: ['recent-transactions-dash'],
         queryFn: () =>
-          api.get('/finances/transactions', { params: { limit: 8 } })
-            .then((r) => (r.data as { data: Transaction[] }).data),
+          api.get<{ data: Transaction[] }>('/finances/transactions', { params: { limit: 8 } })
+            .then((r) => r.data.data),
       },
     ],
   })
 
-  const pStats = paymentStatsQ.data
-  const sStats = studentStatsQ.data
+  const rates = { ...DEFAULT_RATES, ...(appSettingsQ.data?.exchangeRates ?? {}) }
   const kpis   = leadKpisQ.data
   const fin    = financeStatsQ.data
   const autos  = automationsQ.data ?? []
   const forms  = formsQ.data ?? []
   const recent = recentTransactionsQ.data ?? []
 
-  // Today's revenue — pick XOF or fallback to first
-  const todayXOF    = pStats?.todayByAmount.find((a) => a.currency === 'XOF')?.total ?? 0
-  const todayOther  = pStats?.todayByAmount.filter((a) => a.currency !== 'XOF') ?? []
-  const todaySubMsg = todayOther.length
-    ? todayOther.map((a) => `+${fmt(a.total)} ${a.currency}`).join(' · ')
-    : pStats?.monthByAmount.find((a) => a.currency === 'XOF')
-      ? `${fmt(pStats.monthByAmount.find((a) => a.currency === 'XOF')!.total)} XOF ce mois`
-      : undefined
+  // Revenue for the selected period, converted to display currency
+  const periodIncomeTxs = periodTransactionsQ.data?.data ?? []
+  const periodRevenue = periodIncomeTxs
+    .filter((tx) => tx.status !== 'failed')
+    .reduce((sum, tx) => sum + convertAmount(tx.amount, tx.currency, displayCurrency, rates), 0)
+
+  // Lead counts for the period
+  const newLeads = kpis?.period_new ?? kpis?.new_last_7d ?? 0
+  const wonLeads = kpis?.period_won ?? kpis?.won ?? 0
 
   // Active automations
   const activeAutos = autos.filter((a) => a.isActive)
@@ -291,7 +335,7 @@ export function DashboardPage() {
   // Chart data — last 12 months revenue
   const chartData = fin?.byMonth ?? []
 
-  // Max form responses (for bar width)
+  // Max form responses
   const maxResponses = Math.max(...forms.map((f) => f.responseCount), 1)
 
   return (
@@ -299,7 +343,7 @@ export function DashboardPage() {
       <div className="mx-auto max-w-7xl p-6 space-y-8">
 
         {/* ── Header ───────────────────────────────────────────────── */}
-        <div className="flex items-start justify-between">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-100">
               Bonjour, {user?.firstName} 👋
@@ -314,39 +358,62 @@ export function DashboardPage() {
           </div>
         </div>
 
+        {/* ── Period + Currency selectors ───────────────────────────── */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Period pills */}
+          <div className="flex flex-wrap gap-1.5">
+            {PERIODS.map((p) => (
+              <button
+                key={p.key}
+                onClick={() => setPeriod(p.key)}
+                className={cn(
+                  'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+                  period === p.key
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+                )}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Display currency */}
+          <select
+            value={displayCurrency}
+            onChange={(e) => setDisplayCurrency(e.target.value)}
+            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-xs text-gray-200 focus:border-indigo-500 focus:outline-none"
+          >
+            {DISPLAY_CURRENCIES.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
+        </div>
+
         {/* ── KPI Cards ─────────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <MetricCard
-            label="Revenus aujourd'hui"
-            value={`${fmt(todayXOF)} XOF`}
-            sub={todaySubMsg ?? 'Paiements traités'}
+            label="Revenus"
+            value={formatCurrency(periodRevenue, displayCurrency)}
+            sub={`${periodIncomeTxs.filter((t) => t.status !== 'failed').length} transaction${periodIncomeTxs.length !== 1 ? 's' : ''}`}
             icon={TrendingUp}
             accent="emerald"
             href="/finances"
-            loading={paymentStatsQ.isLoading}
+            loading={periodTransactionsQ.isLoading}
           />
           <MetricCard
-            label="Paiements en attente"
-            value={pStats?.nonTraite ?? '···'}
-            sub="À traiter"
-            icon={Clock}
-            accent="amber"
-            href="/payments"
-            loading={paymentStatsQ.isLoading}
-          />
-          <MetricCard
-            label="Nouveaux étudiants"
-            value={sStats?.newThisMonth ?? '···'}
-            sub={`${sStats?.total ?? 0} au total · ${sStats?.withDebt ?? 0} en retard`}
-            icon={GraduationCap}
-            accent="indigo"
-            href="/students"
-            loading={studentStatsQ.isLoading}
+            label="Nouveaux leads"
+            value={newLeads}
+            sub={`${kpis?.total ?? 0} au total`}
+            icon={Users}
+            accent="blue"
+            href="/leads"
+            loading={leadKpisQ.isLoading}
           />
           <MetricCard
             label="Leads Won"
-            value={kpis?.won ?? '···'}
-            sub={`Taux : ${kpis?.conversion_rate ?? 0}% · +${kpis?.new_last_7d ?? 0} cette semaine`}
+            value={wonLeads}
+            sub={`Taux : ${kpis?.conversion_rate ?? 0}%`}
             icon={Trophy}
             accent="violet"
             href="/leads"
@@ -601,69 +668,16 @@ export function DashboardPage() {
                         </span>
                       ) : (
                         <span className="flex items-center gap-1 text-xs text-gray-600">
-                          <AlertTriangle className="h-3 w-3" /> Inactive
+                          <Clock className="h-3 w-3" /> Inactive
                         </span>
                       )}
-                      <span className="text-gray-700">·</span>
-                      <span className="text-xs text-gray-600">{auto.runCount ?? 0} runs</span>
-                      {auto.lastRunAt && (
-                        <>
-                          <span className="text-gray-700">·</span>
-                          <span className="text-xs text-gray-600">{relativeTime(auto.lastRunAt)}</span>
-                        </>
-                      )}
+                      <span className="text-xs text-gray-700">{auto.runCount ?? 0}×</span>
                     </div>
                   </div>
                 </Link>
               ))}
             </div>
           )}
-        </div>
-
-        {/* ── Bottom stats strip ──────────────────────────────────────── */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            {
-              label: 'Paiements traités',
-              value: fmt(pStats?.traite ?? 0),
-              icon: CheckCircle,
-              color: 'text-emerald-400',
-              href: '/payments',
-            },
-            {
-              label: 'Étudiants total',
-              value: fmt(sStats?.total ?? 0),
-              icon: Users,
-              color: 'text-indigo-400',
-              href: '/students',
-            },
-            {
-              label: 'En retard de paiement',
-              value: fmt(sStats?.withDebt ?? 0),
-              icon: AlertTriangle,
-              color: sStats?.withDebt ? 'text-rose-400' : 'text-gray-600',
-              href: '/students',
-            },
-            {
-              label: 'Leads ce mois',
-              value: `+${kpis?.new_last_7d ?? 0}`,
-              icon: TrendingUp,
-              color: 'text-blue-400',
-              href: '/leads',
-            },
-          ].map(({ label, value, icon: Icon, color, href }) => (
-            <Link
-              key={label}
-              to={href}
-              className="flex items-center gap-3 rounded-xl border border-gray-800 bg-gray-900/60 px-4 py-3 hover:border-gray-700 hover:bg-gray-900 transition-colors"
-            >
-              <Icon className={cn('h-4 w-4 shrink-0', color)} />
-              <div className="min-w-0">
-                <p className="text-xs text-gray-500 truncate">{label}</p>
-                <p className={cn('text-sm font-bold', color)}>{value}</p>
-              </div>
-            </Link>
-          ))}
         </div>
 
       </div>

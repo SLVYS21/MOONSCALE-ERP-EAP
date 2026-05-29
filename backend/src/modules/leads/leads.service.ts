@@ -89,6 +89,8 @@ export interface CreateLeadDto {
   email?: string
   phone?: string
   age?: number
+  pays?: string
+  budget?: number
   utm_source?: string
   reseau_source?: string
   lead_magnet?: string
@@ -98,6 +100,10 @@ export interface CreateLeadDto {
   offer_ids?: string[]
   opportunity_amount?: number
   notes?: string
+  typebot_result_id?: string
+  source_form_id?: string
+  source_form_name?: string
+  submitted_at?: Date
 }
 
 export interface UpdateLeadDto {
@@ -696,22 +702,64 @@ Sois concis et factuel. Réponds en français.`
   }
 
   // ── Webhook handlers ──────────────────────────────────────────────────────
+//Backfill
+  async handleTypebotWebhook(
+    payload: Record<string, unknown>,
+    utmOverride?: string,
+    formId?: string,
+    formName?: string,
+  ): Promise<LeadDocument> {
 
-  async handleTypebotWebhook(payload: Record<string, unknown>, utmOverride?: string): Promise<LeadDocument> {
     const variables = (payload.variables as Array<{ name: string; value: unknown }>) ?? []
     const parsed = this.parseTypebotVariables(variables)
     const utm_source = utmOverride ?? parsed.utm_source ?? (payload.utm_source as string) ?? null
 
+    // Extract Typebot metadata from payload
+    const resultId   = (payload.result_id ?? payload.resultId ?? (payload.result as Record<string, unknown>)?.id) as string | undefined
+    const submittedRaw = payload.submittedAt ?? payload.createdAt ?? (payload.result as Record<string, unknown>)?.createdAt ?? null
+    const submittedAt  = submittedRaw ? new Date(String(submittedRaw)) : null
+    const srcFormId    = formId ?? (payload.typebot_id ?? (payload.typebot as Record<string, unknown>)?.id) as string | undefined
+    const srcFormName  = formName ?? (payload.typebot_name ?? (payload.typebot as Record<string, unknown>)?.name) as string | undefined
+
+    // 1. Dedup by typebot_result_id
+    if (resultId) {
+      const byResultId = await this.leadModel.findOne({ typebot_result_id: resultId }).exec()
+      if (byResultId) return byResultId
+    }
+
+    // 2. Dedup by email → upsert (update empty fields only, don't create duplicate)
+    if (parsed.email) {
+      const byEmail = await this.leadModel.findOne({ email: parsed.email }).exec()
+      if (byEmail) {
+        const upd: Record<string, unknown> = {}
+        if (resultId && !byEmail.typebot_result_id)   upd['typebot_result_id'] = resultId
+        if (srcFormId && !byEmail.source_form_id)     upd['source_form_id']   = srcFormId
+        if (srcFormName && !byEmail.source_form_name) upd['source_form_name'] = srcFormName
+        if (submittedAt && !byEmail.submitted_at)     upd['submitted_at']     = submittedAt
+        if (!byEmail.pays   && parsed.pays)           upd['pays']             = parsed.pays
+        if (!byEmail.budget && parsed.budget)         upd['budget']           = parsed.budget
+        if (Object.keys(upd).length) await this.leadModel.updateOne({ _id: byEmail._id }, { $set: upd })
+        return byEmail
+      }
+    }
+
+    // 3. Create new lead
     return this.createLead({
       name: parsed.name,
       email: parsed.email ?? undefined,
       phone: parsed.phone ? String(parsed.phone) : undefined,
       age: parsed.age ? Number(parsed.age) : undefined,
+      pays: parsed.pays ?? undefined,
+      budget: parsed.budget ?? undefined,
       utm_source: utm_source ? String(utm_source) : undefined,
       reseau_source: parsed.reseau_source ? String(parsed.reseau_source) : undefined,
       motivation: parsed.motivation ? String(parsed.motivation) : undefined,
       dynamic_fields: parsed.dynamic,
       source_type: 'typebot',
+      typebot_result_id: resultId,
+      source_form_id: srcFormId,
+      source_form_name: srcFormName,
+      submitted_at: submittedAt ?? undefined,
     })
   }
 
@@ -874,12 +922,22 @@ Sois concis et factuel. Réponds en français.`
 
   // ── Acquisition KPIs ──────────────────────────────────────────────────────
 
-  async getAcquisitionKpis() {
+  async getAcquisitionKpis(dateFrom?: string, dateTo?: string) {
     const now = new Date()
     const ago7d  = new Date(now.getTime() - 7  * 86400000)
     const ago30d = new Date(now.getTime() - 30 * 86400000)
 
-    const [total, new7d, new30d, byPipeline, bySource] = await Promise.all([
+    const hasPeriod = Boolean(dateFrom || dateTo)
+    const periodFilter: Record<string, unknown> = hasPeriod
+      ? {
+          createdAt: {
+            ...(dateFrom ? { $gte: new Date(dateFrom) } : {}),
+            ...(dateTo   ? { $lte: new Date(dateTo + 'T23:59:59.999Z') } : {}),
+          },
+        }
+      : {}
+
+    const [total, new7d, new30d, byPipeline, bySource, periodNew, periodWon] = await Promise.all([
       this.leadModel.countDocuments(),
       this.leadModel.countDocuments({ createdAt: { $gte: ago7d } }),
       this.leadModel.countDocuments({ createdAt: { $gte: ago30d } }),
@@ -888,6 +946,8 @@ Sois concis et factuel. Réponds en français.`
         { $group: { _id: '$source_type', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
+      hasPeriod ? this.leadModel.countDocuments(periodFilter) : Promise.resolve(null),
+      hasPeriod ? this.leadModel.countDocuments({ ...periodFilter, pipeline_status: 'won' }) : Promise.resolve(null),
     ])
 
     const pm = Object.fromEntries(byPipeline.map((r: { _id: string; count: number }) => [r._id, r.count]))
@@ -904,6 +964,8 @@ Sois concis et factuel. Réponds en français.`
       conversion_rate: convRate,
       by_pipeline: pm,
       by_source: bySource,
+      period_new: periodNew,
+      period_won: periodWon,
     }
   }
 
@@ -917,17 +979,26 @@ Sois concis et factuel. Réponds en français.`
       }
     }
 
-    const knownFields = new Set(['nom', 'name', 'email', 'telephone', 'téléphone', 'phone', 'âge', 'age', 'réseau_source', 'reseau_source', 'réseau_source', 'motivation', 'utm_source'])
+    const knownFields = new Set([
+      'nom', 'name', 'email', 'telephone', 'téléphone', 'phone',
+      'âge', 'age', 'réseau_source', 'reseau_source', 'réseau_source', 'motivation', 'utm_source',
+      'pays', 'country', 'ville', 'budget', 'montant', 'montant_budget', 'budget_disponible',
+    ])
     const dynamic: Record<string, unknown> = {}
     for (const [k, v] of Object.entries(varMap)) {
       if (!knownFields.has(k)) dynamic[k] = v
     }
+
+    const rawPays = varMap['pays'] ?? varMap['country'] ?? null
+    const rawBudget = varMap['budget'] ?? varMap['montant'] ?? varMap['montant_budget'] ?? varMap['budget_disponible'] ?? null
 
     return {
       name: String(varMap['nom'] ?? varMap['name'] ?? 'Inconnu'),
       email: varMap['email'] ? String(varMap['email']).toLowerCase().trim() : null,
       phone: varMap['telephone'] ?? varMap['téléphone'] ?? varMap['phone'] ?? null,
       age: varMap['âge'] ?? varMap['age'] ?? null,
+      pays: rawPays ? String(rawPays) : null,
+      budget: rawBudget ? Number(String(rawBudget).replace(/[^0-9.]/g, '')) || null : null,
       reseau_source: varMap['réseau_source'] ?? varMap['reseau_source'] ?? null,
       motivation: varMap['motivation'] ?? null,
       utm_source: varMap['utm_source'] ?? null,
@@ -1022,7 +1093,8 @@ Sois concis et factuel. Réponds en français.`
     let cursor: string | undefined = undefined
 
     do {
-      const url = `${baseUrl}/api/v1/typebots/${typebotId}/results?limit=200${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}`
+      const url = `${baseUrl}/api/v1/typebots/${typebotId}/results?limit=200${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}&timeFilter=allTime`
+      //console.log(url);
       let res: { data: { results?: unknown[]; nextCursor?: string } }
 
       try {
@@ -1035,30 +1107,56 @@ Sois concis et factuel. Réponds en français.`
       const results = (res.data.results ?? []) as Array<{
         id: string
         isCompleted: boolean
+        createdAt?: string
         variables: Array<{ name: string; value: unknown }>
       }>
       cursor = res.data.nextCursor
 
+      console.log(JSON.stringify(results[0], null, 2), results.length);
       for (const result of results) {
         if (!result.isCompleted) { skipped++; continue }
 
-        const existing = await this.leadModel.findOne({ typebot_result_id: result.id }).lean()
-        if (existing) { skipped++; continue }
+        // Dedup 1: by typebot_result_id
+        const byResultId = await this.leadModel.findOne({ typebot_result_id: result.id }).lean()
+        if (byResultId) { skipped++; continue }
+
+        const parsed      = this.parseTypebotVariables(result.variables ?? [])
+        const submittedAt = result.createdAt ? new Date(result.createdAt) : null
+
+        // Dedup 2: by email — update existing lead rather than create duplicate
+        if (parsed.email) {
+          const byEmail = await this.leadModel.findOne({ email: parsed.email }).lean()
+          if (byEmail) {
+            const upd: Record<string, unknown> = { typebot_result_id: result.id }
+            if (!byEmail.source_form_id)   upd['source_form_id']   = typebotId
+            if (!byEmail.source_form_name) upd['source_form_name'] = botName
+            if (!byEmail.submitted_at && submittedAt) upd['submitted_at'] = submittedAt
+            if (!byEmail.pays   && parsed.pays)   upd['pays']   = parsed.pays
+            if (!byEmail.budget && parsed.budget) upd['budget'] = parsed.budget
+            await this.leadModel.updateOne({ _id: byEmail._id }, { $set: upd })
+            skipped++
+            continue
+          }
+        }
 
         try {
-          const parsed = this.parseTypebotVariables(result.variables ?? [])
           const lead = await this.leadModel.create({
             name: parsed.name,
             email: parsed.email,
             phone: parsed.phone ? String(parsed.phone) : null,
             age: parsed.age ? Number(parsed.age) : null,
+            pays: parsed.pays ?? null,
+            budget: parsed.budget ?? null,
             utm_source: parsed.utm_source ? String(parsed.utm_source) : null,
             reseau_source: parsed.reseau_source ? String(parsed.reseau_source) : null,
             motivation: parsed.motivation ? String(parsed.motivation) : '',
             dynamic_fields: Object.keys(parsed.dynamic).length > 0 ? parsed.dynamic : {},
             source_type: 'typebot',
             typebot_result_id: result.id,
-            events: [{ type: 'created', message: `Lead importé depuis Typebot (${botName})`, date: new Date(), actor_id: null }],
+            source_form_id: typebotId,
+            source_form_name: botName,
+            submitted_at: submittedAt,
+            events: [{ type: 'created', message: `Lead importé depuis Typebot (${botName})`, date: submittedAt ?? new Date(), actor_id: null }],
           })
           await this.recalculateScore(lead as unknown as LeadDocument)
           this.automationsService.triggerEvent('lead_created', {

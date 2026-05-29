@@ -725,6 +725,12 @@ export interface Lead {
   notes: string
   created_by: { _id: string; firstName: string; lastName: string } | null
   student_id: string | null
+  typebot_result_id?: string | null
+  source_form_id?: string | null
+  source_form_name?: string | null
+  submitted_at?: string | null
+  pays?: string | null
+  budget?: number | null
   events: Array<{ type: string; message: string; date: string; actor_id?: string | null }>
   createdAt: string
   updatedAt: string
@@ -807,6 +813,7 @@ export interface AppSettings {
   lead_sources: string[]
   custom_gateways: string[]
   callBookingUrl?: string
+  exchangeRates?: Record<string, number>
 }
 
 export interface LeadFunnelStats {

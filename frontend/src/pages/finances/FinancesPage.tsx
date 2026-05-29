@@ -360,40 +360,179 @@ function CategoryModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+// ── Period + conversion helpers ───────────────────────────────────────────────
+
+type PeriodPreset = 'today' | 'yesterday' | '7d' | '30d' | '3m' | '12m' | 'year' | 'custom'
+
+const PERIOD_PRESETS: { key: PeriodPreset; label: string }[] = [
+  { key: 'today',     label: "Auj." },
+  { key: 'yesterday', label: 'Hier' },
+  { key: '7d',        label: '7 j' },
+  { key: '30d',       label: '30 j' },
+  { key: '3m',        label: '3 mois' },
+  { key: '12m',       label: '12 mois' },
+  { key: 'year',      label: 'Année' },
+  { key: 'custom',    label: 'Custom' },
+]
+
+function presetToDates(preset: PeriodPreset): { from: string; to: string } | null {
+  if (preset === 'custom') return null
+  const now = new Date()
+  const today = now.toISOString().slice(0, 10)
+  const shift = (days: number) => { const d = new Date(now); d.setDate(now.getDate() - days); return d.toISOString().slice(0, 10) }
+  const shiftM = (m: number) => { const d = new Date(now); d.setMonth(now.getMonth() - m); return d.toISOString().slice(0, 10) }
+  switch (preset) {
+    case 'today':     return { from: today, to: today }
+    case 'yesterday': { const y = shift(1); return { from: y, to: y } }
+    case '7d':        return { from: shift(7), to: today }
+    case '30d':       return { from: shift(30), to: today }
+    case '3m':        return { from: shiftM(3), to: today }
+    case '12m':       return { from: shiftM(12), to: today }
+    case 'year':      return { from: `${now.getFullYear()}-01-01`, to: today }
+  }
+}
+
+const DEFAULT_RATES: Record<string, number> = { XOF: 1, EUR: 655.957, USD: 610, MAD: 63.5, CAD: 450 }
+
+function convertTx(amount: number, from: string, to: string, rates: Record<string, number>): number {
+  if (!to || from === to) return amount
+  return amount * (rates[from] ?? 1) / (rates[to] ?? 1)
+}
+
 // ── Dashboard tab ─────────────────────────────────────────────────────────────
 
+interface PeriodTransaction {
+  _id: string; type: 'income' | 'expense'; amount: number; currency: string; status: string
+}
+
 function DashboardTab({ currency }: { currency: string }) {
-  const { data: stats, isLoading } = useQuery<FinanceStats>({
+  const [period, setPeriod] = useState<PeriodPreset | ''>('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+
+  // Default "Ce mois" date range used when no preset is selected
+  const now = new Date()
+  const thisMonthFrom = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`
+  const today         = now.toISOString().slice(0, 10)
+
+  // Effective dates — always defined (Ce mois as default)
+  const effectiveFrom = dateFrom || thisMonthFrom
+  const effectiveTo   = dateTo   || today
+
+  function applyDashPreset(p: PeriodPreset) {
+    setPeriod(p)
+    const dates = presetToDates(p)
+    if (dates) { setDateFrom(dates.from); setDateTo(dates.to) }
+    else { setDateFrom(''); setDateTo('') } // custom: clear so user fills manually
+  }
+
+  const { data: appSettings } = useQuery<AppSettings>({
+    queryKey: ['app-settings'],
+    queryFn: () => api.get<AppSettings>('/app-settings').then((r) => r.data),
+    staleTime: 60_000,
+  })
+  const rates: Record<string, number> = { ...DEFAULT_RATES, ...(appSettings?.exchangeRates ?? {}) }
+
+  // All-time stats for chart + categories + gateways (per selected currency)
+  const { data: stats, isLoading: statsLoading } = useQuery<FinanceStats>({
     queryKey: ['finance-stats', currency],
     queryFn: () => api.get<FinanceStats>('/finances/stats', { params: { currency } }).then((r) => r.data),
   })
 
-  if (isLoading) return <div className="py-8 text-center text-sm text-gray-500">Chargement…</div>
-  if (!stats) return null
+  // Period transactions (all currencies) for KPI cards — always fetched
+  const { data: periodData, isLoading: periodLoading } = useQuery<{ data: PeriodTransaction[] }>({
+    queryKey: ['finance-period-txs', effectiveFrom, effectiveTo],
+    queryFn: () =>
+      api.get<{ data: PeriodTransaction[] }>('/finances/transactions', {
+        params: { dateFrom: effectiveFrom, dateTo: effectiveTo, limit: 10000, page: 1 },
+      }).then((r) => r.data),
+  })
 
-  const topCategories = [...stats.byCategory]
+  const periodTxs = periodData?.data ?? []
+
+  // Compute KPIs with cross-currency conversion
+  const dispIncome  = periodTxs.filter((t) => t.type === 'income'  && t.status !== 'failed').reduce((s, t) => s + convertTx(t.amount, t.currency, currency, rates), 0)
+  const dispExpense = periodTxs.filter((t) => t.type === 'expense' && t.status !== 'failed').reduce((s, t) => s + convertTx(t.amount, t.currency, currency, rates), 0)
+  const dispNet     = dispIncome - dispExpense
+  const yearNet     = stats?.year.net ?? 0
+
+  const topCategories = [...(stats?.byCategory ?? [])]
     .sort((a, b) => (b.income + b.expense) - (a.income + a.expense))
     .slice(0, 6)
 
-  const topGateways = [...stats.byGateway]
+  const topGateways = [...(stats?.byGateway ?? [])]
     .sort((a, b) => (b.income + b.expense) - (a.income + a.expense))
     .slice(0, 5)
 
+  const periodLabel = period
+    ? (PERIOD_PRESETS.find((p) => p.key === period)?.label ?? 'Période')
+    : 'Ce mois'
+
+  const isLoading = statsLoading || periodLoading
+
   return (
     <div className="space-y-6">
+
+      {/* Period selector */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-gray-500 shrink-0">Période :</span>
+        <button
+          onClick={() => { setPeriod(''); setDateFrom(''); setDateTo('') }}
+          className={cn(
+            'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+            !period ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+          )}
+        >
+          Ce mois
+        </button>
+        {PERIOD_PRESETS.filter((p) => p.key !== 'custom').map((p) => (
+          <button
+            key={p.key}
+            onClick={() => applyDashPreset(p.key)}
+            className={cn(
+              'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+              period === p.key ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+            )}
+          >
+            {p.label}
+          </button>
+        ))}
+        {/* Custom date range */}
+        <button
+          onClick={() => applyDashPreset('custom')}
+          className={cn(
+            'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+            period === 'custom' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+          )}
+        >
+          Custom
+        </button>
+        {period === 'custom' && (
+          <div className="flex items-center gap-1">
+            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
+              className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1 text-xs text-gray-200 focus:outline-none" />
+            <span className="text-xs text-gray-600">→</span>
+            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
+              className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1 text-xs text-gray-200 focus:outline-none" />
+          </div>
+        )}
+      </div>
+
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: 'Revenus (mois)', value: formatAmount(stats.month.income, currency), icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'Dépenses (mois)', value: formatAmount(stats.month.expense, currency), icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-500/10' },
-          { label: 'Net (mois)', value: formatAmount(stats.month.net, currency), icon: DollarSign, color: stats.month.net >= 0 ? 'text-emerald-400' : 'text-red-400', bg: stats.month.net >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10' },
-          { label: 'Net (année)', value: formatAmount(stats.year.net, currency), icon: DollarSign, color: stats.year.net >= 0 ? 'text-indigo-400' : 'text-red-400', bg: 'bg-indigo-500/10' },
+          { label: `Revenus (${periodLabel})`, value: formatAmount(dispIncome, currency), icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: `Dépenses (${periodLabel})`, value: formatAmount(dispExpense, currency), icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-500/10' },
+          { label: `Net (${periodLabel})`, value: formatAmount(dispNet, currency), icon: DollarSign, color: dispNet >= 0 ? 'text-emerald-400' : 'text-red-400', bg: dispNet >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10' },
+          { label: 'Net (année)', value: formatAmount(yearNet, currency), icon: DollarSign, color: yearNet >= 0 ? 'text-indigo-400' : 'text-red-400', bg: 'bg-indigo-500/10' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <Card key={label}>
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500">{label}</p>
-                <p className={cn('mt-1 text-xl font-semibold', color)}>{value}</p>
+                <p className={cn('mt-1 text-xl font-semibold', isLoading ? 'text-gray-700' : color)}>
+                  {isLoading ? '···' : value}
+                </p>
               </div>
               <div className={cn('rounded-lg p-2.5', bg, color)}>
                 <Icon className="h-5 w-5" />
@@ -403,67 +542,73 @@ function DashboardTab({ currency }: { currency: string }) {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Monthly chart */}
-        <Card>
-          <div className="mb-2 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-gray-200">Évolution (12 mois)</h3>
-            <div className="flex items-center gap-3 text-xs text-gray-500">
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />Revenus</span>
-              <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Dépenses</span>
-            </div>
-          </div>
-          <BarChart data={stats.byMonth} />
-        </Card>
-
-        {/* By category */}
-        <Card>
-          <h3 className="mb-3 text-sm font-semibold text-gray-200">Par catégorie</h3>
-          {topCategories.length === 0 ? (
-            <p className="py-4 text-center text-sm text-gray-600">Aucune donnée.</p>
-          ) : (
-            <div className="space-y-2">
-              {topCategories.map((c, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-base">{c.icon}</span>
-                  <div className="flex-1">
-                    <div className="mb-0.5 flex items-center justify-between text-xs">
-                      <span className="text-gray-300">{c.name}</span>
-                      <span className="text-gray-500">{formatAmount(c.income - c.expense, currency)}</span>
-                    </div>
-                    <div className="h-1 w-full rounded-full bg-gray-800">
-                      <div
-                        className="h-1 rounded-full"
-                        style={{
-                          width: `${Math.min(100, ((c.income + c.expense) / Math.max(...stats.byCategory.map((x) => x.income + x.expense), 1)) * 100)}%`,
-                          backgroundColor: c.color,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
-
-      {/* By gateway */}
-      {topGateways.length > 0 && (
-        <Card>
-          <h3 className="mb-3 text-sm font-semibold text-gray-200">Par gateway</h3>
-          <div className="divide-y divide-gray-800">
-            {topGateways.map((g, i) => (
-              <div key={i} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
-                <span className="text-sm text-gray-300">{GATEWAY_LABELS[g.gateway] ?? g.gateway}</span>
-                <div className="flex gap-4 text-sm">
-                  <span className="text-emerald-400">{formatAmount(g.income, currency)}</span>
-                  <span className="text-red-400">−{formatAmount(g.expense, currency)}</span>
+      {statsLoading ? (
+        <div className="py-8 text-center text-sm text-gray-500">Chargement…</div>
+      ) : !stats ? null : (
+        <>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Monthly chart */}
+            <Card>
+              <div className="mb-2 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-200">Évolution (12 mois)</h3>
+                <div className="flex items-center gap-3 text-xs text-gray-500">
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />Revenus</span>
+                  <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Dépenses</span>
                 </div>
               </div>
-            ))}
+              <BarChart data={stats.byMonth} />
+            </Card>
+
+            {/* By category */}
+            <Card>
+              <h3 className="mb-3 text-sm font-semibold text-gray-200">Par catégorie</h3>
+              {topCategories.length === 0 ? (
+                <p className="py-4 text-center text-sm text-gray-600">Aucune donnée.</p>
+              ) : (
+                <div className="space-y-2">
+                  {topCategories.map((c, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <span className="text-base">{c.icon}</span>
+                      <div className="flex-1">
+                        <div className="mb-0.5 flex items-center justify-between text-xs">
+                          <span className="text-gray-300">{c.name}</span>
+                          <span className="text-gray-500">{formatAmount(c.income - c.expense, currency)}</span>
+                        </div>
+                        <div className="h-1 w-full rounded-full bg-gray-800">
+                          <div
+                            className="h-1 rounded-full"
+                            style={{
+                              width: `${Math.min(100, ((c.income + c.expense) / Math.max(...stats.byCategory.map((x) => x.income + x.expense), 1)) * 100)}%`,
+                              backgroundColor: c.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
           </div>
-        </Card>
+
+          {/* By gateway */}
+          {topGateways.length > 0 && (
+            <Card>
+              <h3 className="mb-3 text-sm font-semibold text-gray-200">Par gateway</h3>
+              <div className="divide-y divide-gray-800">
+                {topGateways.map((g, i) => (
+                  <div key={i} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                    <span className="text-sm text-gray-300">{GATEWAY_LABELS[g.gateway] ?? g.gateway}</span>
+                    <div className="flex gap-4 text-sm">
+                      <span className="text-emerald-400">{formatAmount(g.income, currency)}</span>
+                      <span className="text-red-400">−{formatAmount(g.expense, currency)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </>
       )}
     </div>
   )
@@ -474,12 +619,10 @@ function DashboardTab({ currency }: { currency: string }) {
 function TransactionsTab({
   categories,
   offers,
-  currency,
   onNew,
 }: {
   categories: FinanceCategory[]
   offers: Offer[]
-  currency: string
   onNew: () => void
 }) {
   const navigate = useNavigate()
@@ -489,6 +632,7 @@ function TransactionsTab({
   const allGateways = useAllGateways()
   const [editTx, setEditTx] = useState<Transaction | null>(null)
 
+  const [preset, setPreset] = useState<PeriodPreset | ''>('')
   const [type, setType] = useState('')
   const [categoryId, setCategoryId] = useState('')
   const [gateway, setGateway] = useState('')
@@ -496,18 +640,32 @@ function TransactionsTab({
   const [dateTo, setDateTo] = useState('')
   const [search, setSearch] = useState('')
   const [searchInput, setSearchInput] = useState('')
+  const [displayCurrency, setDisplayCurrency] = useState('')
   const [page, setPage] = useState(1)
   const limit = 25
 
+  const { data: appSettings } = useQuery<AppSettings>({
+    queryKey: ['app-settings'],
+    queryFn: () => api.get<AppSettings>('/app-settings').then((r) => r.data),
+    staleTime: 60_000,
+  })
+  const rates: Record<string, number> = { ...DEFAULT_RATES, ...(appSettings?.exchangeRates ?? {}) }
+
+  function applyPreset(p: PeriodPreset) {
+    setPreset(p)
+    const dates = presetToDates(p)
+    if (dates) { setDateFrom(dates.from); setDateTo(dates.to) }
+    setPage(1)
+  }
+
   const { data, isLoading } = useQuery<PaginatedResponse<Transaction>>({
-    queryKey: ['transactions', { type, categoryId, gateway, currency, dateFrom, dateTo, search, page }],
+    queryKey: ['transactions', { type, categoryId, gateway, dateFrom, dateTo, search, page }],
     queryFn: () =>
       api.get<PaginatedResponse<Transaction>>('/finances/transactions', {
         params: {
           type: type || undefined,
           categoryId: categoryId || undefined,
           gateway: gateway || undefined,
-          currency,
           dateFrom: dateFrom || undefined,
           dateTo: dateTo || undefined,
           search: search || undefined,
@@ -541,6 +699,65 @@ function TransactionsTab({
     <div>
       {/* Filters */}
       <div className="mb-4 space-y-3">
+
+      {/* Period presets */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-gray-500 shrink-0">Période :</span>
+        {PERIOD_PRESETS.map((p) => (
+          <button
+            key={p.key}
+            onClick={() => applyPreset(p.key)}
+            className={cn(
+              'rounded-full px-3 py-1 text-xs font-medium transition-colors',
+              preset === p.key
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+            )}
+          >
+            {p.label}
+          </button>
+        ))}
+        {(preset || dateFrom || dateTo) && (
+          <button
+            onClick={() => { setPreset(''); setDateFrom(''); setDateTo(''); setPage(1) }}
+            className="rounded p-1 text-gray-600 hover:text-gray-300 transition-colors"
+            title="Effacer la période"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+        <div className="ml-auto flex items-center gap-2">
+          <span className="text-xs text-gray-500">Afficher en :</span>
+          <select
+            value={displayCurrency}
+            onChange={(e) => setDisplayCurrency(e.target.value)}
+            className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1 text-xs text-gray-200 focus:border-indigo-500 focus:outline-none"
+          >
+            <option value="">Devise originale</option>
+            {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {/* Custom date range (shown when preset=custom or custom dates) */}
+      {(preset === 'custom' || (!preset && (dateFrom || dateTo))) && (
+        <div className="flex items-center gap-1.5">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => { setDateFrom(e.target.value); setPage(1) }}
+            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+          />
+          <span className="text-xs text-gray-600">→</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => { setDateTo(e.target.value); setPage(1) }}
+            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+          />
+        </div>
+      )}
+
       {/* Search bar */}
       <div className="relative">
         <input
@@ -580,32 +797,6 @@ function TransactionsTab({
           <option value="">Tous les gateways</option>
           {allGateways.map((g) => <option key={g} value={g}>{GATEWAY_LABELS[g] ?? g}</option>)}
         </select>
-        <div className="flex items-center gap-1.5">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => { setDateFrom(e.target.value); setPage(1) }}
-            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
-            placeholder="Du"
-          />
-          <span className="text-xs text-gray-600">→</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => { setDateTo(e.target.value); setPage(1) }}
-            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
-            placeholder="Au"
-          />
-          {(dateFrom || dateTo) && (
-            <button
-              onClick={() => { setDateFrom(''); setDateTo(''); setPage(1) }}
-              className="rounded p-1 text-gray-500 hover:text-gray-300 transition-colors"
-              title="Effacer les dates"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
         <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
           {search && <span className="rounded-full bg-indigo-600/20 px-2 py-0.5 text-indigo-400">"{search}"</span>}
           {total} transaction{total !== 1 ? 's' : ''}
@@ -705,8 +896,17 @@ function TransactionsTab({
                     <td className="py-3 pr-4 whitespace-nowrap">
                       <Badge variant="default">{GATEWAY_LABELS[tx.gateway] ?? tx.gateway}</Badge>
                     </td>
-                    <td className={cn('py-3 pr-4 text-right font-semibold tabular-nums', tx.type === 'income' ? 'text-emerald-400' : 'text-red-400')}>
-                      {tx.type === 'income' ? '+' : '−'}{formatAmount(tx.amount, tx.currency)}
+                    <td className={cn('py-3 pr-4 text-right tabular-nums', tx.type === 'income' ? 'text-emerald-400' : 'text-red-400')}>
+                      {displayCurrency && displayCurrency !== tx.currency ? (
+                        <div>
+                          <p className="font-semibold">
+                            {tx.type === 'income' ? '+' : '−'}{new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Math.round(convertTx(tx.amount, tx.currency, displayCurrency, rates)))} {displayCurrency}
+                          </p>
+                          <p className="text-xs text-gray-600">{formatAmount(tx.amount, tx.currency)}</p>
+                        </div>
+                      ) : (
+                        <span className="font-semibold">{tx.type === 'income' ? '+' : '−'}{formatAmount(tx.amount, tx.currency)}</span>
+                      )}
                     </td>
                     {isAdmin && (
                       <td className="py-3">
@@ -1285,14 +1485,17 @@ export function FinancesPage() {
           <p className="mt-0.5 text-sm text-gray-500">Suivi multi-devises des revenus et dépenses</p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Currency selector */}
-          <select
-            value={currency}
-            onChange={(e) => setCurrency(e.target.value)}
-            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
-          >
-            {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          {/* Currency selector — only active for Dashboard/Stats tab */}
+          {activeTab === 'dashboard' && (
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+              title="Devise pour le dashboard stats"
+            >
+              {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
           {isAdmin && (
             <>
               <button
@@ -1340,7 +1543,7 @@ export function FinancesPage() {
 
       {activeTab === 'dashboard' && <DashboardTab currency={currency} />}
       {activeTab === 'transactions' && (
-        <TransactionsTab categories={categories} offers={allOffers} currency={currency} onNew={() => setShowCreate(true)} />
+        <TransactionsTab categories={categories} offers={allOffers} onNew={() => setShowCreate(true)} />
       )}
       {activeTab === 'products' && <ProductMappingsTab />}
 

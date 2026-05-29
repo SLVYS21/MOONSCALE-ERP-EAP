@@ -75,6 +75,15 @@ export class Lead {
   @Prop({ type: String, default: null }) student_id: string | null
   @Prop({ type: String, default: null, index: true }) typebot_result_id: string | null
 
+  // Form / origine
+  @Prop({ type: String, default: null }) source_form_id: string | null
+  @Prop({ type: String, default: null }) source_form_name: string | null
+  @Prop({ type: Date, default: null }) submitted_at: Date | null
+
+  // Champs directs extraits des formulaires
+  @Prop({ type: String, default: null }) pays: string | null
+  @Prop({ type: Number, default: null }) budget: number | null
+
   @Prop({
     type: [{
       _id: false,

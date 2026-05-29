@@ -22,6 +22,13 @@ export class AppSettings {
 
   @Prop({ default: '' })
   callBookingUrl: string
+
+  @Prop({
+    type: Map,
+    of: Number,
+    default: { XOF: 1, EUR: 655.957, USD: 610, MAD: 63.5, CAD: 450 },
+  })
+  exchangeRates: Map<string, number>
 }
 
 export const AppSettingsSchema = SchemaFactory.createForClass(AppSettings)

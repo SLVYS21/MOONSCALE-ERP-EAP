@@ -188,7 +188,7 @@ export class FinancesService {
     if (filters.dateFrom || filters.dateTo) {
       const dateQuery: Record<string, Date> = {}
       if (filters.dateFrom) dateQuery.$gte = new Date(filters.dateFrom)
-      if (filters.dateTo)   dateQuery.$lte = new Date(filters.dateTo)
+      if (filters.dateTo)   dateQuery.$lte = new Date(filters.dateTo + 'T23:59:59.999Z')
       query.date = dateQuery
     }
 

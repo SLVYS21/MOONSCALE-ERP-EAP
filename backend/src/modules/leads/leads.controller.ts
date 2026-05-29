@@ -168,8 +168,11 @@ export class LeadsController {
   }
 
   @Get('kpis')
-  getKpis() {
-    return this.leadsService.getAcquisitionKpis()
+  getKpis(
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.leadsService.getAcquisitionKpis(dateFrom, dateTo)
   }
 
   // ── Scoring ────────────────────────────────────────────────────────────────

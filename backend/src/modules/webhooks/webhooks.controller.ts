@@ -489,9 +489,40 @@ export class WebhooksController {
   async handleTypebot(
     @Body() body: Record<string, unknown>,
     @Query('utm_source') utmSource?: string,
+    @Query('typebot_id') typebotId?: string,
+    @Query('typebot_name') typebotName?: string,
   ) {
+    /*
+    {
+      submittedAt: '2026-05-29T14:14:47.493Z',
+      message: 'This is a sample result, it has been generated ⬇️',
+      Prenom: 'answer value',
+      Nom: 'answer value',
+      Age: '20',
+      Email: 'test@email.com',
+      WhatsApp: '+33665566773',
+      'Pays  de résidence': 'answer value',
+      'Situation professionnelle': 'Chômeur',
+      'Expérience e-commerce Afrique': 'Jamais',
+      'Déjà investi en formation': 'Oui',
+      'Connaissance Myril SEKOU': 'Je viens de le découvrir',
+      'Motivation formation présentielle': 'answer value',
+      'Objectif gain 6 mois': '0 - 300.000 FCFA',
+      'Pack choisi': 'A — Moins de 200 000 FCFA  (Disqualifié)',
+      'Commentaire libre': 'answer value',
+      Intro: 'DÉMARRER🔥',
+      'Résumé': 'Envoyer ma candidature 👍',
+      'ghl-ID': 'content',
+      'Ville de résidence': 'content',
+      'Disponible présentiel Cotonou': 'content',
+      'Revenu mensuel': 'content',
+      'Mode de paiement': 'content',
+      'Montant mobilisable immédiatement': 'content'
+    }
+*/
     try {
-      const lead = await this.leadsService.handleTypebotWebhook(body, utmSource)
+      console.log(body);
+      const lead = await this.leadsService.handleTypebotWebhook(body, utmSource, typebotId, typebotName)
       return { message: 'success', leadId: (lead as unknown as { _id: unknown })._id }
     } catch (err: unknown) {
       this.logger.error(`Typebot webhook error: ${(err as Error).message}`)
