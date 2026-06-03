@@ -60,6 +60,12 @@ export class User {
 
   @Prop({ type: Date, default: null })
   lastActivity: Date | null
+
+  @Prop({ type: Number, default: null })
+  calcom_user_id: number | null
+
+  @Prop({ type: Number, default: null })
+  calcom_event_type_id: number | null
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

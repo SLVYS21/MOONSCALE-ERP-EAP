@@ -19,6 +19,8 @@ export interface User {
   avatar?: string
   lastActivity?: string
   createdAt: string
+  calcom_user_id?: number | null
+  calcom_event_type_id?: number | null
 }
 
 export interface Invitation {
@@ -693,8 +695,6 @@ export type PipelineStatus =
   | 'lost'
   | 'nurturing'
 
-export type QualificationStatus = 'mql' | 'sql' | 'non_qualifie'
-
 export type LeadSourceType =
   | 'typebot'
   | 'meta_ads'
@@ -715,8 +715,6 @@ export interface Lead {
   motivation: string
   dynamic_fields: Record<string, unknown>
   source_type: LeadSourceType
-  qualification_status: QualificationStatus | null
-  qualification_score: number
   pipeline_status: PipelineStatus
   closer_id: User | null
   lost_reason: string
@@ -771,6 +769,7 @@ export interface LeadCall {
   status: CallStatus
   closer_id: User | null
   offer_proposed_id: SubscriptionOffer | null
+  calcom_booking_uid: string | null
   createdAt: string
   updatedAt: string
 }

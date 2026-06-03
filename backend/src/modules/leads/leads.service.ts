@@ -3,16 +3,20 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Cron } from '@nestjs/schedule'
 import { Model, Types } from 'mongoose'
 import axios from 'axios'
-import { Lead, LeadDocument, PipelineStatus, QualificationStatus, LeadSourceType } from './schemas/lead.schema'
+import ical from 'ical-generator'
+import { Lead, LeadDocument, PipelineStatus, LeadSourceType } from './schemas/lead.schema'
 import { Call, CallDocument } from './schemas/call.schema'
 import { ScoringRule, ScoringRuleDocument } from './schemas/scoring-rule.schema'
 import { ScoringConfig, ScoringConfigDocument } from './schemas/scoring-config.schema'
 import { WhatsAppLink, WhatsAppLinkDocument } from './schemas/whatsapp-link.schema'
 import { WhatsAppClick, WhatsAppClickDocument } from './schemas/whatsapp-click.schema'
+import { TypebotFormConfig, TypebotFormConfigDocument, TypebotFieldMapping } from './schemas/typebot-form-config.schema'
 import { AutomationsService } from '../automations/automations.service'
 import { OffersService } from '../offers/offers.service'
 import { MailService } from '../mail/mail.service'
+import { CalComService } from '../calcom/calcom.service'
 import { Student, StudentDocument } from '../students/schemas/student.schema'
+import { User, UserDocument } from '../users/schemas/user.schema'
 import { DEFAULT_SCORING_RULES } from './leads.seed'
 
 // ── CSV Parser ────────────────────────────────────────────────────────────────
@@ -122,7 +126,6 @@ export interface UpdateLeadDto {
 
 export interface ListLeadsQuery {
   pipeline_status?: string
-  qualification_status?: string
   closer_id?: string
   utm_source?: string
   source_type?: string
@@ -201,9 +204,12 @@ export class LeadsService implements OnApplicationBootstrap {
     @InjectModel(WhatsAppLink.name) private whatsappLinkModel: Model<WhatsAppLinkDocument>,
     @InjectModel(WhatsAppClick.name) private whatsappClickModel: Model<WhatsAppClickDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
+    @InjectModel(TypebotFormConfig.name) private typebotFormConfigModel: Model<TypebotFormConfigDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     private automationsService: AutomationsService,
     private offersService: OffersService,
     private mailService: MailService,
+    private calComService: CalComService,
   ) {}
 
   async onApplicationBootstrap() {
@@ -230,14 +236,20 @@ export class LeadsService implements OnApplicationBootstrap {
       typebot: 'Typebot', meta_ads: 'Meta Ads', whatsapp_tracked: 'WhatsApp tracké',
       whatsapp_direct: 'WhatsApp direct', manual: 'création manuelle', import: 'import CSV',
     }
+
+    // WhatsApp source → direct SQL
+    const isWhatsApp =
+      dto.utm_source?.toLowerCase().includes('whatsapp') ||
+      dto.source_type === 'whatsapp_tracked' ||
+      dto.source_type === 'whatsapp_direct'
+
     const lead = await this.leadModel.create({
       ...dto,
+      ...(isWhatsApp ? { pipeline_status: 'sql' } : {}),
       offer_ids: dto.offer_ids?.map((id) => new Types.ObjectId(id)) ?? [],
       created_by: userId ? new Types.ObjectId(userId) : null,
       events: [{ type: 'created', message: `Lead créé via ${SOURCE_LABEL[dto.source_type ?? 'manual'] ?? dto.source_type}`, date: new Date(), actor_id: userId ?? null }],
     })
-
-    await this.recalculateScore(lead)
 
     this.automationsService.triggerEvent('lead_created', {
       lead: { _id: lead._id, name: lead.name, email: lead.email, source_type: lead.source_type, utm_source: lead.utm_source },
@@ -248,7 +260,7 @@ export class LeadsService implements OnApplicationBootstrap {
 
   async listLeads(query: ListLeadsQuery) {
     const {
-      pipeline_status, qualification_status, closer_id, utm_source,
+      pipeline_status, closer_id, utm_source,
       source_type, search, date_from, date_to,
       page = 1, limit = 50,
     } = query
@@ -256,7 +268,6 @@ export class LeadsService implements OnApplicationBootstrap {
     const filter: Record<string, unknown> = {}
 
     if (pipeline_status) filter.pipeline_status = pipeline_status
-    if (qualification_status) filter.qualification_status = qualification_status
     if (closer_id) filter.closer_id = new Types.ObjectId(closer_id)
     if (utm_source) filter.utm_source = utm_source
     if (source_type) filter.source_type = source_type
@@ -379,21 +390,6 @@ export class LeadsService implements OnApplicationBootstrap {
     return lead
   }
 
-  async updateQualification(id: string, status: QualificationStatus): Promise<LeadDocument> {
-    const lead = await this.leadModel.findByIdAndUpdate(
-      id,
-      { qualification_status: status },
-      { new: true },
-    ).lean() as unknown as LeadDocument
-
-    if (!lead) throw new NotFoundException('Lead introuvable')
-
-    const QLABEL: Record<string, string> = { mql: 'MQL', sql: 'SQL', non_qualifie: 'Non qualifié' }
-    this.pushEvent(id, 'qualification_changed', `Qualification → ${QLABEL[status] ?? status}`)
-
-    return lead
-  }
-
   async assignCloser(id: string, closerId: string | null): Promise<LeadDocument> {
     const update = closerId ? { closer_id: new Types.ObjectId(closerId) } : { closer_id: null }
     const lead = await this.leadModel.findByIdAndUpdate(id, update, { new: true })
@@ -405,57 +401,6 @@ export class LeadsService implements OnApplicationBootstrap {
   }
 
   // ── Scoring ───────────────────────────────────────────────────────────────
-
-  async recalculateScore(lead: LeadDocument): Promise<void> {
-    const [rules, config] = await Promise.all([
-      this.scoringRuleModel.find({ is_active: true }).lean(),
-      this.getOrCreateScoringConfig(),
-    ])
-
-    let score = 0
-    const leadPlain = lead.toObject ? lead.toObject() : lead
-
-    for (const rule of rules) {
-      const fieldVal = (leadPlain as Record<string, unknown>)[rule.condition_field]
-      const strVal = String(fieldVal ?? '')
-
-      let matches = false
-      switch (rule.condition_operator) {
-        case 'equals':
-          matches = strVal === rule.condition_value
-          break
-        case 'contains':
-          matches = strVal.toLowerCase().includes((rule.condition_value ?? '').toLowerCase())
-          break
-        case 'not_null':
-          matches = fieldVal !== null && fieldVal !== undefined && strVal !== ''
-          break
-        case 'is_empty':
-          matches = !fieldVal || strVal === ''
-          break
-      }
-
-      if (matches) score += rule.points
-    }
-
-    let newQualStatus = (leadPlain as Lead).qualification_status
-    if (score >= config.sql_threshold) {
-      newQualStatus = 'sql'
-    } else if (score >= config.mql_threshold) {
-      newQualStatus = 'mql'
-    }
-
-    await this.leadModel.updateOne(
-      { _id: lead._id },
-      { qualification_score: score, qualification_status: newQualStatus },
-    )
-  }
-
-  async recalculateAllScores(): Promise<{ updated: number }> {
-    const leads = await this.leadModel.find().lean()
-    await Promise.all(leads.map((l) => this.recalculateScore(l as unknown as LeadDocument)))
-    return { updated: leads.length }
-  }
 
   private async getOrCreateScoringConfig(): Promise<ScoringConfigDocument> {
     let config = await this.scoringConfigModel.findOne()
@@ -702,24 +647,70 @@ Sois concis et factuel. Réponds en français.`
   }
 
   // ── Webhook handlers ──────────────────────────────────────────────────────
-//Backfill
+
   async handleTypebotWebhook(
     payload: Record<string, unknown>,
     utmOverride?: string,
     formId?: string,
     formName?: string,
   ): Promise<LeadDocument> {
+    const META_KEYS = new Set(['submittedAt', 'message', 'result_id', 'resultId', 'variables'])
 
-    const variables = (payload.variables as Array<{ name: string; value: unknown }>) ?? []
-    const parsed = this.parseTypebotVariables(variables)
+    const srcFormId   = formId ?? (payload.typebot_id ?? (payload.typebot as Record<string, unknown>)?.id) as string | undefined
+    const srcFormName = formName ?? (payload.typebot_name ?? (payload.typebot as Record<string, unknown>)?.name) as string | undefined
+
+    // Resolve the field mapping (from DB or freshly synced)
+    let formConfig: TypebotFormConfigDocument | null = null
+    if (srcFormId) {
+      formConfig = await this.typebotFormConfigModel.findOne({ typebot_id: srcFormId }).lean() as TypebotFormConfigDocument | null
+
+      const receivedKeys = Object.keys(payload).filter(k => !META_KEYS.has(k))
+      const needsSync = !formConfig || this.variablesMismatch(receivedKeys, formConfig.variables)
+      if (needsSync) {
+        formConfig = await this.syncTypebotVariables(srcFormId, srcFormName)
+      }
+    }
+
+    // Parse payload: use stored mapping if available, else fallback to legacy parsers
+    type ParsedPayload = {
+      name: string; email: string | null; phone: unknown; age: unknown
+      pays: string | null; motivation: unknown; reseau_source: unknown
+      budget: number | null; utm_source: unknown; dynamic: Record<string, unknown>
+      submitted_at: Date | null
+    }
+    let parsed: ParsedPayload
+    if (formConfig && Object.keys(formConfig.mapping ?? {}).length > 0) {
+      parsed = this.parseWithMapping(payload, formConfig.mapping)
+    } else {
+      const isFlatFormat = !Array.isArray(payload.variables) && (
+        typeof payload['Email'] === 'string' ||
+        typeof payload['Prenom'] === 'string' ||
+        typeof payload['WhatsApp'] === 'string'
+      )
+      parsed = isFlatFormat
+        ? this.parseTypebotFlatPayload(payload)
+        : this.parseTypebotVariables((payload.variables as Array<{ name: string; value: unknown }>) ?? [])
+    }
+
     const utm_source = utmOverride ?? parsed.utm_source ?? (payload.utm_source as string) ?? null
 
-    // Extract Typebot metadata from payload
-    const resultId   = (payload.result_id ?? payload.resultId ?? (payload.result as Record<string, unknown>)?.id) as string | undefined
-    const submittedRaw = payload.submittedAt ?? payload.createdAt ?? (payload.result as Record<string, unknown>)?.createdAt ?? null
-    const submittedAt  = submittedRaw ? new Date(String(submittedRaw)) : null
-    const srcFormId    = formId ?? (payload.typebot_id ?? (payload.typebot as Record<string, unknown>)?.id) as string | undefined
-    const srcFormName  = formName ?? (payload.typebot_name ?? (payload.typebot as Record<string, unknown>)?.name) as string | undefined
+    // Budget fallback: if mapping returned nothing, extract from "Commentaire libre"
+    let finalBudget = parsed.budget
+    if (!finalBudget) {
+      const commentaireRaw = (payload['Commentaire libre'] ?? payload['commentaire_libre']) as string | undefined
+      if (commentaireRaw) finalBudget = await this.extractBudget(commentaireRaw) || null
+    }
+
+    // Réseau fallback: mapping → "Réseau" field → utm_source
+    const finalReseau: any = parsed.reseau_source
+      ? String(parsed.reseau_source)
+      : ((payload['Réseau'] as string | undefined) ?? utm_source ?? null)
+
+    const resultId = (payload.result_id ?? payload.resultId ?? (payload.result as Record<string, unknown>)?.id) as string | undefined
+    const submittedRaw = parsed.submitted_at ?? (payload.submittedAt ?? payload.createdAt ?? null)
+    const submittedAt = submittedRaw instanceof Date
+      ? submittedRaw
+      : (submittedRaw ? new Date(String(submittedRaw)) : null)
 
     // 1. Dedup by typebot_result_id
     if (resultId) {
@@ -727,7 +718,7 @@ Sois concis et factuel. Réponds en français.`
       if (byResultId) return byResultId
     }
 
-    // 2. Dedup by email → upsert (update empty fields only, don't create duplicate)
+    // 2. Dedup by email → upsert (update empty fields only)
     if (parsed.email) {
       const byEmail = await this.leadModel.findOne({ email: parsed.email }).exec()
       if (byEmail) {
@@ -736,8 +727,8 @@ Sois concis et factuel. Réponds en français.`
         if (srcFormId && !byEmail.source_form_id)     upd['source_form_id']   = srcFormId
         if (srcFormName && !byEmail.source_form_name) upd['source_form_name'] = srcFormName
         if (submittedAt && !byEmail.submitted_at)     upd['submitted_at']     = submittedAt
-        if (!byEmail.pays   && parsed.pays)           upd['pays']             = parsed.pays
-        if (!byEmail.budget && parsed.budget)         upd['budget']           = parsed.budget
+        if (!byEmail.pays   && parsed.pays)           upd['pays']   = parsed.pays
+        if (!byEmail.budget && finalBudget)            upd['budget'] = finalBudget
         if (Object.keys(upd).length) await this.leadModel.updateOne({ _id: byEmail._id }, { $set: upd })
         return byEmail
       }
@@ -750,9 +741,9 @@ Sois concis et factuel. Réponds en français.`
       phone: parsed.phone ? String(parsed.phone) : undefined,
       age: parsed.age ? Number(parsed.age) : undefined,
       pays: parsed.pays ?? undefined,
-      budget: parsed.budget ?? undefined,
+      budget: finalBudget ?? undefined,
       utm_source: utm_source ? String(utm_source) : undefined,
-      reseau_source: parsed.reseau_source ? String(parsed.reseau_source) : undefined,
+      reseau_source: finalReseau ?? undefined,
       motivation: parsed.motivation ? String(parsed.motivation) : undefined,
       dynamic_fields: parsed.dynamic,
       source_type: 'typebot',
@@ -854,37 +845,246 @@ Sois concis et factuel. Réponds en français.`
     return { created, updated, errors, messages }
   }
 
+  // ── Cal.com Slots & Booking ───────────────────────────────────────────────
+
+  async getCalComSlots(leadId: string, closerUserId: string): Promise<Record<string, { time: string }[]>> {
+    const closer = await this.userModel.findById(closerUserId).lean()
+    if (!closer?.calcom_event_type_id) {
+      throw new BadRequestException("Ce closer n'a pas de Cal.com event type configuré. Ajoutez calcom_event_type_id dans son profil.")
+    }
+
+    // Fetch slots for the next 14 days
+    const startTime = new Date().toISOString()
+    const endTime   = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+
+    return this.calComService.getSlots(closer.calcom_event_type_id, startTime, endTime)
+  }
+
+  async createCalComBooking(leadId: string, closerUserId: string, slot: string): Promise<CallDocument> {
+    const [lead, closer] = await Promise.all([
+      this.leadModel.findById(leadId),
+      this.userModel.findById(closerUserId).lean(),
+    ])
+
+    if (!lead) throw new NotFoundException('Lead introuvable')
+    if (!closer?.calcom_event_type_id) {
+      throw new BadRequestException("calcom_event_type_id manquant sur ce closer")
+    }
+    if (!lead.email) throw new BadRequestException('Ce lead n\'a pas d\'adresse email')
+
+    const booking = await this.calComService.createBooking({
+      eventTypeId: closer.calcom_event_type_id,
+      start:       slot,
+      name:        lead.name,
+      email:       lead.email,
+      phone:       lead.phone ?? undefined,
+    })
+
+    // Update pipeline
+    await this.updatePipeline(leadId, 'rdv_programme')
+
+    // Create call record with calcom_booking_uid
+    const call = await this.createCall(leadId, {
+      date:              booking.startTime,
+      google_meet_link:  booking.meetLink,
+      status:            'planned',
+      closer_id:         closerUserId,
+    })
+
+    // Store booking UID on the call
+    await this.callModel.updateOne(
+      { _id: (call as unknown as { _id: Types.ObjectId })._id },
+      { $set: { calcom_booking_uid: booking.uid } },
+    )
+
+    // Generate .ics and send confirmation email
+    await this.sendCalComConfirmationEmail(lead, closer as UserDocument, booking.startTime, booking.endTime, booking.meetLink)
+
+    return call
+  }
+
+  private async sendCalComConfirmationEmail(
+    lead: LeadDocument,
+    closer: UserDocument,
+    startTime: string,
+    endTime: string,
+    meetLink: string,
+  ): Promise<void> {
+    if (!lead.email) return
+
+    const start = new Date(startTime)
+    const end   = new Date(endTime)
+
+    const cal = ical({ name: 'Moonscale' })
+    cal.createEvent({
+      start,
+      end,
+      summary:     `Appel avec ${closer.firstName} ${closer.lastName} — Moonscale`,
+      description: `Rejoignez l'appel via ce lien :\n${meetLink}`,
+      location:    meetLink,
+      organizer:   { name: `${closer.firstName} ${closer.lastName}`, email: closer.email },
+      attendees: [
+        { name: lead.name, email: lead.email },
+        { name: `${closer.firstName} ${closer.lastName}`, email: closer.email },
+      ],
+    })
+
+    try {
+      await this.mailService.sendBookingConfirmation({
+        to:          lead.email,
+        leadName:    lead.name,
+        closerName:  `${closer.firstName} ${closer.lastName}`,
+        startTime:   start,
+        endTime:     end,
+        meetLink,
+        icsContent:  cal.toString(),
+      })
+    } catch (err) {
+      this.logger.error(`Failed to send booking confirmation to ${lead.email}: ${(err as Error).message}`)
+    }
+  }
+
+  // ── Cal.com Webhook ───────────────────────────────────────────────────────
+
   async handleCalComWebhook(payload: Record<string, unknown>): Promise<void> {
     const triggerEvent = payload.triggerEvent as string
-    if (triggerEvent !== 'BOOKING_CREATED') return
 
+    if (triggerEvent === 'BOOKING_CREATED') {
+      await this.handleCalComBookingCreated(payload)
+    } else if (triggerEvent === 'BOOKING_CANCELLED') {
+      await this.handleCalComBookingCancelled(payload)
+    } else if (triggerEvent === 'BOOKING_RESCHEDULED') {
+      await this.handleCalComBookingRescheduled(payload)
+    }
+  }
+
+  private async handleCalComBookingCreated(payload: Record<string, unknown>): Promise<void> {
     const bookingPayload = payload.payload as Record<string, unknown>
     if (!bookingPayload) return
 
     const attendees = (bookingPayload.attendees as Array<{ email: string; name: string }>) ?? []
-    const attendee = attendees[0]
+    const attendee  = attendees[0]
     if (!attendee?.email) return
 
-    const startTime = bookingPayload.startTime as string
-    const videoCall = bookingPayload.videoCallData as Record<string, unknown> | undefined
-    const meetLink = (videoCall?.url as string) ?? ''
+    const startTime    = bookingPayload.startTime as string
+    const endTime      = bookingPayload.endTime as string
+    const bookingUid   = bookingPayload.uid as string
+    const videoCall    = bookingPayload.videoCallData as Record<string, unknown> | undefined
+    const meetLink     = (videoCall?.url as string)
+      ?? (bookingPayload.metadata as Record<string, string> | undefined)?.videoCallUrl
+      ?? (bookingPayload.location as string)
+      ?? ''
 
-    // Find lead by email
+    const organizer = bookingPayload.organizer as { email?: string; name?: string } | undefined
+
     const lead = await this.leadModel.findOne({ email: attendee.email.toLowerCase() })
     if (!lead) {
-      this.logger.warn(`Cal.com webhook: no lead found for email ${attendee.email}`)
+      this.logger.warn(`Cal.com BOOKING_CREATED: no lead for email ${attendee.email}`)
       return
     }
 
-    // Update pipeline to RDV Programmé
+    // Avoid duplicate if already booked via ERP (calcom_booking_uid already set)
+    const existing = await this.callModel.findOne({ lead_id: lead._id, calcom_booking_uid: bookingUid })
+    if (existing) return
+
     await this.updatePipeline(String(lead._id), 'rdv_programme')
 
-    // Create a planned call record
-    await this.createCall(String(lead._id), {
-      date: startTime,
+    let closerId: string | undefined
+    if (organizer?.email) {
+      const closerUser = await this.userModel.findOne({ email: organizer.email.toLowerCase() }).lean()
+      if (closerUser) closerId = String((closerUser as unknown as { _id: unknown })._id)
+    }
+
+    const call = await this.createCall(String(lead._id), {
+      date:             startTime,
       google_meet_link: meetLink,
-      status: 'planned',
+      status:           'planned',
+      closer_id:        closerId,
     })
+
+    await this.callModel.updateOne(
+      { _id: (call as unknown as { _id: Types.ObjectId })._id },
+      { $set: { calcom_booking_uid: bookingUid } },
+    )
+
+    // Send confirmation email with .ics
+    if (lead.email && endTime) {
+      const closer = closerId
+        ? await this.userModel.findById(closerId).lean() as UserDocument | null
+        : null
+
+      const cal = ical({ name: 'Moonscale' })
+      const start = new Date(startTime)
+      const end   = new Date(endTime)
+
+      cal.createEvent({
+        start,
+        end,
+        summary:     `Appel ${closer ? `avec ${closer.firstName} ${closer.lastName}` : ''} — Moonscale`,
+        description: `Lien Google Meet : ${meetLink}`,
+        location:    meetLink,
+        organizer:   { name: organizer?.name ?? 'Moonscale', email: organizer?.email ?? 'noreply@moonscale.com' },
+        attendees:   [{ name: attendee.name ?? lead.name, email: lead.email }],
+      })
+
+      try {
+        await this.mailService.sendBookingConfirmation({
+          to:         lead.email,
+          leadName:   lead.name,
+          closerName: closer ? `${closer.firstName} ${closer.lastName}` : (organizer?.name ?? 'notre équipe'),
+          startTime:  start,
+          endTime:    end,
+          meetLink,
+          icsContent: cal.toString(),
+        })
+      } catch (err) {
+        this.logger.error(`Booking confirmation email failed for ${lead.email}: ${(err as Error).message}`)
+      }
+    }
+  }
+
+  async cancelCalComBooking(callId: string): Promise<void> {
+    const call = await this.callModel.findById(callId)
+    if (!call) throw new NotFoundException('Call introuvable')
+    if (!call.calcom_booking_uid) throw new BadRequestException('Ce call n\'a pas de booking Cal.com associé')
+
+    await this.calComService.cancelBooking(call.calcom_booking_uid)
+    await this.callModel.updateOne({ _id: call._id }, { $set: { status: 'cancelled' } })
+    await this.pushEvent(call.lead_id, 'call_cancelled', 'Appel annulé depuis l\'ERP')
+  }
+
+  private async handleCalComBookingCancelled(payload: Record<string, unknown>): Promise<void> {
+    const bookingPayload = payload.payload as Record<string, unknown>
+    const bookingUid = bookingPayload?.uid as string
+    if (!bookingUid) return
+
+    const call = await this.callModel.findOne({ calcom_booking_uid: bookingUid })
+    if (!call) return
+
+    await this.callModel.updateOne({ _id: call._id }, { $set: { status: 'cancelled' } })
+    await this.pushEvent(call.lead_id, 'call_cancelled', 'Appel annulé via Cal.com')
+    this.logger.log(`Cal.com BOOKING_CANCELLED: call ${call._id} marked cancelled`)
+  }
+
+  private async handleCalComBookingRescheduled(payload: Record<string, unknown>): Promise<void> {
+    const bookingPayload = payload.payload as Record<string, unknown>
+    const bookingUid  = bookingPayload?.uid as string
+    const newStartTime = bookingPayload?.startTime as string
+    const videoCall   = bookingPayload?.videoCallData as Record<string, unknown> | undefined
+    const newMeetLink = (videoCall?.url as string)
+      ?? (bookingPayload?.location as string)
+      ?? ''
+
+    if (!bookingUid || !newStartTime) return
+
+    const call = await this.callModel.findOne({ calcom_booking_uid: bookingUid })
+    if (!call) return
+
+    const updates: Record<string, unknown> = { date: new Date(newStartTime), status: 'planned' }
+    if (newMeetLink) updates.google_meet_link = newMeetLink
+
+    await this.callModel.updateOne({ _id: call._id }, { $set: updates })
+    await this.pushEvent(call.lead_id, 'call_rescheduled', `Appel reprogrammé → ${new Date(newStartTime).toLocaleString('fr-FR')}`)
   }
 
   // ── Analytics ─────────────────────────────────────────────────────────────
@@ -902,22 +1102,18 @@ Sois concis et factuel. Réponds en français.`
       { $group: { _id: '$pipeline_status', count: { $sum: 1 } } },
     ]
 
-    const [statusCounts, sourceCounts, qualCounts] = await Promise.all([
+    const [statusCounts, sourceCounts] = await Promise.all([
       this.leadModel.aggregate(pipeline),
       this.leadModel.aggregate([
         { $match: matchFilter },
         { $group: { _id: '$utm_source', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
       ]),
-      this.leadModel.aggregate([
-        { $match: matchFilter },
-        { $group: { _id: '$qualification_status', count: { $sum: 1 } } },
-      ]),
     ])
 
     const total = await this.leadModel.countDocuments(matchFilter)
 
-    return { total, by_pipeline: statusCounts, by_source: sourceCounts, by_qualification: qualCounts }
+    return { total, by_pipeline: statusCounts, by_source: sourceCounts }
   }
 
   // ── Acquisition KPIs ──────────────────────────────────────────────────────
@@ -969,7 +1165,552 @@ Sois concis et factuel. Réponds en français.`
     }
   }
 
+  // ── Typebot variable sync & Groq mapping ─────────────────────────────────
+
+  async syncTypebotVariables(typebotId: string, typebotName?: string): Promise<TypebotFormConfigDocument> {
+    const { baseUrl, token } = this.typebotEnv()
+
+    let variables: string[] = []
+    let botName = typebotName ?? typebotId
+
+    if (baseUrl && token) {
+      try {
+        const headers = { Authorization: `Bearer ${token}` }
+        const info = await axios.get(`${baseUrl}/api/v1/typebots/${typebotId}`, { headers, timeout: 10000 })
+        const typebot = info.data.typebot as Record<string, unknown> | undefined
+        botName = (typebot?.name as string) ?? botName
+        variables = this.extractTypebotVariables(typebot ?? {})
+      } catch (err) {
+        this.logger.warn(`syncTypebotVariables: cannot fetch typebot ${typebotId}: ${(err as Error).message}`)
+      }
+    }
+
+    let mapping: TypebotFieldMapping = {}
+    if (variables.length > 0) {
+      mapping = await this.getGroqMapping(variables)
+    }
+
+    const config = await this.typebotFormConfigModel.findOneAndUpdate(
+      { typebot_id: typebotId },
+      { typebot_id: typebotId, typebot_name: botName, variables, mapping, last_synced_at: new Date() },
+      { upsert: true, new: true, setDefaultsOnInsert: true },
+    ).lean() as TypebotFormConfigDocument
+
+    this.logger.log(`syncTypebotVariables [${botName}]: ${variables.length} variables, mapping keys: ${Object.keys(mapping).join(', ')}`)
+    return config
+  }
+
+  private extractTypebotVariables(typebot: Record<string, unknown>): string[] {
+    const vars = typebot.variables as Array<{ id: string; name: string }> | undefined
+    if (!Array.isArray(vars)) return []
+    return vars.map((v) => v.name).filter(Boolean)
+  }
+
+  private async getGroqMapping(variables: string[]): Promise<TypebotFieldMapping> {
+    // Rotate through available keys to spread load
+    const keys = [
+      process.env.GROQ_API_KEY_1,
+      process.env.GROQ_API_KEY_2,
+      process.env.GROQ_API_KEY_3,
+      process.env.GROQ_API_KEY,
+    ].filter(Boolean) as string[]
+    const apiKey = keys[Math.floor(Math.random() * keys.length)]
+    if (!apiKey) return {}
+
+    const prompt = `Tu es un expert en mapping de formulaires. Voici les variables d'un formulaire Typebot :
+${variables.map((v) => `- "${v}"`).join('\n')}
+
+Mappe-les aux champs lead suivants (utilise exactement ces noms de champs) :
+- name : nom complet du prospect (si prénom et nom ne sont pas séparés)
+- prenom : prénom seul (si variable séparée du nom de famille)
+- nom : nom de famille seul (si variable séparée du prénom)
+- email : adresse email
+- phone : téléphone ou WhatsApp
+- age : âge en années
+- pays : pays de résidence
+- budget : budget disponible (montant numérique)
+- reseau_source : comment le prospect a connu la formation / la marque
+- motivation : objectif ou motivation du prospect
+- utm_source : source marketing (si présente)
+
+Retourne UNIQUEMENT un objet JSON valide, sans texte ni markdown, exemple :
+{"email":"Email","phone":"WhatsApp","age":"Age"}`
+
+    try {
+      const response = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 512,
+          temperature: 0,
+          messages: [{ role: 'user', content: prompt }],
+        },
+        {
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          timeout: 15000,
+        },
+      )
+
+      const text: string = response.data?.choices?.[0]?.message?.content ?? ''
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (!jsonMatch) return {}
+      return JSON.parse(jsonMatch[0]) as TypebotFieldMapping
+    } catch (err) {
+      this.logger.warn(`getGroqMapping failed: ${(err as Error).message}`)
+      return {}
+    }
+  }
+
+  private variablesMismatch(receivedKeys: string[], storedVariables: string[]): boolean {
+    if (storedVariables.length === 0) return true
+    const stored = new Set(storedVariables)
+    const overlap = receivedKeys.filter((k) => stored.has(k))
+    // Less than 40% of received keys are known → consider a different form version
+    return overlap.length < receivedKeys.length * 0.4
+  }
+
+  private parseWithMapping(payload: Record<string, unknown>, mapping: TypebotFieldMapping) {
+    // Support both original Typebot names ("WhatsApp") and normalized keys ("whatsapp")
+    const normKey = (k: string) => k.toLowerCase().replace(/\s+/g, '_')
+    const get = (key: string | undefined): string | null => {
+      if (!key) return null
+      const v = payload[key] ?? payload[normKey(key)]
+      return v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null
+    }
+
+    const prenom = get(mapping.prenom)
+    const nom    = get(mapping.nom)
+    const name   = (prenom || nom)
+      ? [prenom, nom].filter(Boolean).join(' ')
+      : get(mapping.name) ?? get(mapping.email) ?? 'Inconnu'
+
+    const email  = get(mapping.email)?.toLowerCase() ?? null
+    const phone  = get(mapping.phone)
+    const ageRaw = get(mapping.age)
+    const age    = ageRaw ? Number(ageRaw) || null : null
+
+    const pays          = get(mapping.pays)
+    const motivation    = get(mapping.motivation)
+    const reseau_source = get(mapping.reseau_source)
+    const utm_source    = get(mapping.utm_source)
+
+    let budget: number | null = null
+    const budgetRaw = get(mapping.budget)
+    if (budgetRaw) {
+      const n = Number(budgetRaw.replace(/[^0-9.]/g, ''))
+      if (n > 0) budget = n
+    }
+
+    const knownValues = new Set(Object.values(mapping).filter(Boolean))
+    const metaKeys    = new Set(['submittedAt', 'message', 'result_id', 'resultId', 'variables'])
+
+    const dynamic: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(payload)) {
+      if (!knownValues.has(k) && !metaKeys.has(k) && v !== null && v !== undefined && String(v).trim() !== '') {
+        dynamic[k] = v
+      }
+    }
+
+    const submittedAtRaw = payload['submittedAt'] as string | undefined
+    const submitted_at   = submittedAtRaw ? new Date(submittedAtRaw) : null
+
+    return { name, email, phone, age, pays, motivation, reseau_source, budget, utm_source, dynamic, submitted_at }
+  }
+
+  private async extractBudget(text: string): Promise<number> {
+    if (!text || !text.trim()) return 0
+
+    // Match thousands-separated values ("100.000f", "60.000") or plain 4+ digit numbers ("100000", "10000")
+    const numPattern = /\b(\d{1,3}(?:[.\s]\d{3})+|\d{4,})\s*(?:[fF](?:cfa|CFA)?)?\b/
+    const match = text.match(numPattern)
+    if (match) {
+      const n = parseInt(match[1].replace(/[.\s]/g, ''), 10)
+      if (!isNaN(n) && n > 0) return n
+    }
+
+    // No digits at all → definitely zero
+    if (!/\d/.test(text)) return 0
+
+    // Has digits but ambiguous (e.g. "100mill") → delegate to Groq
+    return this.extractBudgetWithGroq(text)
+  }
+
+  private async extractBudgetWithGroq(text: string): Promise<number> {
+    const keys = [
+      process.env.GROQ_API_KEY_1,
+      process.env.GROQ_API_KEY_2,
+      process.env.GROQ_API_KEY_3,
+      process.env.GROQ_API_KEY,
+    ].filter(Boolean) as string[]
+    const apiKey = keys[Math.floor(Math.random() * keys.length)]
+    if (!apiKey) return 0
+
+    const prompt = `Extrait le montant financier depuis ce texte et retourne UNIQUEMENT un entier (en unités de base, ex: 100000 pour "100 000 F CFA"). Réponds 0 si aucun montant clair.\n\nTexte: "${text}"`
+
+    try {
+      const response = await axios.post(
+        'https://api.groq.com/openai/v1/chat/completions',
+        {
+          model: 'llama-3.3-70b-versatile',
+          max_tokens: 32,
+          temperature: 0,
+          messages: [{ role: 'user', content: prompt }],
+        },
+        {
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          timeout: 10000,
+        },
+      )
+      const raw: string = response.data?.choices?.[0]?.message?.content ?? '0'
+      const n = parseInt(raw.trim(), 10)
+      return isNaN(n) ? 0 : Math.max(0, n)
+    } catch (err) {
+      this.logger.warn(`extractBudgetWithGroq failed: ${(err as Error).message}`)
+      return 0
+    }
+  }
+
+  async listTypebotFormConfigs(): Promise<TypebotFormConfigDocument[]> {
+    return this.typebotFormConfigModel.find().sort({ typebot_name: 1 }).lean() as unknown as TypebotFormConfigDocument[]
+  }
+
+  async resyncTypebotFormConfig(typebotId: string): Promise<TypebotFormConfigDocument> {
+    return this.syncTypebotVariables(typebotId)
+  }
+
+  // Full resync: re-fetch ALL results from Typebot API, re-parse with Groq mapping,
+  // update existing leads (force-overwrites core fields), and apply WhatsApp → SQL rule.
+  async resyncFormLeads(
+    formId: string,
+    options: { utmSource?: string } = {},
+  ): Promise<{ updated: number; created: number; skipped: number; errors: number }> {
+    const { baseUrl, token } = this.typebotEnv()
+    if (!baseUrl || !token) throw new BadRequestException('TYPEBOT_TOKEN et TYPEBOT_SELF_URL requis')
+
+    // 1. Sync variables + Groq mapping for this form
+    const config = await this.syncTypebotVariables(formId)
+    const hasMapping = Object.keys(config.mapping ?? {}).length > 0
+    const botName   = config.typebot_name ?? formId
+    const headers   = { Authorization: `Bearer ${token}` }
+
+    const utmSource  = options.utmSource ?? null
+    const isWhatsApp = utmSource?.toLowerCase().includes('whatsapp') ?? false
+
+    let updated = 0, created = 0, skipped = 0, errors = 0
+    let cursor: string | undefined = undefined
+
+    do {
+      const url = `${baseUrl}/api/v1/typebots/${formId}/results?limit=200${cursor ? `&cursor=${encodeURIComponent(cursor)}` : ''}&timeFilter=allTime`
+      let res: { data: { results?: unknown[]; nextCursor?: string } }
+      try {
+        res = await axios.get(url, { headers, timeout: 15000 })
+      } catch (err) {
+        this.logger.error(`resyncFormLeads: fetch error: ${(err as Error).message}`)
+        break
+      }
+
+      const results = (res.data.results ?? []) as Array<{
+        id: string
+        isCompleted: boolean
+        createdAt?: string
+        variables: Array<{ name: string; value: unknown }>
+      }>
+      cursor = res.data.nextCursor
+
+      for (const result of results) {
+        if (!result.isCompleted) { skipped++; continue }
+
+        try {
+          // Build flat key→value map from variables (preserves original names like "WhatsApp", "Email")
+          const flat: Record<string, unknown> = {}
+          for (const v of result.variables ?? []) {
+            if (v.value !== null && v.value !== undefined && v.value !== '') {
+              flat[v.name] = v.value
+            }
+          }
+
+          const parsed = hasMapping
+            ? this.parseWithMapping(flat, config.mapping)
+            : this.parseTypebotVariables(result.variables ?? [])
+
+          const submittedAt = result.createdAt ? new Date(result.createdAt) : null
+
+          // Find existing lead by result ID first, then email
+          const existing =
+            await this.leadModel.findOne({ typebot_result_id: result.id }).lean() ??
+            (parsed.email ? await this.leadModel.findOne({ email: parsed.email }).lean() : null)
+
+          const coreUpd: Record<string, unknown> = {
+            typebot_result_id: result.id,
+            source_form_id:    formId,
+            source_form_name:  botName,
+            dynamic_fields:    { ...(((existing as LeadDocument | null)?.dynamic_fields) ?? {}), ...flat },
+          }
+          if (submittedAt)                              coreUpd.submitted_at        = submittedAt
+          if (utmSource)                                coreUpd.utm_source          = utmSource
+          if (parsed.name && parsed.name !== 'Inconnu') coreUpd.name               = parsed.name
+          if (parsed.email)                             coreUpd.email               = parsed.email
+          if (parsed.phone)                             coreUpd.phone               = String(parsed.phone)
+          if (parsed.age)                               coreUpd.age                 = Number(parsed.age)
+          if (parsed.pays)                              coreUpd.pays                = parsed.pays
+          // Budget: parsed → "Commentaire libre" fallback
+          let loopBudget = parsed.budget ?? null
+          if (!loopBudget) {
+            const commentaire = (flat['Commentaire libre'] ?? flat['commentaire_libre']) as string | undefined
+            if (commentaire) loopBudget = await this.extractBudget(commentaire) || null
+          }
+          if (loopBudget) coreUpd.budget = loopBudget
+
+          // Réseau: parsed → flat "Réseau" → utmSource
+          const loopReseau = parsed.reseau_source
+            ? String(parsed.reseau_source)
+            : ((flat['Réseau'] as string | undefined) ?? utmSource ?? null)
+          if (loopReseau) coreUpd.reseau_source = loopReseau
+
+          if (parsed.motivation)                        coreUpd.motivation          = String(parsed.motivation)
+
+          if (existing) {
+            const existingLead = existing as unknown as Lead & { _id: Types.ObjectId }
+            if (isWhatsApp && existingLead.pipeline_status === 'nouveau') coreUpd.pipeline_status = 'sql'
+
+            await this.leadModel.updateOne({ _id: existingLead._id }, { $set: coreUpd })
+            updated++
+          } else {
+            const lead = await this.leadModel.create({
+              name:             (parsed.name && parsed.name !== 'Inconnu') ? parsed.name : 'Inconnu',
+              email:            parsed.email ?? null,
+              phone:            parsed.phone ? String(parsed.phone) : null,
+              age:              parsed.age ? Number(parsed.age) : null,
+              pays:             parsed.pays ?? null,
+              budget:           loopBudget ?? null,
+              utm_source:       utmSource,
+              reseau_source:    loopReseau,
+              motivation:       parsed.motivation ? String(parsed.motivation) : '',
+              dynamic_fields:   flat,
+              source_type:      'typebot',
+              typebot_result_id: result.id,
+              source_form_id:   formId,
+              source_form_name: botName,
+              submitted_at:     submittedAt,
+              pipeline_status:  isWhatsApp ? 'sql' : 'nouveau',
+              events: [{ type: 'created', message: `Lead importé depuis Typebot (${botName})`, date: submittedAt ?? new Date(), actor_id: null }],
+            })
+            created++
+          }
+        } catch (err) {
+          this.logger.error(`resyncFormLeads: result ${result.id}: ${(err as Error).message}`)
+          errors++
+        }
+      }
+    } while (cursor)
+
+    this.logger.log(`resyncFormLeads [${botName}]: updated=${updated} created=${created} skipped=${skipped} errors=${errors}`)
+    return { updated, created, skipped, errors }
+  }
+
+  // Migration: ensure a TypebotFormConfig exists for every known source_form_id
+  async migrateTypebotConfigs(): Promise<{ synced: number; skipped: number }> {
+    const formIds = await this.leadModel.distinct('source_form_id', {
+      source_type: 'typebot',
+      source_form_id: { $ne: null },
+    })
+
+    let synced = 0, skipped = 0
+
+    for (const formId of formIds as string[]) {
+      const existing = await this.typebotFormConfigModel.findOne({ typebot_id: formId }).lean()
+      if (existing) { skipped++; continue }
+
+      const nameDoc = await this.leadModel.findOne({ source_form_id: formId }).select('source_form_name').lean()
+      await this.syncTypebotVariables(formId, (nameDoc as { source_form_name?: string } | null)?.source_form_name ?? undefined)
+      synced++
+    }
+
+    this.logger.log(`migrateTypebotConfigs: synced=${synced} skipped=${skipped}`)
+    return { synced, skipped }
+  }
+
+  // Re-map existing leads using stored TypebotFormConfig mappings.
+  // Only fills fields that are currently null/empty — never overwrites existing data.
+  async migrateLeadsFromFormConfigs(): Promise<{ updated: number; skipped: number; errors: number }> {
+    const leads = await this.leadModel.find({
+      typebot_result_id: { $ne: null}
+    }).lean()
+
+    let updated = 0, skipped = 0, errors = 0
+
+    for (const lead of leads) {
+      try {
+        const config = await this.typebotFormConfigModel
+          .findOne({ typebot_id: (lead as { source_form_id: string }).source_form_id || 'q10953ehzz3kt5xhofbnsog6' })
+          .lean() as (TypebotFormConfigDocument & { mapping: TypebotFieldMapping }) | null
+
+        if (!config || !config.mapping || Object.keys(config.mapping).length === 0) {
+          skipped++
+          continue
+        }
+
+        const dyn     = (lead.dynamic_fields ?? {}) as Record<string, unknown>
+        const mapping = config.mapping
+
+        // dynamic_fields keys were normalized by parseTypebotVariables: toLowerCase + spaces→underscores
+        // The Groq mapping uses original Typebot names ("WhatsApp", "Pays de résidence", etc.)
+        // So we try original key first, then the normalized version as fallback.
+        const normKey = (k: string) => k.toLowerCase().replace(/\s+/g, '_')
+        const get = (key: string | undefined): string | null => {
+          if (!key) return null
+          const v = dyn[key] ?? dyn[normKey(key)]
+          return v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null
+        }
+
+        const upd: Record<string, unknown> = {}
+
+        // Name: only fix if missing or generic placeholder
+        const prenom     = get(mapping.prenom)
+        const nom        = get(mapping.nom)
+        const nameFromDyn = (prenom || nom)
+          ? [prenom, nom].filter(Boolean).join(' ')
+          : get(mapping.name)
+        if (nameFromDyn && (!lead.name || lead.name === 'Inconnu')) {
+          upd.name = nameFromDyn
+        }
+
+        if (!lead.email) {
+          const v = get(mapping.email)?.toLowerCase()
+          if (v) upd.email = v
+        }
+
+        if (!lead.phone) {
+          const v = get(mapping.phone)
+          if (v) upd.phone = v
+        }
+
+        if (!lead.age) {
+          const v = get(mapping.age)
+          const n = v ? Number(v) || null : null
+          if (n) upd.age = n
+        }
+
+        if (!lead.pays) {
+          const v = get(mapping.pays)
+          if (v) upd.pays = v
+        }
+
+        if (!lead.budget) {
+          const commentaire = dyn['commentaire_libre'] as string | undefined
+          const budget = commentaire ? await this.extractBudget(commentaire) : 0
+          if (budget >= 0) upd.budget = budget;
+          
+        }
+
+        if (!lead.reseau_source) {
+          const v = get(mapping.reseau_source)
+          upd.reseau_source = v ?? 'WhatsApp'
+        }
+
+        if (!lead.motivation) {
+          const v = get(mapping.motivation)
+          if (v) upd.motivation = v
+        }
+
+        if (Object.keys(upd).length > 0) {
+          await this.leadModel.updateOne({ _id: lead._id }, { $set: upd })
+          updated++
+        } else {
+          skipped++
+        }
+      } catch (err) {
+        this.logger.error(`migrateLeadsFromFormConfigs: lead ${(lead as { _id: unknown })._id}: ${(err as Error).message}`)
+        errors++
+      }
+    }
+
+    this.logger.log(`migrateLeadsFromFormConfigs: updated=${updated} skipped=${skipped} errors=${errors}`)
+    return { updated, skipped, errors }
+  }
+
+  // Migrate: promote leads whose qualification_status was 'sql'/'mql' to matching pipeline_status
+  // (only upgrades — never downgrades leads already past that stage)
+  async migrateQualificationToStatus(): Promise<{ sql: number; mql: number }> {
+    const BELOW_SQL = ['nouveau', 'mql']
+    const BELOW_MQL = ['nouveau']
+
+    const [sqlResult, mqlResult] = await Promise.all([
+      this.leadModel.updateMany(
+        { qualification_status: 'sql', pipeline_status: { $in: BELOW_SQL } } as Record<string, unknown>,
+        { $set: { pipeline_status: 'sql' } },
+      ),
+      this.leadModel.updateMany(
+        { qualification_status: 'mql', pipeline_status: { $in: BELOW_MQL } } as Record<string, unknown>,
+        { $set: { pipeline_status: 'mql' } },
+      ),
+    ])
+
+    this.logger.log(`migrateQualificationToStatus: sql=${sqlResult.modifiedCount} mql=${mqlResult.modifiedCount}`)
+    return { sql: sqlResult.modifiedCount, mql: mqlResult.modifiedCount }
+  }
+
   // ── Typebot API sync ──────────────────────────────────────────────────────
+
+  private parseTypebotFlatPayload(body: Record<string, unknown>) {
+    const str = (key: string): string | null => {
+      const v = body[key]
+      return v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null
+    }
+
+    const prenom = str('Prenom')
+    const nom    = str('Nom')
+    const name   = [prenom, nom].filter(Boolean).join(' ') || str('Email') || 'Inconnu'
+
+    const email  = str('Email')?.toLowerCase() ?? null
+    const phone  = str('WhatsApp')
+    const ageRaw = str('Age')
+    const age    = ageRaw ? Number(ageRaw) || null : null
+
+    // Key may have double space from some Typebot exports
+    const pays = str('Pays  de résidence') ?? str('Pays de résidence') ?? null
+
+    const motivation     = str('Motivation formation présentielle')
+    const reseau_source  = str('Connaissance Myril SEKOU')
+    const submittedAtRaw = str('submittedAt')
+    const submitted_at   = submittedAtRaw ? new Date(submittedAtRaw) : null
+
+    // Budget: prefer explicit amount field, then extract from pack label
+    let budget: number | null = null
+    const montantRaw = str('Montant mobilisable immédiatement')
+    if (montantRaw) {
+      const n = Number(montantRaw.replace(/[^0-9.]/g, ''))
+      if (n > 0) budget = n
+    }
+    if (!budget) {
+      const packRaw = str('Pack choisi')
+      if (packRaw) {
+        const match = packRaw.match(/[\d\s]+/)
+        if (match) {
+          const n = Number(match[0].replace(/\s+/g, ''))
+          if (n > 0) budget = n
+        }
+      }
+    }
+
+    const knownKeys = new Set([
+      'Prenom', 'Nom', 'Email', 'WhatsApp', 'Age',
+      'Pays  de résidence', 'Pays de résidence',
+      'Motivation formation présentielle',
+      'Connaissance Myril SEKOU',
+      'Montant mobilisable immédiatement',
+      'submittedAt', 'message',
+    ])
+
+    const dynamic: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(body)) {
+      if (!knownKeys.has(k) && v !== null && v !== undefined && String(v).trim() !== '') {
+        dynamic[k] = v
+      }
+    }
+
+    return { name, email, phone, age, pays, motivation, reseau_source, budget, utm_source: null, dynamic, submitted_at }
+  }
 
   private parseTypebotVariables(variables: Array<{ name: string; value: unknown }>) {
     const varMap: Record<string, unknown> = {}
@@ -1003,6 +1744,7 @@ Sois concis et factuel. Réponds en français.`
       motivation: varMap['motivation'] ?? null,
       utm_source: varMap['utm_source'] ?? null,
       dynamic,
+      submitted_at: null as Date | null,
     }
   }
 
@@ -1158,7 +1900,6 @@ Sois concis et factuel. Réponds en français.`
             submitted_at: submittedAt,
             events: [{ type: 'created', message: `Lead importé depuis Typebot (${botName})`, date: submittedAt ?? new Date(), actor_id: null }],
           })
-          await this.recalculateScore(lead as unknown as LeadDocument)
           this.automationsService.triggerEvent('lead_created', {
             lead: { _id: lead._id, name: lead.name, email: lead.email, source_type: 'typebot' },
           })

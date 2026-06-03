@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -6,10 +6,11 @@ import {
   Plus, ExternalLink, Sparkles, CheckCircle, XCircle,
   Clock, ChevronDown, Trash2, GraduationCap,
   GitBranch, Star, PhoneCall, PhoneOff, UserCheck, ChevronUp,
-  CalendarClock, Send, X,
+  CalendarClock, Send, X, CalendarDays, ChevronLeft, ChevronRight,
+  Video, Loader2,
 } from 'lucide-react'
 import api from '@/services/api'
-import type { Lead, LeadCall, SubscriptionOffer, PipelineStatus, QualificationStatus, AppSettings } from '@/types'
+import type { Lead, LeadCall, SubscriptionOffer, PipelineStatus, AppSettings } from '@/types'
 import { cn } from '@/lib/utils'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -23,12 +24,6 @@ const PIPELINE_OPTIONS: { value: PipelineStatus; label: string; color: string }[
   { value: 'won',              label: 'Won',              color: 'text-green-400' },
   { value: 'lost',             label: 'Lost',             color: 'text-red-400' },
   { value: 'nurturing',        label: 'Nurturing',        color: 'text-purple-400' },
-]
-
-const QUAL_OPTIONS = [
-  { value: 'mql',         label: 'MQL',           bg: 'bg-blue-900/30 text-blue-300' },
-  { value: 'sql',         label: 'SQL',           bg: 'bg-indigo-900/30 text-indigo-300' },
-  { value: 'non_qualifie',label: 'Non qualifié',  bg: 'bg-gray-800 text-gray-400' },
 ]
 
 const CALL_STATUS: Record<string, { label: string; icon: React.ElementType; color: string }> = {
@@ -343,6 +338,233 @@ function AddCallModal({ leadId, onClose }: { leadId: string; onClose: () => void
   )
 }
 
+// ── Cal.com Booking Modal ─────────────────────────────────────────────────────
+
+function CalComBookingModal({ leadId, leadName, onClose }: {
+  leadId: string
+  leadName: string
+  onClose: () => void
+}) {
+  const qc = useQueryClient()
+  const [selectedDate, setSelectedDate] = useState<string | null>(null)
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [weekOffset, setWeekOffset] = useState(0)
+
+  const { data: slots, isLoading, error } = useQuery<Record<string, { time: string }[]>>({
+    queryKey: ['calcom-slots', leadId],
+    queryFn: () => api.get(`/leads/${leadId}/calcom/slots`).then(r => r.data),
+    staleTime: 60_000,
+    retry: false,
+  })
+
+  const bookMutation = useMutation({
+    mutationFn: (slot: string) => api.post(`/leads/${leadId}/calcom/book`, { slot }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['lead-calls', leadId] })
+      qc.invalidateQueries({ queryKey: ['lead', leadId] })
+      onClose()
+    },
+  })
+
+  const sortedDates = useMemo(() => Object.keys(slots ?? {}).sort(), [slots])
+
+  // Week navigation over available dates
+  const WEEK = 7
+  const startIdx = weekOffset * WEEK
+  const visibleDates = sortedDates.slice(startIdx, startIdx + WEEK)
+  const canPrev = weekOffset > 0
+  const canNext = startIdx + WEEK < sortedDates.length
+
+  function fmtDate(iso: string) {
+    const d = new Date(iso + 'T12:00:00')
+    return {
+      day: d.toLocaleDateString('fr-FR', { weekday: 'short' }),
+      num: d.getDate(),
+      month: d.toLocaleDateString('fr-FR', { month: 'short' }),
+    }
+  }
+
+  function fmtTime(iso: string) {
+    return new Date(iso).toLocaleTimeString('fr-FR', {
+      hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Abidjan',
+    })
+  }
+
+  const slotsForDate = selectedDate ? (slots?.[selectedDate] ?? []) : []
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-2xl bg-gray-900 border border-gray-700 shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
+          <div className="flex items-center gap-2.5">
+            <CalendarDays size={18} className="text-indigo-400" />
+            <div>
+              <h2 className="text-[15px] font-semibold text-gray-100">Programmer un appel</h2>
+              <p className="text-xs text-gray-500">{leadName}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="p-5">
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center py-12 gap-3">
+              <Loader2 size={24} className="text-indigo-400 animate-spin" />
+              <p className="text-sm text-gray-500">Chargement des créneaux…</p>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
+              {(error as { response?: { data?: { message?: string } } }).response?.data?.message
+                ?? "Impossible de charger les créneaux. Vérifiez que votre profil a un Cal.com event type configuré."}
+            </div>
+          )}
+
+          {!isLoading && !error && sortedDates.length === 0 && (
+            <div className="py-12 text-center text-sm text-gray-500">
+              Aucun créneau disponible dans les 14 prochains jours.
+            </div>
+          )}
+
+          {!isLoading && !error && sortedDates.length > 0 && (
+            <>
+              {/* Date selector */}
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-2.5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Choisir une date</p>
+                  <div className="flex items-center gap-1">
+                    <button
+                      disabled={!canPrev}
+                      onClick={() => { setWeekOffset(w => w - 1); setSelectedDate(null); setSelectedSlot(null) }}
+                      className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
+                    >
+                      <ChevronLeft size={14} />
+                    </button>
+                    <button
+                      disabled={!canNext}
+                      onClick={() => { setWeekOffset(w => w + 1); setSelectedDate(null); setSelectedSlot(null) }}
+                      className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
+                    >
+                      <ChevronRight size={14} />
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                  {visibleDates.map(d => {
+                    const f = fmtDate(d)
+                    const active = d === selectedDate
+                    const count = slots?.[d]?.length ?? 0
+                    return (
+                      <button
+                        key={d}
+                        onClick={() => { setSelectedDate(d); setSelectedSlot(null) }}
+                        className={cn(
+                          'flex flex-col items-center rounded-xl py-2.5 px-1 transition-all text-center',
+                          active
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-gray-800/60 hover:bg-gray-800 text-gray-300',
+                        )}
+                      >
+                        <span className="text-[10px] font-medium uppercase opacity-70 capitalize">{f.day}</span>
+                        <span className="text-[17px] font-bold leading-tight">{f.num}</span>
+                        <span className="text-[10px] opacity-60 capitalize">{f.month}</span>
+                        <span className={cn(
+                          'mt-1 text-[10px] font-semibold',
+                          active ? 'text-indigo-200' : 'text-indigo-400',
+                        )}>
+                          {count}
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* Time slots */}
+              {selectedDate && (
+                <div className="mb-4">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2.5">
+                    Créneaux disponibles
+                  </p>
+                  {slotsForDate.length === 0 ? (
+                    <p className="text-sm text-gray-500">Aucun créneau pour cette date.</p>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-1.5 max-h-44 overflow-y-auto pr-1">
+                      {slotsForDate.map(s => (
+                        <button
+                          key={s.time}
+                          onClick={() => setSelectedSlot(s.time)}
+                          className={cn(
+                            'rounded-lg py-2 text-[13px] font-medium transition-all',
+                            selectedSlot === s.time
+                              ? 'bg-indigo-600 text-white'
+                              : 'bg-gray-800 hover:bg-gray-700 text-gray-300',
+                          )}
+                        >
+                          {fmtTime(s.time)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Confirm */}
+              {selectedSlot && (
+                <div className="rounded-xl border border-indigo-700/40 bg-indigo-950/30 px-4 py-3 mb-4">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <Video size={13} className="text-indigo-400" />
+                    <p className="text-xs font-semibold text-indigo-300">Récapitulatif</p>
+                  </div>
+                  <p className="text-sm text-gray-200">
+                    {new Date(selectedSlot).toLocaleDateString('fr-FR', {
+                      weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Abidjan',
+                    })}
+                    {' à '}
+                    {new Date(selectedSlot).toLocaleTimeString('fr-FR', {
+                      hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Abidjan',
+                    })}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    Un email de confirmation avec fichier .ics sera envoyé automatiquement.
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Error from booking */}
+          {bookMutation.isError && (
+            <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2.5 text-sm text-red-400 mb-3">
+              {(bookMutation.error as { response?: { data?: { message?: string } } }).response?.data?.message
+                ?? 'Erreur lors de la réservation.'}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-800">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+            Annuler
+          </button>
+          <button
+            disabled={!selectedSlot || bookMutation.isPending}
+            onClick={() => selectedSlot && bookMutation.mutate(selectedSlot)}
+            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {bookMutation.isPending && <Loader2 size={13} className="animate-spin" />}
+            {bookMutation.isPending ? 'Réservation...' : 'Confirmer le RDV'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LeadDetailPage() {
@@ -353,6 +575,7 @@ export function LeadDetailPage() {
   const [editNotes, setEditNotes] = useState(false)
   const [notes, setNotes] = useState('')
   const [showAddCall, setShowAddCall] = useState(false)
+  const [showCalBooking, setShowCalBooking] = useState(false)
   const [showCallLink, setShowCallLink] = useState(false)
   const [callLinkUrl, setCallLinkUrl] = useState('')
   const [callLinkMsg, setCallLinkMsg] = useState('')
@@ -390,10 +613,6 @@ export function LeadDetailPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['lead', id] }),
   })
 
-  const qualMutation = useMutation({
-    mutationFn: (status: QualificationStatus) => api.patch(`/leads/${id}/qualification`, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['lead', id] }),
-  })
 
   const notesMutation = useMutation({
     mutationFn: (n: string) => api.patch(`/leads/${id}`, { notes: n }),
@@ -429,6 +648,13 @@ export function LeadDetailPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       {showAddCall && id && <AddCallModal leadId={id} onClose={() => setShowAddCall(false)} />}
+      {showCalBooking && id && (
+        <CalComBookingModal
+          leadId={id}
+          leadName={lead?.name ?? ''}
+          onClose={() => setShowCalBooking(false)}
+        />
+      )}
 
       {/* Send call link modal */}
       {showCallLink && (
@@ -523,6 +749,14 @@ export function LeadDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowCalBooking(true)}
+            className="flex items-center gap-2 rounded-lg border border-indigo-700/50 bg-indigo-900/30 px-3 py-1.5 text-xs text-indigo-300 hover:border-indigo-500 hover:bg-indigo-900/60 transition-colors"
+            title="Programmer un appel via Cal.com"
+          >
+            <CalendarDays size={14} />
+            Programmer un appel
+          </button>
+          <button
             onClick={() => {
               setCallLinkUrl(appSettings?.callBookingUrl ?? '')
               setCallLinkMsg('')
@@ -585,25 +819,6 @@ export function LeadDetailPage() {
               </select>
             </div>
 
-            <div>
-              <label className="text-xs text-gray-500 mb-1 block">Qualification</label>
-              <div className="flex flex-wrap gap-1.5">
-                {QUAL_OPTIONS.map((q) => (
-                  <button
-                    key={q.value}
-                    onClick={() => qualMutation.mutate(q.value as QualificationStatus)}
-                    className={cn(
-                      'rounded-full px-3 py-1 text-xs font-medium transition-opacity',
-                      q.bg,
-                      lead.qualification_status === q.value ? 'opacity-100 ring-1 ring-white/20' : 'opacity-50 hover:opacity-80',
-                    )}
-                  >
-                    {q.label}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-1.5 text-xs text-gray-600">Score : {lead.qualification_score} pts</p>
-            </div>
           </div>
 
           {/* Convert to student — shown when Won */}

@@ -45,15 +45,8 @@ class UpdateLeadBody implements UpdateLeadDto {
 }
 
 class UpdatePipelineBody {
-  @IStr() @IIn(['nouveau', 'mql', 'sql', 'rdv_programme', 'appel_diagnostic', 'won', 'lost', 'nurturing'])
-  status: 'nouveau' | 'mql' | 'sql' | 'rdv_programme' | 'appel_diagnostic' | 'won' | 'lost' | 'nurturing'
-
+  @IStr() status: 'nouveau' | 'mql' | 'sql' | 'rdv_programme' | 'appel_diagnostic' | 'won' | 'lost' | 'nurturing'
   @IOpt() @IStr() lost_reason?: string
-}
-
-class UpdateQualificationBody {
-  @IStr() @IIn(['mql', 'sql', 'non_qualifie'])
-  status: 'mql' | 'sql' | 'non_qualifie'
 }
 
 class AssignCloserBody {
@@ -62,7 +55,6 @@ class AssignCloserBody {
 
 class LeadsQuery {
   @IOpt() @IStr() pipeline_status?: string
-  @IOpt() @IStr() qualification_status?: string
   @IOpt() @IStr() closer_id?: string
   @IOpt() @IStr() utm_source?: string
   @IOpt() @IStr() source_type?: string
@@ -208,9 +200,9 @@ export class LeadsController {
     return this.leadsService.updateScoringConfig(body)
   }
 
-  @Post('scoring/recalculate-all')
-  recalculateAll() {
-    return this.leadsService.recalculateAllScores()
+  @Post('migrate-qualification-to-status')
+  migrateQualificationToStatus() {
+    return this.leadsService.migrateQualificationToStatus()
   }
 
   // ── WhatsApp Tracking Links ────────────────────────────────────────────────
@@ -253,6 +245,36 @@ export class LeadsController {
     return this.leadsService.backfillTypebot(id)
   }
 
+  // ── Typebot form configs (variable mapping) ───────────────────────────────
+
+  @Get('typebot-form-configs')
+  listTypebotFormConfigs() {
+    return this.leadsService.listTypebotFormConfigs()
+  }
+
+  @Post('typebot-form-configs/:id/sync')
+  resyncTypebotFormConfig(@Param('id') id: string) {
+    return this.leadsService.resyncTypebotFormConfig(id)
+  }
+
+  @Post('typebot-form-configs/:id/resync-leads')
+  resyncFormLeads(
+    @Param('id') id: string,
+    @Body() body: { utm_source?: string },
+  ) {
+    return this.leadsService.resyncFormLeads(id, { utmSource: body?.utm_source })
+  }
+
+  @Post('typebot-form-configs/migrate')
+  migrateTypebotConfigs() {
+    return this.leadsService.migrateTypebotConfigs()
+  }
+
+  @Post('typebot-form-configs/migrate-leads')
+  migrateLeadsFromFormConfigs() {
+    return this.leadsService.migrateLeadsFromFormConfigs()
+  }
+
   // ── Lead Detail ────────────────────────────────────────────────────────────
 
   @Get(':id')
@@ -276,14 +298,34 @@ export class LeadsController {
     return this.leadsService.updatePipeline(id, body.status, body.lost_reason)
   }
 
-  @Patch(':id/qualification')
-  updateQualification(@Param('id') id: string, @Body() body: UpdateQualificationBody) {
-    return this.leadsService.updateQualification(id, body.status)
-  }
-
   @Patch(':id/assign')
   assignCloser(@Param('id') id: string, @Body() body: AssignCloserBody) {
     return this.leadsService.assignCloser(id, body.closer_id)
+  }
+
+  // ── Cal.com ────────────────────────────────────────────────────────────────
+
+  @Get(':id/calcom/slots')
+  getCalComSlots(@Param('id') id: string, @CurrentUser() user: UserDocument) {
+    return this.leadsService.getCalComSlots(id, String(user._id))
+  }
+
+  @Post(':id/calcom/book')
+  createCalComBooking(
+    @Param('id') id: string,
+    @Body() body: { slot: string },
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.leadsService.createCalComBooking(id, String(user._id), body.slot)
+  }
+
+  @Delete(':id/calls/:callId/calcom-cancel')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  cancelCalComBooking(
+    @Param('id') _id: string,
+    @Param('callId') callId: string,
+  ) {
+    return this.leadsService.cancelCalComBooking(callId)
   }
 
   // ── Calls ──────────────────────────────────────────────────────────────────

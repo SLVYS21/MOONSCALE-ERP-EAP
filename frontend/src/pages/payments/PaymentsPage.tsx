@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
 import {
   ChevronLeft, ChevronRight, ExternalLink, CalendarDays,
-  Clock, CheckCircle2, XCircle, Banknote, CreditCard, Search, ChevronDown, Package,
+  Clock, CheckCircle2, XCircle, Banknote, CreditCard, Search, ChevronDown, Package, Filter, X,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -12,6 +12,8 @@ import { Badge } from '@/components/ui/Badge'
 import { cn, formatDate, formatAmount } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
 import api from '@/services/api'
+import { type Period, periodToDates } from '@/lib/periods'
+import { DateRangePicker, SHORT_PERIODS } from '@/components/ui/DateRangePicker'
 import type { Payment, PaymentStatus, PaymentCurrency, PaymentModality, PaginatedResponse, Offer } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -23,39 +25,6 @@ interface PaymentStats {
   rejete: number
   todayByAmount: { currency: string; total: number }[]
   monthByAmount: { currency: string; total: number }[]
-}
-
-// ── Period ────────────────────────────────────────────────────────────────────
-
-type Period = 'last7' | 'last30' | 'month' | 'all' | 'custom'
-
-const PERIODS: { value: Period; label: string }[] = [
-  { value: 'last7',  label: '7 jours' },
-  { value: 'last30', label: '30 jours' },
-  { value: 'month',  label: 'Ce mois' },
-  { value: 'all',    label: 'Tout' },
-  { value: 'custom', label: 'Dates…' },
-]
-
-function toISO(d: Date) { return d.toISOString().slice(0, 10) }
-
-function periodToDates(period: Period, customFrom: string, customTo: string) {
-  const now = new Date()
-  if (period === 'last7') {
-    const from = new Date(now); from.setDate(now.getDate() - 6)
-    return { dateFrom: toISO(from), dateTo: toISO(now) }
-  }
-  if (period === 'last30') {
-    const from = new Date(now); from.setDate(now.getDate() - 29)
-    return { dateFrom: toISO(from), dateTo: toISO(now) }
-  }
-  if (period === 'month') {
-    return { dateFrom: toISO(new Date(now.getFullYear(), now.getMonth(), 1)), dateTo: toISO(now) }
-  }
-  if (period === 'custom') {
-    return { dateFrom: customFrom || undefined, dateTo: customTo || undefined }
-  }
-  return { dateFrom: undefined, dateTo: undefined }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -344,7 +313,7 @@ export function PaymentsPage() {
   const isAdmin = user?.role === 'superadmin' || user?.role === 'admin'
 
   const [activeStatus, setActiveStatus] = useState<PaymentStatus>('NON TRAITÉ')
-  const [period, setPeriod] = useState<Period>('all')
+  const [period, setPeriod] = useState<Period | ''>('')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [search, setSearch] = useState('')
@@ -362,7 +331,9 @@ export function PaymentsPage() {
 
   useEffect(() => { setPage(1) }, [debouncedSearch, activeStatus, period, customFrom, customTo])
 
-  const { dateFrom, dateTo } = periodToDates(period, customFrom, customTo)
+  const _r = (!period || period === 'custom') ? { from: customFrom, to: customTo } : periodToDates(period)
+  const dateFrom = _r.from
+  const dateTo = _r.to
 
   const { data: stats } = useQuery<PaymentStats>({
     queryKey: ['payments-stats'],
@@ -478,59 +449,48 @@ export function PaymentsPage() {
         />
       </div>
 
-      {/* Period filter */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
-          <CalendarDays className="h-3.5 w-3.5" />
-          <span>Période</span>
-        </div>
-        <div className="flex gap-1 rounded-xl border border-gray-800 bg-gray-900/30 p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p.value}
-              onClick={() => { setPeriod(p.value); setPage(1) }}
-              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                period === p.value
-                  ? 'bg-white dark:bg-indigo-600 shadow-sm text-gray-100 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-200'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-gray-600 mr-1 shrink-0">Filtres :</span>
 
-        {period === 'custom' && (
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={customFrom}
-              onChange={(e) => { setCustomFrom(e.target.value); setPage(1) }}
-              className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-xs text-gray-100 focus:border-indigo-500 focus:outline-none"
-            />
-            <span className="text-xs text-gray-500">→</span>
-            <input
-              type="date"
-              value={customTo}
-              onChange={(e) => { setCustomTo(e.target.value); setPage(1) }}
-              className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-xs text-gray-100 focus:border-indigo-500 focus:outline-none"
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Search bar */}
-      <div className="mb-4">
-        <div className="relative max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+        {/* Search pill */}
+        <div className={cn(
+          'flex items-center gap-1.5 rounded-full border py-1.5 pl-3 pr-3',
+          search ? 'border-indigo-600/50 bg-indigo-900/20' : 'border-gray-700 bg-gray-900',
+        )}>
+          <Search size={12} className={search ? 'text-indigo-400 shrink-0' : 'text-gray-500 shrink-0'} />
           <input
-            type="text"
-            placeholder="Rechercher par nom ou email…"
+            className="bg-transparent text-[13px] text-gray-200 placeholder-gray-600 focus:outline-none w-40"
+            placeholder="Rechercher…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800/50 pl-9 pr-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
+          {search && (
+            <button onClick={() => setSearch('')} className="text-gray-500 hover:text-gray-300">
+              <X size={11} />
+            </button>
+          )}
         </div>
+
+        {/* Date range */}
+        <DateRangePicker
+          period={period}
+          customFrom={customFrom}
+          customTo={customTo}
+          onChange={(p, from, to) => { setPeriod(p); setCustomFrom(from); setCustomTo(to) }}
+          periods={SHORT_PERIODS}
+          placeholder="Toutes les dates"
+        />
+
+        {/* Clear all */}
+        {(search || period || customFrom || customTo) && (
+          <button
+            onClick={() => { setSearch(''); setPeriod(''); setCustomFrom(''); setCustomTo('') }}
+            className="flex items-center gap-1 rounded-full border border-gray-700 px-2.5 py-1.5 text-[12px] text-gray-500 hover:text-gray-300 hover:border-gray-600 transition-colors"
+          >
+            <Filter size={11} /><X size={10} />
+          </button>
+        )}
       </div>
 
       {/* Status tabs */}

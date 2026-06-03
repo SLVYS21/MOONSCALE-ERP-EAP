@@ -22,6 +22,8 @@ export class Call {
 
   @Prop({ type: Types.ObjectId, ref: 'User', default: null }) closer_id: Types.ObjectId | null
   @Prop({ type: Types.ObjectId, ref: 'Offer', default: null }) offer_proposed_id: Types.ObjectId | null
+
+  @Prop({ type: String, default: null }) calcom_booking_uid: string | null
 }
 
 export const CallSchema = SchemaFactory.createForClass(Call)

@@ -6,11 +6,12 @@ import {
 } from 'recharts'
 import {
   BarChart2, RefreshCw, Upload, ExternalLink, CheckCircle,
-  AlertCircle, PlayCircle, TrendingUp, CalendarDays, ChevronDown, Crosshair,
+  AlertCircle, PlayCircle, TrendingUp, Crosshair,
 } from 'lucide-react'
 import api from '@/services/api'
 import { cn } from '@/lib/utils'
-import { type Period, PERIODS, periodToDates, periodLabel as getPeriodLabel } from '@/lib/periods'
+import { type Period, periodToDates } from '@/lib/periods'
+import { DateRangePicker, SHORT_PERIODS } from '@/components/ui/DateRangePicker'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -130,12 +131,11 @@ export function AnalyticsPage() {
   const [customTo, setCustomTo] = useState('')
   const qc = useQueryClient()
 
-  const { from: dateFrom, to: dateTo } = period === 'custom'
+  const { from: dateFrom, to: dateTo } = (!period || period === 'custom')
     ? { from: customFrom, to: customTo }
     : periodToDates(period)
 
   const range = { from: dateFrom, to: dateTo }
-  const activePeriodLabel = getPeriodLabel(period, customFrom, customTo)
 
   // ── Queries ────────────────────────────────────────────────────────────────
 
@@ -261,52 +261,14 @@ export function AnalyticsPage() {
           <BarChart2 className="h-6 w-6 text-indigo-400" />
           <h1 className="text-xl font-bold text-gray-100">Analytics</h1>
         </div>
-        <div className="flex flex-col items-end gap-1.5">
-          {/* Period dropdown */}
-          <div className="relative">
-            <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-            <select
-              value={period}
-              onChange={e => setPeriod(e.target.value as Period | '')}
-              className={cn(
-                'rounded-lg border bg-gray-900 pl-8 pr-7 py-1.5 text-sm appearance-none cursor-pointer focus:outline-none focus:ring-1 focus:ring-indigo-500',
-                period ? 'border-indigo-600 text-indigo-300' : 'border-gray-700 text-gray-300',
-              )}
-            >
-              <option value="">Toutes les dates</option>
-              {PERIODS.map(p => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-          </div>
-
-          {/* Period label badge */}
-          {activePeriodLabel && period !== 'custom' && (
-            <span className="rounded-full bg-indigo-900/40 border border-indigo-700/40 px-2.5 py-0.5 text-xs text-indigo-300 font-medium">
-              {activePeriodLabel}
-            </span>
-          )}
-
-          {/* Custom date inputs */}
-          {period === 'custom' && (
-            <div className="flex items-center gap-1.5 rounded-lg bg-gray-900 border border-indigo-700/50 px-3 py-1.5">
-              <input
-                type="date"
-                value={customFrom}
-                onChange={e => setCustomFrom(e.target.value)}
-                className="bg-transparent text-xs text-gray-300 focus:outline-none w-28 [color-scheme:dark]"
-              />
-              <span className="text-gray-600 text-xs">→</span>
-              <input
-                type="date"
-                value={customTo}
-                onChange={e => setCustomTo(e.target.value)}
-                className="bg-transparent text-xs text-gray-300 focus:outline-none w-28 [color-scheme:dark]"
-              />
-            </div>
-          )}
-        </div>
+        <DateRangePicker
+          period={period}
+          customFrom={customFrom}
+          customTo={customTo}
+          onChange={(p, from, to) => { setPeriod(p); setCustomFrom(from); setCustomTo(to) }}
+          periods={SHORT_PERIODS}
+          placeholder="Toutes les dates"
+        />
       </div>
 
       {/* Tabs */}

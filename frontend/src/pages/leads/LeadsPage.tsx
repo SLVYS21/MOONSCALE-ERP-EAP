@@ -4,24 +4,32 @@ import { Link } from 'react-router-dom'
 import {
   Plus, Search, Kanban, LayoutList,
   Phone, Mail, Globe, ChevronRight,
-  TrendingUp, Target, Clock, CheckCircle, Upload, X, CalendarDays, ChevronDown,
+  TrendingUp, Target, Clock, CheckCircle, Upload, X, Filter,
+  Briefcase, Banknote,
 } from 'lucide-react'
 import api from '@/services/api'
 import type { Lead, PipelineStatus, AppSettings } from '@/types'
 import { cn } from '@/lib/utils'
-import { type Period, PERIODS, periodToDates, periodLabel as getPeriodLabel } from '@/lib/periods'
+import { type Period, periodToDates } from '@/lib/periods'
+import { DateRangePicker, ALL_PERIODS } from '@/components/ui/DateRangePicker'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
-const PIPELINE_COLUMNS: { status: PipelineStatus; label: string; color: string; bg: string }[] = [
-  { status: 'nouveau',         label: 'Nouveau',          color: 'text-gray-400',   bg: 'bg-gray-800/40' },
-  { status: 'mql',             label: 'MQL',              color: 'text-blue-400',   bg: 'bg-blue-900/20' },
-  { status: 'sql',             label: 'SQL',              color: 'text-indigo-400', bg: 'bg-indigo-900/20' },
-  { status: 'rdv_programme',   label: 'RDV Programmé',    color: 'text-yellow-400', bg: 'bg-yellow-900/20' },
-  { status: 'appel_diagnostic',label: 'Appel Diagnostic', color: 'text-orange-400', bg: 'bg-orange-900/20' },
-  { status: 'won',             label: 'Won',              color: 'text-green-400',  bg: 'bg-green-900/20' },
-  { status: 'lost',            label: 'Lost',             color: 'text-red-400',    bg: 'bg-red-900/20' },
-  { status: 'nurturing',       label: 'Nurturing',        color: 'text-purple-400', bg: 'bg-purple-900/20' },
+const PIPELINE_COLUMNS: {
+  status: PipelineStatus
+  label: string
+  color: string
+  dotColor: string
+  bg: string
+}[] = [
+  { status: 'nouveau',          label: 'Nouveau',          color: 'text-gray-400',   dotColor: 'bg-gray-400',   bg: 'bg-gray-800/40' },
+  { status: 'mql',              label: 'MQL',              color: 'text-blue-400',   dotColor: 'bg-blue-400',   bg: 'bg-blue-900/20' },
+  { status: 'sql',              label: 'SQL',              color: 'text-indigo-400', dotColor: 'bg-indigo-400', bg: 'bg-indigo-900/20' },
+  { status: 'rdv_programme',    label: 'RDV Programmé',    color: 'text-yellow-400', dotColor: 'bg-yellow-400', bg: 'bg-yellow-900/20' },
+  { status: 'appel_diagnostic', label: 'Appel Diagnostic', color: 'text-orange-400', dotColor: 'bg-orange-400', bg: 'bg-orange-900/20' },
+  { status: 'won',              label: 'Won',              color: 'text-green-400',  dotColor: 'bg-green-400',  bg: 'bg-green-900/20' },
+  { status: 'lost',             label: 'Lost',             color: 'text-red-400',    dotColor: 'bg-red-400',    bg: 'bg-red-900/20' },
+  { status: 'nurturing',        label: 'Nurturing',        color: 'text-purple-400', dotColor: 'bg-purple-400', bg: 'bg-purple-900/20' },
 ]
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -33,10 +41,57 @@ const SOURCE_LABELS: Record<string, string> = {
   import: 'Import',
 }
 
-const QUAL_BADGE: Record<string, string> = {
-  mql: 'bg-blue-900/30 text-blue-300',
-  sql: 'bg-indigo-900/30 text-indigo-300',
-  non_qualifie: 'bg-gray-800 text-gray-400',
+// ── Card helpers ───────────────────────────────────────────────────────────────
+
+const AVATAR_PALETTE = [
+  'bg-rose-500', 'bg-orange-500', 'bg-amber-500', 'bg-lime-600',
+  'bg-emerald-500', 'bg-teal-500', 'bg-cyan-500', 'bg-blue-500',
+  'bg-violet-500', 'bg-pink-500', 'bg-indigo-500', 'bg-sky-500',
+]
+
+function avatarBg(name: string): string {
+  let h = 0
+  for (const c of name) h = ((h << 5) - h) + c.charCodeAt(0)
+  return AVATAR_PALETTE[Math.abs(h) % AVATAR_PALETTE.length]
+}
+
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
+
+function splitName(fullName: string): { nom: string; prenom: string } {
+  const parts = fullName.trim().split(/\s+/)
+  if (parts.length === 1) return { nom: parts[0].toUpperCase(), prenom: '' }
+  return {
+    nom:    parts[parts.length - 1].toUpperCase(),
+    prenom: parts.slice(0, -1).join(' '),
+  }
+}
+
+function getProfession(lead: Lead): string | null {
+  const d = lead.dynamic_fields ?? {}
+  return (
+    d['Situation professionnelle'] ??
+    d['situation_professionnelle'] ??
+    d['Profession'] ??
+    d['profession'] ??
+    d['Métier'] ??
+    d['metier'] ??
+    null
+  ) as string | null
+}
+
+function getSourceLabel(lead: Lead): string | null {
+  return lead.utm_source ?? lead.reseau_source ?? SOURCE_LABELS[lead.source_type] ?? null
+}
+
+function formatBudget(amount: number, lead: Lead): string {
+  const d = lead.dynamic_fields ?? {}
+  const explicit = (d['devise'] ?? d['Devise'] ?? d['currency'] ?? d['Currency']) as string | undefined
+  const cur = explicit || (amount < 10000 ? '€' : 'F CFA')
+  return `${amount.toLocaleString('fr-FR')} ${cur}`
 }
 
 // ── Create Lead Modal ─────────────────────────────────────────────────────────
@@ -154,63 +209,88 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ── Lead Card (kanban) ─────────────────────────────────────────────────────────
+// ── Lead Card ─────────────────────────────────────────────────────────────────
 
 function LeadCard({ lead }: { lead: Lead }) {
-  const pays   = lead.pays   ?? (lead.dynamic_fields?.pays   as string | undefined) ?? null
-  const budget = lead.budget ?? (lead.dynamic_fields?.budget as number | undefined) ?? null
+  const budget     = lead.budget ?? (lead.dynamic_fields?.budget as number | undefined) ?? null
+  const { nom, prenom } = splitName(lead.name)
+  const profession = getProfession(lead)
+  const source     = getSourceLabel(lead)
+  const bg         = avatarBg(lead.name)
+
+  const closerInitials = lead.closer_id
+    ? (lead.closer_id.firstName[0] + lead.closer_id.lastName[0]).toUpperCase()
+    : null
+  const closerBg = lead.closer_id
+    ? avatarBg(lead.closer_id.firstName + lead.closer_id.lastName)
+    : null
 
   return (
     <Link
       to={`/leads/${lead._id}`}
-      className="block rounded-lg bg-gray-900 border border-gray-800 hover:border-gray-700 p-3 transition-colors group"
+      className="block rounded-xl bg-gray-900 border border-gray-800/80 hover:border-gray-700 hover:bg-gray-850 p-4 transition-all"
     >
+      {/* Avatar */}
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-gray-200 group-hover:text-white line-clamp-1">{lead.name}</p>
-        <ChevronRight size={14} className="shrink-0 text-gray-600 group-hover:text-gray-400 mt-0.5" />
+        <div className={cn(
+          'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0',
+          bg,
+        )}>
+          {getInitials(lead.name)}
+        </div>
       </div>
 
-      {lead.email && (
-        <p className="mt-1 text-xs text-gray-500 truncate">{lead.email}</p>
-      )}
+      {/* NOM Prénom */}
+      <p className="mt-2.5 text-[13px] leading-tight">
+        <span className="font-bold text-gray-100">{nom}</span>
+        {prenom && <span className="font-normal text-gray-400"> {prenom}</span>}
+      </p>
 
-      {/* Age · Pays · Budget */}
-      {(lead.age || pays || budget != null) && (
-        <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-xs text-gray-500">
-          {lead.age && <span>{lead.age} ans</span>}
-          {pays && <span>📍 {pays}</span>}
-          {budget != null && <span className="text-emerald-400/80">💰 {Number(budget).toLocaleString()}</span>}
+      {/* Profession · Age */}
+      {(profession || lead.age) && (
+        <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-gray-500">
+          <Briefcase size={10} className="shrink-0 text-gray-600" />
+          <span className="truncate">
+            {[profession, lead.age ? `${lead.age} ans` : null].filter(Boolean).join(' · ')}
+          </span>
         </div>
       )}
 
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {lead.qualification_status && (
-          <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', QUAL_BADGE[lead.qualification_status])}>
-            {lead.qualification_status.toUpperCase()}
+      {/* Budget */}
+      {budget != null && (
+        <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-emerald-700/40 bg-emerald-950/50 px-2.5 py-1.5">
+          <Banknote size={11} className="text-emerald-500 shrink-0" />
+          <span className="text-[11px] font-semibold text-emerald-400 truncate">
+            {formatBudget(budget, lead)}
           </span>
+        </div>
+      )}
+
+      {/* Source + closer */}
+      <div className="mt-2.5 flex items-center justify-between gap-2">
+        {source ? (
+          <div className="flex items-center gap-1 text-[11px] text-gray-500 min-w-0">
+            <Globe size={10} className="shrink-0 text-gray-600" />
+            <span className="truncate">{source}</span>
+          </div>
+        ) : <div />}
+
+        {closerInitials && closerBg ? (
+          <div className="flex items-center gap-1 shrink-0">
+            <div className={cn(
+              'w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white',
+              closerBg,
+            )}>
+              {closerInitials}
+            </div>
+            <span className="text-[11px] text-gray-500 max-w-[56px] truncate">
+              {lead.closer_id?.firstName}
+            </span>
+          </div>
+        ) : (
+          <span className="text-[11px] text-gray-600 shrink-0">Non assigné</span>
         )}
-        {lead.source_form_name ? (
-          <span className="rounded-full bg-violet-900/30 px-2 py-0.5 text-xs text-violet-300 truncate max-w-[120px]" title={lead.source_form_name}>
-            {lead.source_form_name}
-          </span>
-        ) : lead.utm_source ? (
-          <span className="rounded-full bg-gray-800 px-2 py-0.5 text-xs text-gray-400">
-            {lead.utm_source}
-          </span>
-        ) : null}
       </div>
-
-      {lead.closer_id && (
-        <p className="mt-2 text-xs text-gray-500">
-          Closer : {lead.closer_id.firstName} {lead.closer_id.lastName}
-        </p>
-      )}
-
-      {lead.opportunity_amount != null && (
-        <p className="mt-1 text-xs font-medium text-green-400">
-          {lead.opportunity_amount.toLocaleString()} {lead.offer_ids[0]?.plans?.[0]?.currency ?? 'XOF'}
-        </p>
-      )}
     </Link>
   )
 }
@@ -227,7 +307,7 @@ function KanbanView({
   onStatusChange: (leadId: string, status: PipelineStatus) => void
 }) {
   const [draggingId, setDraggingId] = useState<string | null>(null)
-  const [overCol, setOverCol] = useState<PipelineStatus | null>(null)
+  const [overCol, setOverCol]       = useState<PipelineStatus | null>(null)
 
   const grouped = PIPELINE_COLUMNS.reduce<Record<string, Lead[]>>((acc, col) => {
     acc[col.status] = leads.filter((l) => l.pipeline_status === col.status)
@@ -241,22 +321,20 @@ function KanbanView({
   const draggingLead = draggingId ? leads.find((l) => l._id === draggingId) : null
 
   return (
-    <div className="flex gap-3 overflow-x-auto pb-4 select-none" style={{ minWidth: 0 }}>
+    <div className="flex gap-4 overflow-x-auto pb-4 select-none" style={{ minWidth: 0 }}>
       {visibleCols.map((col) => {
-        const isTarget = overCol === col.status && draggingId !== null && draggingLead?.pipeline_status !== col.status
-        const colLeads = grouped[col.status] ?? []
+        const isTarget  = overCol === col.status && draggingId !== null && draggingLead?.pipeline_status !== col.status
+        const colLeads  = grouped[col.status] ?? []
 
         return (
-          <div key={col.status} className="shrink-0 w-64 flex flex-col">
-            {/* Header */}
-            <div className={cn(
-              'rounded-t-lg px-3 py-2 flex items-center justify-between transition-colors',
-              isTarget ? 'bg-indigo-600/25' : col.bg,
-            )}>
-              <span className={cn('text-xs font-semibold uppercase tracking-wide transition-colors', isTarget ? 'text-indigo-300' : col.color)}>
+          <div key={col.status} className="shrink-0 w-[272px] flex flex-col">
+            {/* Column header */}
+            <div className="flex items-center gap-2 px-1 py-2 mb-2">
+              <div className={cn('w-2 h-2 rounded-full shrink-0', col.dotColor)} />
+              <span className="flex-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
                 {col.label}
               </span>
-              <span className={cn('text-xs font-bold transition-colors', isTarget ? 'text-indigo-300' : col.color)}>
+              <span className="rounded-full bg-gray-800 border border-gray-700/60 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
                 {colLeads.length}
               </span>
             </div>
@@ -264,8 +342,10 @@ function KanbanView({
             {/* Drop zone */}
             <div
               className={cn(
-                'flex-1 rounded-b-lg border border-t-0 p-2 space-y-2 min-h-[200px] transition-colors',
-                isTarget ? 'bg-indigo-900/10 border-indigo-600/40' : 'bg-gray-950 border-gray-800',
+                'flex-1 rounded-xl border p-2 space-y-2.5 min-h-[200px] transition-colors',
+                isTarget
+                  ? 'bg-indigo-900/10 border-indigo-600/40'
+                  : 'bg-gray-950/60 border-gray-800/60',
               )}
               onDragOver={(e) => { e.preventDefault(); if (overCol !== col.status) setOverCol(col.status) }}
               onDragEnter={(e) => { e.preventDefault(); setOverCol(col.status) }}
@@ -274,18 +354,14 @@ function KanbanView({
                 if (draggingId && draggingLead?.pipeline_status !== col.status) {
                   onStatusChange(draggingId, col.status)
                 }
-                setDraggingId(null)
-                setOverCol(null)
+                setDraggingId(null); setOverCol(null)
               }}
             >
               {colLeads.map((lead) => (
                 <div
                   key={lead._id}
                   draggable
-                  onDragStart={(e) => {
-                    e.dataTransfer.effectAllowed = 'move'
-                    setDraggingId(lead._id)
-                  }}
+                  onDragStart={(e) => { e.dataTransfer.effectAllowed = 'move'; setDraggingId(lead._id) }}
                   onDragEnd={() => { setDraggingId(null); setOverCol(null) }}
                   className={cn(
                     'cursor-grab active:cursor-grabbing transition-opacity',
@@ -299,7 +375,7 @@ function KanbanView({
               {colLeads.length === 0 && (
                 <div className={cn(
                   'flex items-center justify-center rounded-lg border-2 border-dashed min-h-[80px] transition-colors',
-                  isTarget ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-gray-800/60',
+                  isTarget ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-gray-800/50',
                 )}>
                   <p className={cn('text-xs', isTarget ? 'text-indigo-400' : 'text-gray-700')}>
                     {isTarget ? '↓ Déposer ici' : 'Vide'}
@@ -328,7 +404,7 @@ function TableView({ leads }: { leads: Lead[] }) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-800 bg-gray-900">
-            {['Nom', 'Contact', 'Source', 'Qualification', 'Pipeline', 'Closer', ''].map((h) => (
+            {['Nom', 'Contact', 'Source', 'Pipeline', 'Closer', ''].map((h) => (
               <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                 {h}
               </th>
@@ -338,11 +414,22 @@ function TableView({ leads }: { leads: Lead[] }) {
         <tbody>
           {leads.map((lead) => {
             const col = PIPELINE_COLUMNS.find((c) => c.status === lead.pipeline_status)
+            const { nom, prenom } = splitName(lead.name)
             return (
               <tr key={lead._id} className="border-b border-gray-800/50 hover:bg-gray-900/50 transition-colors">
                 <td className="px-4 py-3">
-                  <p className="font-medium text-gray-200">{lead.name}</p>
-                  {lead.age && <p className="text-xs text-gray-500">{lead.age} ans</p>}
+                  <div className="flex items-center gap-2.5">
+                    <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarBg(lead.name))}>
+                      {getInitials(lead.name)}
+                    </div>
+                    <div>
+                      <p className="text-[13px] text-gray-200">
+                        <span className="font-bold">{nom}</span>
+                        {prenom && <span className="font-normal text-gray-400"> {prenom}</span>}
+                      </p>
+                      {lead.age && <p className="text-[11px] text-gray-600">{lead.age} ans</p>}
+                    </div>
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   {lead.email && (
@@ -369,25 +456,23 @@ function TableView({ leads }: { leads: Lead[] }) {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  {lead.qualification_status ? (
-                    <span className={cn('rounded-full px-2 py-0.5 text-xs font-medium', QUAL_BADGE[lead.qualification_status])}>
-                      {lead.qualification_status.toUpperCase()}
+                  <div className="flex items-center gap-1.5">
+                    <div className={cn('w-1.5 h-1.5 rounded-full', col?.dotColor ?? 'bg-gray-600')} />
+                    <span className={cn('text-xs font-medium', col?.color ?? 'text-gray-400')}>
+                      {col?.label ?? lead.pipeline_status}
                     </span>
-                  ) : (
-                    <span className="text-xs text-gray-600">—</span>
-                  )}
-                  <p className="mt-0.5 text-xs text-gray-600">{lead.qualification_score} pts</p>
-                </td>
-                <td className="px-4 py-3">
-                  <span className={cn('text-xs font-medium', col?.color ?? 'text-gray-400')}>
-                    {col?.label ?? lead.pipeline_status}
-                  </span>
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   {lead.closer_id ? (
-                    <span className="text-xs text-gray-400">
-                      {lead.closer_id.firstName} {lead.closer_id.lastName}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <div className={cn('w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white', avatarBg(lead.closer_id.firstName + lead.closer_id.lastName))}>
+                        {(lead.closer_id.firstName[0] + lead.closer_id.lastName[0]).toUpperCase()}
+                      </div>
+                      <span className="text-xs text-gray-400">
+                        {lead.closer_id.firstName} {lead.closer_id.lastName}
+                      </span>
+                    </div>
                   ) : (
                     <span className="text-xs text-gray-600">Non assigné</span>
                   )}
@@ -405,7 +490,7 @@ function TableView({ leads }: { leads: Lead[] }) {
           })}
           {leads.length === 0 && (
             <tr>
-              <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-500">
+              <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
                 Aucun lead trouvé
               </td>
             </tr>
@@ -419,18 +504,18 @@ function TableView({ leads }: { leads: Lead[] }) {
 // ── Stats Bar ─────────────────────────────────────────────────────────────────
 
 function StatsBar({ leads }: { leads: Lead[] }) {
-  const total = leads.length
-  const won   = leads.filter((l) => l.pipeline_status === 'won').length
-  const sql   = leads.filter((l) => l.pipeline_status === 'sql' || l.pipeline_status === 'rdv_programme' || l.pipeline_status === 'appel_diagnostic').length
+  const total    = leads.length
+  const won      = leads.filter((l) => l.pipeline_status === 'won').length
+  const sql      = leads.filter((l) => ['sql', 'rdv_programme', 'appel_diagnostic'].includes(l.pipeline_status)).length
   const convRate = total > 0 ? Math.round((won / total) * 100) : 0
 
   return (
     <div className="grid grid-cols-4 gap-3 mb-5">
       {[
-        { icon: Target, label: 'Total leads', value: total, color: 'text-gray-300' },
-        { icon: TrendingUp, label: 'En phase SQL+', value: sql, color: 'text-indigo-400' },
-        { icon: CheckCircle, label: 'Won', value: won, color: 'text-green-400' },
-        { icon: Clock, label: 'Taux conversion', value: `${convRate}%`, color: 'text-yellow-400' },
+        { icon: Target,      label: 'Total leads',      value: total,        color: 'text-gray-300' },
+        { icon: TrendingUp,  label: 'En phase SQL+',     value: sql,          color: 'text-indigo-400' },
+        { icon: CheckCircle, label: 'Won',               value: won,          color: 'text-green-400' },
+        { icon: Clock,       label: 'Taux conversion',   value: `${convRate}%`, color: 'text-yellow-400' },
       ].map(({ icon: Icon, label, value, color }) => (
         <div key={label} className="rounded-xl bg-gray-900 border border-gray-800 p-4">
           <div className="flex items-center gap-2 mb-1">
@@ -444,31 +529,27 @@ function StatsBar({ leads }: { leads: Lead[] }) {
   )
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
-const inputCls = 'rounded-lg bg-gray-900 border border-gray-800 px-3 py-2 text-sm text-gray-300 focus:border-indigo-500 focus:outline-none'
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LeadsPage() {
-  const [view, setView] = useState<'kanban' | 'table'>('kanban')
+  const [view, setView]           = useState<'kanban' | 'table'>('kanban')
   const [showCreate, setShowCreate] = useState(false)
-  const [search, setSearch] = useState('')
-  const [pipeline, setPipeline] = useState('')
-  const [source, setSource] = useState('')
-  const [period, setPeriod] = useState<Period | ''>('')
+  const [search, setSearch]       = useState('')
+  const [pipeline, setPipeline]   = useState('')
+  const [source, setSource]       = useState('')
+  const [period, setPeriod]       = useState<Period | ''>('')
   const [customFrom, setCustomFrom] = useState('')
-  const [customTo, setCustomTo] = useState('')
+  const [customTo, setCustomTo]   = useState('')
   const csvRef = useRef<HTMLInputElement>(null)
-  const qc = useQueryClient()
+  const qc     = useQueryClient()
 
   const { from: dateFrom, to: dateTo } = period === 'custom'
     ? { from: customFrom, to: customTo }
     : periodToDates(period)
 
-  const activePeriodLabel = getPeriodLabel(period, customFrom, customTo)
-
-  const activeFilters = [pipeline, source, period].filter(Boolean).length
+  const activeFilters = [pipeline, source, period || customFrom || customTo].filter(Boolean).length
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: PipelineStatus }) =>
@@ -524,10 +605,7 @@ export function LeadsPage() {
     <div className="p-6">
       {showCreate && <CreateLeadModal onClose={() => setShowCreate(false)} />}
       <input
-        type="file"
-        accept=".csv"
-        ref={csvRef}
-        className="hidden"
+        type="file" accept=".csv" ref={csvRef} className="hidden"
         onChange={(e) => {
           const f = e.target.files?.[0]
           if (f) importCsv.mutate(f)
@@ -545,7 +623,6 @@ export function LeadsPage() {
           <button
             onClick={() => csvRef.current?.click()}
             disabled={importCsv.isPending}
-            title="Importer CSV Typebot"
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 disabled:opacity-50 transition-colors"
           >
             <Upload size={14} />
@@ -573,90 +650,79 @@ export function LeadsPage() {
       {/* Stats */}
       <StatsBar leads={leads} />
 
-      {/* Filters */}
+      {/* Filter bar */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* Search */}
-        <div className="relative">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+        <span className="text-[11px] font-bold uppercase tracking-widest text-gray-600 mr-1 shrink-0">Filtres :</span>
+
+        {/* Search pill */}
+        <div className="flex items-center gap-1.5 rounded-full border border-gray-700 bg-gray-900 pl-3 pr-3 py-1.5">
+          <Search size={12} className="text-gray-500 shrink-0" />
           <input
-            className="w-52 rounded-lg bg-gray-900 border border-gray-800 pl-9 pr-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
-            placeholder="Rechercher..."
+            className="bg-transparent text-[13px] text-gray-200 placeholder-gray-600 focus:outline-none w-36"
+            placeholder="Rechercher…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-        </div>
-
-        {/* Status */}
-        <select className={inputCls} value={pipeline} onChange={(e) => setPipeline(e.target.value)}>
-          <option value="">Tous les statuts</option>
-          {PIPELINE_COLUMNS.map((c) => (
-            <option key={c.status} value={c.status}>{c.label}</option>
-          ))}
-        </select>
-
-        {/* Source */}
-        <select className={inputCls} value={source} onChange={(e) => setSource(e.target.value)}>
-          <option value="">Toutes les sources</option>
-          {Object.entries(SOURCE_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </select>
-
-        {/* Period picker */}
-        <div className="flex flex-col gap-1.5">
-          <div className="relative">
-            <CalendarDays size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-            <select
-              className={cn(inputCls, 'pl-8 pr-7 appearance-none cursor-pointer', period && 'border-indigo-600 text-indigo-300')}
-              value={period}
-              onChange={(e) => setPeriod(e.target.value as Period | '')}
-            >
-              <option value="">Toutes les dates</option>
-              {PERIODS.map((p) => (
-                <option key={p.value} value={p.value}>{p.label}</option>
-              ))}
-            </select>
-            <ChevronDown size={12} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-          </div>
-
-          {/* Custom date inputs — shown only when "Personnalisé" is selected */}
-          {period === 'custom' && (
-            <div className="flex items-center gap-1.5 rounded-lg bg-gray-900 border border-indigo-700/50 px-3 py-2">
-              <input
-                type="date"
-                className="bg-transparent text-xs text-gray-300 focus:outline-none w-28 [color-scheme:dark]"
-                value={customFrom}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                placeholder="Du"
-              />
-              <span className="text-gray-600 text-xs">→</span>
-              <input
-                type="date"
-                className="bg-transparent text-xs text-gray-300 focus:outline-none w-28 [color-scheme:dark]"
-                value={customTo}
-                onChange={(e) => setCustomTo(e.target.value)}
-                placeholder="Au"
-              />
-            </div>
+          {search && (
+            <button onClick={() => setSearch('')} className="text-gray-600 hover:text-gray-400 transition-colors">
+              <X size={11} />
+            </button>
           )}
         </div>
 
-        {/* Active period badge + clear */}
+        {/* Pipeline status pill */}
+        <div className={cn(
+          'relative flex items-center rounded-full border py-1.5 pl-3 pr-7 transition-colors',
+          pipeline ? 'border-indigo-600/50 bg-indigo-900/20' : 'border-gray-700 bg-gray-900',
+        )}>
+          <select
+            className="bg-transparent text-[13px] text-gray-300 focus:outline-none appearance-none cursor-pointer"
+            value={pipeline}
+            onChange={(e) => setPipeline(e.target.value)}
+          >
+            <option value="">Tous les statuts</option>
+            {PIPELINE_COLUMNS.map((c) => (
+              <option key={c.status} value={c.status}>{c.label}</option>
+            ))}
+          </select>
+          <Globe size={11} className="absolute right-2.5 text-gray-500 pointer-events-none" />
+        </div>
+
+        {/* Source pill */}
+        <div className={cn(
+          'relative flex items-center rounded-full border py-1.5 pl-3 pr-7 transition-colors',
+          source ? 'border-indigo-600/50 bg-indigo-900/20' : 'border-gray-700 bg-gray-900',
+        )}>
+          <select
+            className="bg-transparent text-[13px] text-gray-300 focus:outline-none appearance-none cursor-pointer"
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+          >
+            <option value="">Toutes les sources</option>
+            {Object.entries(SOURCE_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </select>
+          <Globe size={11} className="absolute right-2.5 text-gray-500 pointer-events-none" />
+        </div>
+
+        {/* Date range picker */}
+        <DateRangePicker
+          period={period} customFrom={customFrom} customTo={customTo}
+          onChange={(p, from, to) => { setPeriod(p as Period | ''); setCustomFrom(from); setCustomTo(to) }}
+          periods={ALL_PERIODS}
+          placeholder="Toutes les dates"
+        />
+
+        {/* Clear all */}
         {activeFilters > 0 && (
-          <div className="flex items-center gap-2 self-start">
-            {activePeriodLabel && (
-              <span className="rounded-full bg-indigo-900/40 border border-indigo-700/40 px-2.5 py-1 text-xs text-indigo-300 font-medium">
-                {activePeriodLabel}
-              </span>
-            )}
-            <button
-              onClick={clearFilters}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-400 hover:text-gray-200 border border-gray-700 hover:border-gray-600 transition-colors"
-            >
-              <X size={13} />
-              Effacer ({activeFilters})
-            </button>
-          </div>
+          <button
+            onClick={clearFilters}
+            className="flex items-center gap-1 rounded-full border border-gray-700 bg-gray-900 px-2.5 py-1.5 text-[13px] text-gray-400 hover:text-gray-200 hover:border-gray-600 transition-colors"
+          >
+            <Filter size={11} />
+            <X size={10} />
+          </button>
         )}
 
         {/* View toggle */}

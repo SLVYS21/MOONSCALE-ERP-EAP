@@ -13,8 +13,6 @@ export type PipelineStatus =
   | 'lost'
   | 'nurturing'
 
-export type QualificationStatus = 'mql' | 'sql' | 'non_qualifie'
-
 export type LeadSourceType =
   | 'typebot'
   | 'meta_ads'
@@ -47,11 +45,6 @@ export class Lead {
     default: 'manual',
   })
   source_type: LeadSourceType
-
-  @Prop({ type: String, enum: ['mql', 'sql', 'non_qualifie', null], default: null })
-  qualification_status: QualificationStatus | null
-
-  @Prop({ type: Number, default: 0 }) qualification_score: number
 
   @Prop({
     type: String,
@@ -100,7 +93,6 @@ export class Lead {
 export const LeadSchema = SchemaFactory.createForClass(Lead)
 
 LeadSchema.index({ pipeline_status: 1 })
-LeadSchema.index({ qualification_status: 1 })
 LeadSchema.index({ closer_id: 1 })
 LeadSchema.index({ utm_source: 1 })
 LeadSchema.index({ email: 1 })
