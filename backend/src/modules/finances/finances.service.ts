@@ -164,6 +164,7 @@ export class FinancesService {
     dateTo?: string
     currency?: string
     offerId?: string
+    leadId?: string
     page?: number
     limit?: number
   }) {
@@ -176,6 +177,7 @@ export class FinancesService {
     if (filters.status)     query.status = filters.status
     if (filters.currency)   query.currency = filters.currency
     if (filters.offerId)    query.offerId = new Types.ObjectId(filters.offerId)
+    if (filters.leadId)     query.leadId  = new Types.ObjectId(filters.leadId)
     if (filters.search) {
       query.$or = [
         { description:    { $regex: filters.search, $options: 'i' } },
@@ -248,6 +250,7 @@ export class FinancesService {
     type: string; amount: number; currency: string; description: string
     categoryId: string | null; date: string; gateway: string; status: string
     reference: string; notes: string; offerId: string | null; productName: string | null
+    leadId: string | null; leadName: string | null
   }>) {
     const tx = await this.transactionModel.findById(id)
     if (!tx) throw new NotFoundException('Transaction introuvable')
@@ -266,6 +269,8 @@ export class FinancesService {
       tx.offerId = data.offerId ? new Types.ObjectId(data.offerId) : null
     }
     if (data.productName !== undefined) tx.productName = data.productName ?? null
+    if (data.leadId !== undefined)      tx.leadId = data.leadId ? new Types.ObjectId(data.leadId) : null
+    if (data.leadName !== undefined)    tx.leadName = data.leadName ?? null
 
     return tx.save()
   }

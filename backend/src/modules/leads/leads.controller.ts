@@ -74,6 +74,7 @@ class CreateCallBody implements CreateCallDto {
   @IOpt() @IStr() status?: 'planned' | 'completed' | 'cancelled'
   @IOpt() @IStr() closer_id?: string
   @IOpt() @IStr() offer_proposed_id?: string
+  @IOpt() @IBool() sendEmail?: boolean
 }
 
 class UpdateCallBody implements UpdateCallDto {
@@ -326,6 +327,17 @@ export class LeadsController {
     @Param('callId') callId: string,
   ) {
     return this.leadsService.cancelCalComBooking(callId)
+  }
+
+  // ── Cal.com booking email pref ────────────────────────────────────────────
+
+  @Post(':id/booking-pref')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  setBookingPref(
+    @Param('id') id: string,
+    @Body() body: { sendEmail?: boolean },
+  ) {
+    this.leadsService.setBookingEmailPref(id, body.sendEmail ?? true)
   }
 
   // ── Calls ──────────────────────────────────────────────────────────────────

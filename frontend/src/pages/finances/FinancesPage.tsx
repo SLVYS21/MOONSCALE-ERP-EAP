@@ -14,7 +14,7 @@ import { useAuthStore } from '@/store/authStore'
 import api from '@/services/api'
 import type {
   FinanceStats, Transaction, FinanceCategory,
-  PaginatedResponse, TransactionType, TransactionGateway, Offer, AppSettings,
+  PaginatedResponse, TransactionType, TransactionGateway, Offer, AppSettings, Lead,
 } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -57,7 +57,18 @@ function EditTransactionModal({
   )
   const [offerId, setOfferId] = useState<string>(tx.offerId ?? '')
   const [productName, setProductName] = useState<string>(tx.productName ?? '')
+  const [leadId, setLeadId] = useState<string>(tx.leadId ?? '')
+  const [leadDisplayName, setLeadDisplayName] = useState<string>(tx.leadName ?? '')
+  const [leadSearch, setLeadSearch] = useState('')
+  const [showLeadDrop, setShowLeadDrop] = useState(false)
   const [error, setError] = useState('')
+
+  const { data: leadResults } = useQuery({
+    queryKey: ['leads-quick-search', leadSearch],
+    queryFn: () => api.get('/leads', { params: { search: leadSearch, limit: 8 } })
+      .then(r => r.data as { data: Lead[] }),
+    enabled: leadSearch.length > 1,
+  })
 
   const { mutate, isPending } = useMutation({
     mutationFn: (body: object) => api.patch(`/finances/transactions/${tx._id}`, body),
@@ -114,6 +125,55 @@ function EditTransactionModal({
               />
             </div>
           )}
+
+          {/* Lead link */}
+          <div>
+            <label className="mb-1.5 block text-xs font-medium text-gray-400">Lead lié</label>
+            {leadId ? (
+              <div className="flex items-center gap-2 rounded-lg border border-indigo-700/40 bg-indigo-950/30 px-3 py-2">
+                <span className="flex-1 text-sm text-indigo-300 truncate">{leadDisplayName || leadId}</span>
+                <button
+                  type="button"
+                  onClick={() => { setLeadId(''); setLeadDisplayName('') }}
+                  className="text-gray-500 hover:text-red-400 transition-colors shrink-0"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input
+                  type="text"
+                  value={leadSearch}
+                  onChange={(e) => { setLeadSearch(e.target.value); setShowLeadDrop(true) }}
+                  onFocus={() => setShowLeadDrop(true)}
+                  onBlur={() => setTimeout(() => setShowLeadDrop(false), 150)}
+                  placeholder="Rechercher un lead par nom ou email…"
+                  className={selectCls}
+                />
+                {showLeadDrop && (leadResults?.data ?? []).length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-[200] rounded-lg border border-gray-700 bg-gray-900 shadow-xl overflow-hidden">
+                    {(leadResults?.data ?? []).map((l) => (
+                      <button
+                        key={l._id}
+                        type="button"
+                        onMouseDown={() => {
+                          setLeadId(l._id)
+                          setLeadDisplayName(l.name)
+                          setLeadSearch('')
+                          setShowLeadDrop(false)
+                        }}
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 transition-colors"
+                      >
+                        <span className="text-sm text-gray-200 truncate">{l.name}</span>
+                        {l.email && <span className="text-xs text-gray-500 truncate">{l.email}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
@@ -126,6 +186,8 @@ function EditTransactionModal({
               categoryId: categoryId || null,
               offerId: offerId || null,
               productName: productName || null,
+              leadId: leadId || null,
+              leadName: leadDisplayName || null,
             })}
           >
             Enregistrer

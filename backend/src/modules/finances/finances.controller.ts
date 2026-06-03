@@ -55,6 +55,8 @@ class UpdateTransactionDto {
   @IsOptional() @IsString() notes?: string
   @IsOptional() offerId?: string | null
   @IsOptional() productName?: string | null
+  @IsOptional() leadId?: string | null
+  @IsOptional() leadName?: string | null
 }
 
 class ListTransactionsQuery {
@@ -66,6 +68,7 @@ class ListTransactionsQuery {
   @IsOptional() @IsString() search?: string
   @IsOptional() @IsString() dateFrom?: string
   @IsOptional() @IsString() dateTo?: string
+  @IsOptional() @IsString() leadId?: string
   @IsOptional() @Type(() => Number) @IsNumber() @Min(1) page?: number
   @IsOptional() @Type(() => Number) @IsNumber() @Min(1) limit?: number
 }

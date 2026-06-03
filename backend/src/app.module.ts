@@ -23,6 +23,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module'
 import { AppSettingsModule } from './modules/app-settings/app-settings.module'
 import { ContentModule } from './modules/content/content.module'
 import { OffersModule } from './modules/offers/offers.module'
+import { CalcomDbModule } from './modules/calcom-db/calcom-db.module'
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { OffersModule } from './modules/offers/offers.module'
     AppSettingsModule,
     ContentModule,
     OffersModule,
+    CalcomDbModule,
   ],
 })
 export class AppModule {}

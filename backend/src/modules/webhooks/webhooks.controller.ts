@@ -534,7 +534,21 @@ export class WebhooksController {
 
   @Post('calcom')
   @HttpCode(HttpStatus.OK)
-  async handleCalCom(@Body() body: Record<string, unknown>) {
+  async handleCalCom(
+    @Req() req: RawBodyRequest<Request>,
+    @Headers('x-cal-signature-256') sigHeader: string,
+  ) {
+    const secret = process.env.CALCOM_WEBHOOK_SECRET
+    if (secret && sigHeader && req.rawBody) {
+      // Cal.com sends "sha256=<hex>"
+      const hex = sigHeader.startsWith('sha256=') ? sigHeader.slice(7) : sigHeader
+      if (!verifyHmacHeader(req.rawBody, hex, secret)) {
+        this.logger.warn('Cal.com webhook: invalid signature')
+        throw new BadRequestException('Invalid Cal.com signature')
+      }
+    }
+
+    const body = req.body as Record<string, unknown>
     try {
       await this.leadsService.handleCalComWebhook(body)
       return { message: 'received' }

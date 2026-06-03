@@ -5,8 +5,10 @@ import {
   Plus, Search, Kanban, LayoutList,
   Phone, Mail, Globe, ChevronRight,
   TrendingUp, Target, Clock, CheckCircle, Upload, X, Filter,
-  Briefcase, Banknote,
+  Briefcase, Banknote, Trophy, Star, BarChart2,
+  CalendarDays, ExternalLink, AlertCircle, Video,
 } from 'lucide-react'
+import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import api from '@/services/api'
 import type { Lead, PipelineStatus, AppSettings } from '@/types'
 import { cn } from '@/lib/utils'
@@ -39,6 +41,26 @@ const SOURCE_LABELS: Record<string, string> = {
   whatsapp_direct: 'WhatsApp direct',
   manual: 'Manuel',
   import: 'Import',
+}
+
+const PIPELINE_COLORS: Record<string, string> = {
+  nouveau:          '#6b7280',
+  mql:              '#3b82f6',
+  sql:              '#6366f1',
+  rdv_programme:    '#eab308',
+  appel_diagnostic: '#f97316',
+  won:              '#22c55e',
+  lost:             '#ef4444',
+  nurturing:        '#a855f7',
+}
+
+const SRC_COLORS = [
+  '#6366f1', '#3b82f6', '#ec4899', '#06b6d4', '#22c55e',
+  '#f97316', '#eab308', '#a855f7', '#f43f5e',
+]
+
+function fmtCFA(n: number) {
+  return `${n.toLocaleString('fr-FR')} F CFA`
 }
 
 // ── Card helpers ───────────────────────────────────────────────────────────────
@@ -209,9 +231,193 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
   )
 }
 
+// ── Quick Call Modal ──────────────────────────────────────────────────────────
+
+function QuickCallModal({ lead, myBookingUrl, onClose }: {
+  lead: Lead
+  myBookingUrl: string | null
+  onClose: () => void
+}) {
+  const qc = useQueryClient()
+  type Step = 'pre' | 'iframe' | 'manual'
+  const [step, setStep] = useState<Step>(myBookingUrl ? 'pre' : 'manual')
+  const [sendEmail, setSendEmail] = useState(!!lead.email)
+  const [prefLoading, setPrefLoading] = useState(false)
+
+  // Manual form
+  const defaultDate = (() => {
+    const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0)
+    return d.toISOString().slice(0, 16)
+  })()
+  const [date, setDate] = useState(defaultDate)
+  const [meetLink, setMeetLink] = useState('')
+  const [manualSendEmail, setManualSendEmail] = useState(!!lead.email)
+  const [emailSent, setEmailSent] = useState(false)
+
+  const createMutation = useMutation({
+    mutationFn: () => api.post(`/leads/${lead._id}/calls`, {
+      date, google_meet_link: meetLink || undefined, sendEmail: manualSendEmail && !!lead.email,
+    }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['leads'] })
+      if (manualSendEmail && lead.email) { setEmailSent(true); setTimeout(onClose, 2000) }
+      else onClose()
+    },
+  })
+
+  const handlePreConfirm = async () => {
+    setPrefLoading(true)
+    try { await api.post(`/leads/${lead._id}/booking-pref`, { sendEmail: sendEmail && !!lead.email }) } catch { /* ignore */ }
+    setPrefLoading(false)
+    setStep('iframe')
+  }
+
+  const generateMeet = () => {
+    const id = Math.random().toString(36).slice(2, 5) + '-' + Math.random().toString(36).slice(2, 7) + '-' + Math.random().toString(36).slice(2, 5)
+    setMeetLink(`https://meet.google.com/${id}`)
+  }
+
+  // ── Iframe view (fullscreen) ───────────────────────────────
+  if (step === 'iframe') {
+    const params = new URLSearchParams()
+    if (lead.name) params.set('name', lead.name)
+    if (lead.email) params.set('email', lead.email)
+    const iframeUrl = `${myBookingUrl}?${params.toString()}`
+
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col bg-gray-950">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-800 shrink-0">
+          <div className="flex items-center gap-2.5">
+            <CalendarDays size={16} className="text-indigo-400" />
+            <div>
+              <h2 className="text-sm font-semibold text-gray-100">Programmer un appel — {lead.name}</h2>
+              <p className="text-xs text-gray-500">Cal.com enverra l'invitation automatiquement</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <a href={iframeUrl} target="_blank" rel="noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300">
+              <ExternalLink size={12} /> Ouvrir dans un onglet
+            </a>
+            <button onClick={() => { onClose(); qc.invalidateQueries({ queryKey: ['lead-calls', lead._id] }) }}
+              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+        <iframe src={iframeUrl} className="flex-1 w-full border-none" title="Réservation Cal.com" />
+      </div>
+    )
+  }
+
+  // ── Pre-booking screen ─────────────────────────────────────
+  if (step === 'pre') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 space-y-5">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-2">
+              <CalendarDays size={18} className="text-indigo-400 mt-0.5" />
+              <h2 className="text-base font-semibold text-gray-100">Programmer un appel</h2>
+            </div>
+            <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-300"><X size={16} /></button>
+          </div>
+          <p className="text-sm text-gray-400">
+            Cal.com s'ouvrira pour choisir un créneau avec <span className="text-gray-200">{lead.name}</span>.
+          </p>
+          {lead.email && (
+            <label className="flex items-center gap-3 cursor-pointer select-none">
+              <div onClick={() => setSendEmail(v => !v)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${sendEmail ? 'bg-indigo-600' : 'bg-gray-700'}`}>
+                <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${sendEmail ? 'translate-x-5' : ''}`} />
+              </div>
+              <span className="text-sm text-gray-300">
+                Envoyer aussi l'email ERP à <span className="text-gray-100">{lead.email}</span>
+              </span>
+            </label>
+          )}
+          <div className="flex gap-3 pt-1">
+            <button onClick={onClose}
+              className="flex-1 py-2 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+              Annuler
+            </button>
+            <button onClick={handlePreConfirm} disabled={prefLoading}
+              className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white disabled:opacity-60 transition-colors">
+              {prefLoading ? 'Chargement…' : 'Ouvrir Cal.com →'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Manual form ────────────────────────────────────────────
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 space-y-4">
+        {emailSent ? (
+          <div className="flex flex-col items-center gap-3 py-4">
+            <CheckCircle size={36} className="text-green-400" />
+            <p className="text-sm text-gray-300">Email envoyé à <span className="text-gray-100">{lead.email}</span></p>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-2">
+                <CalendarDays size={18} className="text-indigo-400 mt-0.5" />
+                <h2 className="text-base font-semibold text-gray-100">Nouvel appel — {lead.name}</h2>
+              </div>
+              <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-300"><X size={16} /></button>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">Date & heure</label>
+              <input type="datetime-local" value={date} onChange={e => setDate(e.target.value)}
+                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-400 mb-1">Lien Google Meet</label>
+              <div className="flex gap-2">
+                <input value={meetLink} onChange={e => setMeetLink(e.target.value)}
+                  placeholder="https://meet.google.com/..."
+                  className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none" />
+                <button onClick={generateMeet}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-xs text-gray-300 shrink-0 transition-colors">
+                  <Video size={12} /> Nouveau
+                </button>
+              </div>
+            </div>
+            {lead.email && (
+              <label className="flex items-center gap-3 cursor-pointer select-none">
+                <div onClick={() => setManualSendEmail(v => !v)}
+                  className={`relative w-10 h-5 rounded-full transition-colors ${manualSendEmail ? 'bg-indigo-600' : 'bg-gray-700'}`}>
+                  <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${manualSendEmail ? 'translate-x-5' : ''}`} />
+                </div>
+                <span className="text-sm text-gray-300">Email de confirmation à <span className="text-gray-100">{lead.email}</span></span>
+              </label>
+            )}
+            {createMutation.isError && (
+              <p className="text-xs text-red-400 flex items-center gap-1"><AlertCircle size={12} /> Erreur lors de la création</p>
+            )}
+            <div className="flex gap-3 pt-1">
+              <button onClick={onClose}
+                className="flex-1 py-2 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+                Annuler
+              </button>
+              <button onClick={() => createMutation.mutate()} disabled={!date || createMutation.isPending}
+                className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white disabled:opacity-60 transition-colors">
+                {createMutation.isPending ? 'Création…' : 'Créer'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Lead Card ─────────────────────────────────────────────────────────────────
 
-function LeadCard({ lead }: { lead: Lead }) {
+function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () => void }) {
   const budget     = lead.budget ?? (lead.dynamic_fields?.budget as number | undefined) ?? null
   const { nom, prenom } = splitName(lead.name)
   const profession = getProfession(lead)
@@ -230,7 +436,7 @@ function LeadCard({ lead }: { lead: Lead }) {
       to={`/leads/${lead._id}`}
       className="block rounded-xl bg-gray-900 border border-gray-800/80 hover:border-gray-700 hover:bg-gray-850 p-4 transition-all"
     >
-      {/* Avatar */}
+      {/* Avatar + call button */}
       <div className="flex items-start justify-between gap-2">
         <div className={cn(
           'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0',
@@ -238,6 +444,15 @@ function LeadCard({ lead }: { lead: Lead }) {
         )}>
           {getInitials(lead.name)}
         </div>
+        {onScheduleCall && (
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onScheduleCall() }}
+            title="Programmer un appel"
+            className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-400 hover:bg-indigo-900/30 transition-colors shrink-0"
+          >
+            <CalendarDays size={14} />
+          </button>
+        )}
       </div>
 
       {/* NOM Prénom */}
@@ -301,10 +516,12 @@ function KanbanView({
   leads,
   pipelineFilter,
   onStatusChange,
+  onScheduleCall,
 }: {
   leads: Lead[]
   pipelineFilter: string
   onStatusChange: (leadId: string, status: PipelineStatus) => void
+  onScheduleCall: (lead: Lead) => void
 }) {
   const [draggingId, setDraggingId] = useState<string | null>(null)
   const [overCol, setOverCol]       = useState<PipelineStatus | null>(null)
@@ -368,7 +585,7 @@ function KanbanView({
                     draggingId === lead._id && 'opacity-25',
                   )}
                 >
-                  <LeadCard lead={lead} />
+                  <LeadCard lead={lead} onScheduleCall={() => onScheduleCall(lead)} />
                 </div>
               ))}
 
@@ -398,7 +615,11 @@ function KanbanView({
 
 // ── Table View ────────────────────────────────────────────────────────────────
 
-function TableView({ leads }: { leads: Lead[] }) {
+function TableView({ leads, onStatusChange, onScheduleCall }: {
+  leads: Lead[]
+  onStatusChange: (leadId: string, status: PipelineStatus) => void
+  onScheduleCall: (lead: Lead) => void
+}) {
   return (
     <div className="rounded-xl border border-gray-800 overflow-hidden">
       <table className="w-full text-sm">
@@ -456,12 +677,22 @@ function TableView({ leads }: { leads: Lead[] }) {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    <div className={cn('w-1.5 h-1.5 rounded-full', col?.dotColor ?? 'bg-gray-600')} />
-                    <span className={cn('text-xs font-medium', col?.color ?? 'text-gray-400')}>
-                      {col?.label ?? lead.pipeline_status}
-                    </span>
-                  </div>
+                  <select
+                    value={lead.pipeline_status}
+                    onChange={(e) => onStatusChange(lead._id, e.target.value as PipelineStatus)}
+                    onClick={(e) => e.stopPropagation()}
+                    className={cn(
+                      'rounded-full px-2.5 py-1 text-xs font-medium bg-transparent border border-transparent',
+                      'hover:border-gray-600 focus:outline-none focus:border-indigo-500 cursor-pointer',
+                      col?.color ?? 'text-gray-400',
+                    )}
+                  >
+                    {PIPELINE_COLUMNS.map((c) => (
+                      <option key={c.status} value={c.status} className="bg-gray-900 text-gray-100">
+                        {c.label}
+                      </option>
+                    ))}
+                  </select>
                 </td>
                 <td className="px-4 py-3">
                   {lead.closer_id ? (
@@ -478,12 +709,21 @@ function TableView({ leads }: { leads: Lead[] }) {
                   )}
                 </td>
                 <td className="px-4 py-3">
-                  <Link
-                    to={`/leads/${lead._id}`}
-                    className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
-                  >
-                    Voir <ChevronRight size={12} />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => onScheduleCall(lead)}
+                      title="Programmer un appel"
+                      className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-400 hover:bg-indigo-900/30 transition-colors"
+                    >
+                      <CalendarDays size={14} />
+                    </button>
+                    <Link
+                      to={`/leads/${lead._id}`}
+                      className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+                    >
+                      Voir <ChevronRight size={12} />
+                    </Link>
+                  </div>
                 </td>
               </tr>
             )
@@ -531,11 +771,310 @@ function StatsBar({ leads }: { leads: Lead[] }) {
 
 
 
+// ── Leads Analytics Tab ───────────────────────────────────────────────────────
+
+function LeadsAnalytics() {
+  const [period, setPeriod]       = useState<Period | ''>('30d')
+  const [customFrom, setCustomFrom] = useState('')
+  const [customTo, setCustomTo]   = useState('')
+
+  const { from: dateFrom, to: dateTo } = (!period || period === 'custom')
+    ? { from: customFrom, to: customTo }
+    : periodToDates(period)
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['leads-analytics-tab', dateFrom, dateTo],
+    queryFn: () =>
+      api.get('/leads', {
+        params: {
+          date_from: dateFrom || undefined,
+          date_to:   dateTo   || undefined,
+          limit: 1000,
+        },
+      }).then((r) => r.data as { data: Lead[]; total: number }),
+  })
+
+  const leads = data?.data ?? []
+  const total = leads.length
+
+  const byPipeline: Record<string, number> = {}
+  const bySource:   Record<string, number> = {}
+  const budgetByPipeline: Record<string, number> = {}
+
+  for (const lead of leads) {
+    const s = lead.pipeline_status
+    byPipeline[s] = (byPipeline[s] ?? 0) + 1
+
+    const src =
+      (lead.reseau_source && lead.reseau_source.trim())
+        ? lead.reseau_source.trim()
+        : (lead.utm_source && lead.utm_source.trim())
+          ? lead.utm_source.trim()
+          : SOURCE_LABELS[lead.source_type] ?? null
+    if (src) bySource[src] = (bySource[src] ?? 0) + 1
+
+    const budget = (lead.budget ?? (lead.dynamic_fields?.budget as number | undefined) ?? 0) as number
+    if (budget > 0) budgetByPipeline[s] = (budgetByPipeline[s] ?? 0) + budget
+  }
+
+  const wonCount    = byPipeline['won'] ?? 0
+  const sqlCount    = (byPipeline['sql'] ?? 0) + (byPipeline['rdv_programme'] ?? 0) + (byPipeline['appel_diagnostic'] ?? 0)
+  const actifsCount = total - wonCount - (byPipeline['lost'] ?? 0)
+  const convRate    = total > 0 ? Math.round((wonCount / total) * 100) : 0
+
+  const donutData = PIPELINE_COLUMNS
+    .map(c => ({ name: c.label, value: byPipeline[c.status] ?? 0, color: PIPELINE_COLORS[c.status] }))
+    .filter(d => d.value > 0)
+
+  const mqlPlus   = total - (byPipeline['nouveau'] ?? 0) - (byPipeline['lost'] ?? 0)
+  const sqlPlus   = (byPipeline['sql'] ?? 0) + (byPipeline['rdv_programme'] ?? 0) + (byPipeline['appel_diagnostic'] ?? 0) + wonCount
+  const rdvPlus   = (byPipeline['rdv_programme'] ?? 0) + (byPipeline['appel_diagnostic'] ?? 0) + wonCount
+  const appelPlus = (byPipeline['appel_diagnostic'] ?? 0) + wonCount
+
+  const funnelStages = [
+    { label: 'Total leads',  count: total,     prev: total,     color: '#6b7280' },
+    { label: 'MQL+',         count: mqlPlus,   prev: total,     color: '#3b82f6' },
+    { label: 'SQL+',         count: sqlPlus,   prev: mqlPlus,   color: '#6366f1' },
+    { label: 'RDV+',         count: rdvPlus,   prev: sqlPlus,   color: '#eab308' },
+    { label: 'Appel diag.+', count: appelPlus, prev: rdvPlus,   color: '#f97316' },
+    { label: 'Won',          count: wonCount,  prev: appelPlus, color: '#22c55e' },
+  ]
+
+  const sourcesData   = Object.entries(bySource).sort(([, a], [, b]) => b - a).slice(0, 8)
+  const maxSource     = sourcesData[0]?.[1] ?? 1
+
+  const budgetData    = Object.entries(budgetByPipeline).sort(([, a], [, b]) => b - a)
+  const maxBudget     = budgetData[0]?.[1] ?? 1
+  const totalBudget   = Object.values(budgetByPipeline).reduce((a, b) => a + b, 0)
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Period picker */}
+      <div className="flex items-center gap-2">
+        <DateRangePicker
+          period={period} customFrom={customFrom} customTo={customTo}
+          onChange={(p, from, to) => { setPeriod(p as Period | ''); setCustomFrom(from); setCustomTo(to) }}
+          periods={ALL_PERIODS}
+          placeholder="Toutes les dates"
+        />
+        {total > 0 && <span className="text-xs text-gray-600">{total} lead{total > 1 ? 's' : ''} sur la période</span>}
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-4 gap-3">
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 flex items-start justify-between">
+          <div>
+            <p className="text-xs text-gray-500">Total Leads</p>
+            <p className="text-3xl font-bold text-gray-100 mt-1">{total}</p>
+            <p className="text-xs text-gray-600 mt-1">sur la période</p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
+            <Target size={16} className="text-gray-400" />
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 flex items-start justify-between">
+          <div>
+            <p className="text-xs text-gray-500">SQL</p>
+            <p className="text-3xl font-bold text-gray-100 mt-1">{sqlCount}</p>
+            <p className="text-xs text-gray-600 mt-1">leads qualifiés vente</p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
+            <Star size={16} className="text-gray-400" />
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-amber-950/30 border border-amber-900/30 p-4 flex items-start justify-between">
+          <div>
+            <p className="text-xs text-amber-700">Actifs</p>
+            <p className="text-3xl font-bold text-amber-400 mt-1">{actifsCount}</p>
+            <p className="text-xs text-amber-900/70 mt-1">en cours dans le pipeline</p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-amber-900/30 flex items-center justify-center shrink-0">
+            <TrendingUp size={16} className="text-amber-500" />
+          </div>
+        </div>
+
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 flex items-start justify-between">
+          <div>
+            <p className="text-xs text-gray-500">Won</p>
+            <p className="text-3xl font-bold text-green-400 mt-1">
+              {wonCount}
+              <span className="text-lg font-normal text-gray-600 mx-1">·</span>
+              <span className="text-lg font-semibold text-green-500">{convRate}%</span>
+            </p>
+            <p className="text-xs text-gray-600 mt-1">taux de conversion</p>
+          </div>
+          <div className="w-9 h-9 rounded-lg bg-green-950/40 flex items-center justify-center shrink-0">
+            <Trophy size={16} className="text-green-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Row 1 — Donut + Funnel */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Donut */}
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
+          <p className="text-sm font-semibold text-gray-200 mb-4">Répartition des leads par statut</p>
+          {donutData.length > 0 ? (
+            <div className="flex items-center gap-5">
+              <div className="relative shrink-0" style={{ width: 180, height: 180 }}>
+                <PieChart width={180} height={180}>
+                  <Pie
+                    data={donutData} cx={90} cy={90}
+                    innerRadius={56} outerRadius={80} paddingAngle={2}
+                    dataKey="value" startAngle={90} endAngle={-270}
+                  >
+                    {donutData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 8, fontSize: 12 }}
+                    formatter={(val, name) => {
+                      const v = Number(val) || 0
+                      const pct = total > 0 ? Math.round((v / total) * 100) : 0
+                      return [`${v} (${pct}%)`, String(name)]
+                    }}
+                  />
+                </PieChart>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-2xl font-bold text-gray-100">{total}</span>
+                  <span className="text-[10px] text-gray-500 mt-0.5">leads</span>
+                </div>
+              </div>
+              <div className="flex-1 space-y-2">
+                {donutData.map((entry) => {
+                  const pct = total > 0 ? Math.round((entry.value / total) * 100) : 0
+                  return (
+                    <div key={entry.name} className="flex items-center justify-between text-[12px]">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: entry.color }} />
+                        <span className="text-gray-400 truncate">{entry.name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        <span className="font-semibold text-gray-200">{entry.value}</span>
+                        <span className="text-gray-600 w-8 text-right">{pct}%</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600 py-8 text-center">Aucun lead sur la période</p>
+          )}
+        </div>
+
+        {/* Funnel */}
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
+          <p className="text-sm font-semibold text-gray-200 mb-4">Entonnoir de conversion</p>
+          <div className="space-y-2.5">
+            {funnelStages.map((stage, i) => {
+              const widthPct  = total > 0 ? Math.max((stage.count / total) * 100, stage.count > 0 ? 6 : 0) : 0
+              const convPct   = i === 0 ? null : (stage.prev > 0 ? Math.round((stage.count / stage.prev) * 100) : 0)
+              return (
+                <div key={stage.label} className="flex items-center gap-2">
+                  <div className="w-[88px] text-[11px] text-gray-500 text-right shrink-0">{stage.label}</div>
+                  <div className="flex-1 h-7 rounded bg-gray-800/60 relative overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded flex items-center px-2 transition-all"
+                      style={{ width: `${widthPct}%`, backgroundColor: stage.color + 'dd' }}
+                    >
+                      <span className="text-[12px] font-bold text-white">{stage.count}</span>
+                    </div>
+                  </div>
+                  <div className="w-9 text-right shrink-0">
+                    {convPct !== null && (
+                      <span className="text-[11px] text-gray-500">{convPct}%</span>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Row 2 — Sources + Budget */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Sources */}
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
+          <p className="text-sm font-semibold text-gray-200 mb-4">Leads par source</p>
+          {sourcesData.length > 0 ? (
+            <div className="space-y-2.5">
+              {sourcesData.map(([src, count], i) => (
+                <div key={src} className="flex items-center gap-2">
+                  <div className="w-20 text-[11px] text-gray-400 text-right shrink-0 truncate">{src}</div>
+                  <div className="flex-1 h-7 rounded bg-gray-800/60 relative overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded flex items-center justify-end px-2 transition-all"
+                      style={{ width: `${Math.max((count / maxSource) * 100, 8)}%`, backgroundColor: SRC_COLORS[i % SRC_COLORS.length] + 'dd' }}
+                    >
+                      <span className="text-[12px] font-bold text-white">{count}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600 py-8 text-center">Aucune source renseignée</p>
+          )}
+        </div>
+
+        {/* Budget */}
+        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
+          <div className="flex items-start justify-between mb-1">
+            <p className="text-sm font-semibold text-gray-200">Valeur des opportunités</p>
+            {totalBudget > 0 && (
+              <span className="text-xs font-semibold text-green-400 shrink-0 ml-2">
+                Total : {fmtCFA(totalBudget)}
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-gray-600 mb-3">Budget cumulé des leads par statut (en F CFA)</p>
+          {budgetData.length > 0 ? (
+            <div className="space-y-2.5">
+              {budgetData.map(([status, value]) => {
+                const col   = PIPELINE_COLUMNS.find(c => c.status === status)
+                const color = PIPELINE_COLORS[status] ?? '#6b7280'
+                return (
+                  <div key={status} className="flex items-center gap-2">
+                    <div className="w-[88px] text-[11px] text-gray-400 text-right shrink-0 truncate">{col?.label ?? status}</div>
+                    <div className="flex-1 h-7 rounded bg-gray-800/60 relative overflow-hidden">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded flex items-center px-2 transition-all"
+                        style={{ width: `${Math.max((value / maxBudget) * 100, 10)}%`, backgroundColor: color + 'dd' }}
+                      >
+                        <span className="text-[11px] font-semibold text-white truncate">{fmtCFA(value)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-600 py-8 text-center">Aucun budget renseigné</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LeadsPage() {
+  const [activeTab, setActiveTab] = useState<'pipeline' | 'analytics'>('pipeline')
   const [view, setView]           = useState<'kanban' | 'table'>('kanban')
   const [showCreate, setShowCreate] = useState(false)
+  const [schedulingLead, setSchedulingLead] = useState<Lead | null>(null)
   const [search, setSearch]       = useState('')
   const [pipeline, setPipeline]   = useState('')
   const [source, setSource]       = useState('')
@@ -580,6 +1119,14 @@ export function LeadsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['leads'] }),
   })
 
+  const { data: calcomUrlData } = useQuery({
+    queryKey: ['calcom-my-booking-url'],
+    queryFn: () => api.get('/calcom/my-booking-url').then(r => r.data as { url: string | null }),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  const myBookingUrl = calcomUrlData?.url ?? null
+
   const { data, isLoading } = useQuery({
     queryKey: ['leads', search, pipeline, source, dateFrom, dateTo],
     queryFn: () =>
@@ -604,6 +1151,13 @@ export function LeadsPage() {
   return (
     <div className="p-6">
       {showCreate && <CreateLeadModal onClose={() => setShowCreate(false)} />}
+      {schedulingLead && (
+        <QuickCallModal
+          lead={schedulingLead}
+          myBookingUrl={myBookingUrl}
+          onClose={() => setSchedulingLead(null)}
+        />
+      )}
       <input
         type="file" accept=".csv" ref={csvRef} className="hidden"
         onChange={(e) => {
@@ -646,6 +1200,39 @@ export function LeadsPage() {
           </button>
         </div>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-gray-800 mb-5">
+        <button
+          onClick={() => setActiveTab('pipeline')}
+          className={cn(
+            'flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+            activeTab === 'pipeline'
+              ? 'border-indigo-500 text-indigo-400'
+              : 'border-transparent text-gray-500 hover:text-gray-300',
+          )}
+        >
+          <Kanban size={13} />
+          Pipeline
+        </button>
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={cn(
+            'flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+            activeTab === 'analytics'
+              ? 'border-indigo-500 text-indigo-400'
+              : 'border-transparent text-gray-500 hover:text-gray-300',
+          )}
+        >
+          <BarChart2 size={13} />
+          Analytics
+        </button>
+      </div>
+
+      {activeTab === 'analytics' ? (
+        <LeadsAnalytics />
+      ) : (
+        <>
 
       {/* Stats */}
       <StatsBar leads={leads} />
@@ -766,9 +1353,16 @@ export function LeadsPage() {
           leads={leads}
           pipelineFilter={pipeline}
           onStatusChange={(leadId, status) => updateStatusMutation.mutate({ id: leadId, status })}
+          onScheduleCall={(lead) => setSchedulingLead(lead)}
         />
       ) : (
-        <TableView leads={leads} />
+        <TableView
+          leads={leads}
+          onStatusChange={(leadId, status) => updateStatusMutation.mutate({ id: leadId, status })}
+          onScheduleCall={(lead) => setSchedulingLead(lead)}
+        />
+      )}
+        </>
       )}
     </div>
   )

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
@@ -6,11 +6,11 @@ import {
   Plus, ExternalLink, Sparkles, CheckCircle, XCircle,
   Clock, ChevronDown, Trash2, GraduationCap,
   GitBranch, Star, PhoneCall, PhoneOff, UserCheck, ChevronUp,
-  CalendarClock, Send, X, CalendarDays, ChevronLeft, ChevronRight,
-  Video, Loader2,
+  CalendarClock, Send, X, CalendarDays,
+  Video, CreditCard, Link2, Link2Off, AlertCircle,
 } from 'lucide-react'
 import api from '@/services/api'
-import type { Lead, LeadCall, SubscriptionOffer, PipelineStatus, AppSettings } from '@/types'
+import type { Lead, LeadCall, SubscriptionOffer, PipelineStatus, AppSettings, Transaction } from '@/types'
 import { cn } from '@/lib/utils'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -33,6 +33,17 @@ const CALL_STATUS: Record<string, { label: string; icon: React.ElementType; colo
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+const TX_STATUS_LABEL: Record<string, string> = {
+  pending: 'En attente', completed: 'Complété', failed: 'Échoué', refunded: 'Remboursé',
+}
+const TX_STATUS_COLOR: Record<string, string> = {
+  pending: 'text-yellow-400', completed: 'text-green-400', failed: 'text-red-400', refunded: 'text-orange-400',
+}
+const GATEWAY_LABELS: Record<string, string> = {
+  stripe: 'Stripe', chariow: 'Chariow', pawapay: 'PawaPay', fedapay: 'FedaPay',
+  wave: 'Wave', orange_money: 'Orange Money', virement: 'Virement', manual: 'Manuel', bank_import: 'Import PDF',
+}
 
 function formatDate(str: string | null) {
   if (!str) return '—'
@@ -300,37 +311,179 @@ function CallCard({ leadId, call, offers, onUpdate }: {
 
 // ── Add Call Modal ─────────────────────────────────────────────────────────────
 
-function AddCallModal({ leadId, onClose }: { leadId: string; onClose: () => void }) {
+function AddCallModal({ leadId, leadEmail, onClose }: { leadId: string; leadEmail?: string | null; onClose: () => void }) {
   const qc = useQueryClient()
-  const [form, setForm] = useState({ date: '', google_meet_link: '', status: 'planned' as const })
+
+  const defaultDate = (() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    d.setHours(10, 0, 0, 0)
+    return d.toISOString().slice(0, 16)
+  })()
+
+  const [form, setForm] = useState({ date: defaultDate, google_meet_link: '', status: 'planned' as const })
+  const [sendEmail, setSendEmail] = useState(!!leadEmail)
+  const [emailSent, setEmailSent] = useState(false)
 
   const mutation = useMutation({
-    mutationFn: (data: typeof form) => api.post(`/leads/${leadId}/calls`, data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['lead-calls', leadId] }); onClose() },
+    mutationFn: (data: typeof form & { sendEmail: boolean }) => api.post(`/leads/${leadId}/calls`, data),
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['lead-calls', leadId] })
+      if (vars.sendEmail && leadEmail) {
+        setEmailSent(true)
+        setTimeout(onClose, 2500)
+      } else {
+        onClose()
+      }
+    },
   })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6">
         <h2 className="text-lg font-semibold text-gray-100 mb-5">Nouvel appel</h2>
-        <div className="space-y-3">
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Date & heure</label>
-            <input type="datetime-local" className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} />
+
+        {emailSent ? (
+          <div className="flex flex-col items-center gap-3 py-6">
+            <CheckCircle size={40} className="text-green-400" />
+            <p className="text-sm text-gray-300 text-center">
+              Email de confirmation envoyé à{' '}
+              <span className="text-white font-medium">{leadEmail}</span>
+            </p>
           </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Lien Google Meet</label>
-            <input className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none" placeholder="https://meet.google.com/..." value={form.google_meet_link} onChange={(e) => setForm((f) => ({ ...f, google_meet_link: e.target.value }))} />
+        ) : (
+          <>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Date & heure</label>
+                <input
+                  type="datetime-local"
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                  value={form.date}
+                  onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Lien Google Meet</label>
+                <div className="flex gap-2">
+                  <input
+                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                    placeholder="https://meet.google.com/..."
+                    value={form.google_meet_link}
+                    onChange={(e) => setForm((f) => ({ ...f, google_meet_link: e.target.value }))}
+                  />
+                  <a
+                    href="https://meet.new"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-xs text-gray-300 whitespace-nowrap transition-colors"
+                  >
+                    <Video size={13} />
+                    Nouveau Meet
+                  </a>
+                </div>
+              </div>
+              {leadEmail ? (
+                <button
+                  type="button"
+                  onClick={() => setSendEmail((v) => !v)}
+                  className="flex items-center gap-3 w-full text-left"
+                >
+                  <div className={cn('w-9 h-5 rounded-full flex items-center px-0.5 transition-colors', sendEmail ? 'bg-indigo-600' : 'bg-gray-700')}>
+                    <div className={cn('w-4 h-4 rounded-full bg-white transition-transform', sendEmail ? 'translate-x-4' : 'translate-x-0')} />
+                  </div>
+                  <span className="text-sm text-gray-300">
+                    Envoyer email de confirmation à{' '}
+                    <span className="text-white">{leadEmail}</span>
+                  </span>
+                </button>
+              ) : (
+                <p className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <AlertCircle size={12} />
+                  Ce lead n'a pas d'adresse email — confirmation impossible.
+                </p>
+              )}
+            </div>
+            <div className="mt-5 flex justify-end gap-3">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+                Annuler
+              </button>
+              <button
+                disabled={mutation.isPending}
+                onClick={() => mutation.mutate({ ...form, sendEmail: sendEmail && !!leadEmail })}
+                className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm text-white font-medium disabled:opacity-50"
+              >
+                {mutation.isPending ? 'Création...' : 'Créer'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Pre-Booking Modal (email pref before Cal.com iframe) ─────────────────────
+
+function PreBookingModal({ leadId, leadEmail, onConfirm, onClose }: {
+  leadId: string
+  leadEmail?: string | null
+  onConfirm: () => void
+  onClose: () => void
+}) {
+  const [sendEmail, setSendEmail] = useState(!!leadEmail)
+  const [loading, setLoading] = useState(false)
+
+  const handleConfirm = async () => {
+    setLoading(true)
+    try {
+      await api.post(`/leads/${leadId}/booking-pref`, { sendEmail: sendEmail && !!leadEmail })
+    } catch { /* non-blocking */ }
+    setLoading(false)
+    onConfirm()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 space-y-5">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <CalendarDays size={18} className="text-indigo-400 mt-0.5" />
+            <h2 className="text-base font-semibold text-gray-100">Programmer un appel</h2>
           </div>
+          <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-300">
+            <X size={16} />
+          </button>
         </div>
-        <div className="mt-5 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">Annuler</button>
+        <p className="text-sm text-gray-400">
+          Cal.com va s'ouvrir pour choisir un créneau. Une invitation calendrier sera envoyée automatiquement par Cal.com.
+        </p>
+        {leadEmail && (
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => setSendEmail(v => !v)}
+              className={`relative w-10 h-5 rounded-full transition-colors ${sendEmail ? 'bg-indigo-600' : 'bg-gray-700'}`}
+            >
+              <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${sendEmail ? 'translate-x-5' : ''}`} />
+            </div>
+            <span className="text-sm text-gray-300">
+              Envoyer aussi l'email ERP à <span className="text-gray-100">{leadEmail}</span>
+            </span>
+          </label>
+        )}
+        <div className="flex gap-3 pt-1">
           <button
-            disabled={mutation.isPending}
-            onClick={() => mutation.mutate(form)}
-            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm text-white font-medium disabled:opacity-50"
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-gray-200 hover:border-gray-500 transition-colors"
           >
-            {mutation.isPending ? 'Création...' : 'Créer'}
+            Annuler
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={loading}
+            className="flex-1 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-medium text-white transition-colors disabled:opacity-60"
+          >
+            {loading ? 'Chargement…' : 'Ouvrir Cal.com →'}
           </button>
         </div>
       </div>
@@ -338,227 +491,146 @@ function AddCallModal({ leadId, onClose }: { leadId: string; onClose: () => void
   )
 }
 
-// ── Cal.com Booking Modal ─────────────────────────────────────────────────────
+// ── Cal.com Booking Modal (iframe approach) ───────────────────────────────────
 
-function CalComBookingModal({ leadId, leadName, onClose }: {
-  leadId: string
+function CalComBookingModal({ leadName, leadEmail, bookingUrl, onClose }: {
   leadName: string
+  leadEmail?: string | null
+  bookingUrl?: string
   onClose: () => void
 }) {
-  const qc = useQueryClient()
-  const [selectedDate, setSelectedDate] = useState<string | null>(null)
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
-  const [weekOffset, setWeekOffset] = useState(0)
-
-  const { data: slots, isLoading, error } = useQuery<Record<string, { time: string }[]>>({
-    queryKey: ['calcom-slots', leadId],
-    queryFn: () => api.get(`/leads/${leadId}/calcom/slots`).then(r => r.data),
-    staleTime: 60_000,
-    retry: false,
-  })
-
-  const bookMutation = useMutation({
-    mutationFn: (slot: string) => api.post(`/leads/${leadId}/calcom/book`, { slot }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['lead-calls', leadId] })
-      qc.invalidateQueries({ queryKey: ['lead', leadId] })
-      onClose()
-    },
-  })
-
-  const sortedDates = useMemo(() => Object.keys(slots ?? {}).sort(), [slots])
-
-  // Week navigation over available dates
-  const WEEK = 7
-  const startIdx = weekOffset * WEEK
-  const visibleDates = sortedDates.slice(startIdx, startIdx + WEEK)
-  const canPrev = weekOffset > 0
-  const canNext = startIdx + WEEK < sortedDates.length
-
-  function fmtDate(iso: string) {
-    const d = new Date(iso + 'T12:00:00')
-    return {
-      day: d.toLocaleDateString('fr-FR', { weekday: 'short' }),
-      num: d.getDate(),
-      month: d.toLocaleDateString('fr-FR', { month: 'short' }),
-    }
-  }
-
-  function fmtTime(iso: string) {
-    return new Date(iso).toLocaleTimeString('fr-FR', {
-      hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Abidjan',
-    })
-  }
-
-  const slotsForDate = selectedDate ? (slots?.[selectedDate] ?? []) : []
+  const params = new URLSearchParams()
+  if (leadName) params.set('name', leadName)
+  if (leadEmail) params.set('email', leadEmail)
+  const iframeUrl = bookingUrl ? `${bookingUrl}?${params.toString()}` : null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-lg rounded-2xl bg-gray-900 border border-gray-700 shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-800">
-          <div className="flex items-center gap-2.5">
-            <CalendarDays size={18} className="text-indigo-400" />
-            <div>
-              <h2 className="text-[15px] font-semibold text-gray-100">Programmer un appel</h2>
-              <p className="text-xs text-gray-500">{leadName}</p>
-            </div>
+    <div className="fixed inset-0 z-50 flex flex-col bg-gray-950">
+      {/* Header */}
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-800 shrink-0">
+        <div className="flex items-center gap-2.5">
+          <CalendarDays size={16} className="text-indigo-400" />
+          <div>
+            <h2 className="text-sm font-semibold text-gray-100">
+              Programmer un appel — {leadName}
+            </h2>
+            <p className="text-xs text-gray-500">
+              L'email de confirmation (.ics) sera envoyé automatiquement dès que le RDV est confirmé dans Cal.com
+            </p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors">
+        </div>
+        <div className="flex items-center gap-2">
+          {iframeUrl && (
+            <a
+              href={iframeUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors"
+            >
+              <ExternalLink size={12} />
+              Ouvrir dans un onglet
+            </a>
+          )}
+          <button
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+          >
             <X size={16} />
           </button>
         </div>
+      </div>
 
-        <div className="p-5">
-          {isLoading && (
-            <div className="flex flex-col items-center justify-center py-12 gap-3">
-              <Loader2 size={24} className="text-indigo-400 animate-spin" />
-              <p className="text-sm text-gray-500">Chargement des créneaux…</p>
-            </div>
-          )}
+      {/* Content */}
+      {!iframeUrl ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center max-w-sm">
+            <AlertCircle size={40} className="text-yellow-500 mx-auto mb-3" />
+            <p className="text-gray-200 font-semibold mb-1">URL Cal.com non configurée</p>
+            <p className="text-sm text-gray-500">
+              Ajoutez le lien de réservation Cal.com dans{' '}
+              <span className="text-indigo-400">Paramètres → Booking URL</span>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <iframe
+          src={iframeUrl}
+          className="flex-1 w-full border-none"
+          title="Réservation Cal.com"
+        />
+      )}
+    </div>
+  )
+}
 
-          {error && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-3 text-sm text-red-400">
-              {(error as { response?: { data?: { message?: string } } }).response?.data?.message
-                ?? "Impossible de charger les créneaux. Vérifiez que votre profil a un Cal.com event type configuré."}
-            </div>
-          )}
+// ── Link Transaction Modal ────────────────────────────────────────────────────
 
-          {!isLoading && !error && sortedDates.length === 0 && (
-            <div className="py-12 text-center text-sm text-gray-500">
-              Aucun créneau disponible dans les 14 prochains jours.
-            </div>
-          )}
+function LinkTransactionModal({
+  leadId, leadName, onClose, onLinked,
+}: {
+  leadId: string; leadName: string
+  onClose: () => void; onLinked: () => void
+}) {
+  const [search, setSearch] = useState('')
 
-          {!isLoading && !error && sortedDates.length > 0 && (
-            <>
-              {/* Date selector */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-2.5">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">Choisir une date</p>
-                  <div className="flex items-center gap-1">
-                    <button
-                      disabled={!canPrev}
-                      onClick={() => { setWeekOffset(w => w - 1); setSelectedDate(null); setSelectedSlot(null) }}
-                      className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      disabled={!canNext}
-                      onClick={() => { setWeekOffset(w => w + 1); setSelectedDate(null); setSelectedSlot(null) }}
-                      className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-gray-300 disabled:opacity-30 transition-colors"
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {visibleDates.map(d => {
-                    const f = fmtDate(d)
-                    const active = d === selectedDate
-                    const count = slots?.[d]?.length ?? 0
-                    return (
-                      <button
-                        key={d}
-                        onClick={() => { setSelectedDate(d); setSelectedSlot(null) }}
-                        className={cn(
-                          'flex flex-col items-center rounded-xl py-2.5 px-1 transition-all text-center',
-                          active
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-gray-800/60 hover:bg-gray-800 text-gray-300',
-                        )}
-                      >
-                        <span className="text-[10px] font-medium uppercase opacity-70 capitalize">{f.day}</span>
-                        <span className="text-[17px] font-bold leading-tight">{f.num}</span>
-                        <span className="text-[10px] opacity-60 capitalize">{f.month}</span>
-                        <span className={cn(
-                          'mt-1 text-[10px] font-semibold',
-                          active ? 'text-indigo-200' : 'text-indigo-400',
-                        )}>
-                          {count}
-                        </span>
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
+  const { data, isLoading } = useQuery({
+    queryKey: ['tx-search-link', search],
+    queryFn: () => api.get('/finances/transactions', {
+      params: { type: 'income', search: search || undefined, limit: 20 },
+    }).then(r => r.data as { data: Transaction[] }),
+  })
 
-              {/* Time slots */}
-              {selectedDate && (
-                <div className="mb-4">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-2.5">
-                    Créneaux disponibles
-                  </p>
-                  {slotsForDate.length === 0 ? (
-                    <p className="text-sm text-gray-500">Aucun créneau pour cette date.</p>
-                  ) : (
-                    <div className="grid grid-cols-3 gap-1.5 max-h-44 overflow-y-auto pr-1">
-                      {slotsForDate.map(s => (
-                        <button
-                          key={s.time}
-                          onClick={() => setSelectedSlot(s.time)}
-                          className={cn(
-                            'rounded-lg py-2 text-[13px] font-medium transition-all',
-                            selectedSlot === s.time
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-gray-800 hover:bg-gray-700 text-gray-300',
-                          )}
-                        >
-                          {fmtTime(s.time)}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+  const linkMutation = useMutation({
+    mutationFn: (txId: string) =>
+      api.patch(`/finances/transactions/${txId}`, { leadId, leadName }),
+    onSuccess: onLinked,
+  })
 
-              {/* Confirm */}
-              {selectedSlot && (
-                <div className="rounded-xl border border-indigo-700/40 bg-indigo-950/30 px-4 py-3 mb-4">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <Video size={13} className="text-indigo-400" />
-                    <p className="text-xs font-semibold text-indigo-300">Récapitulatif</p>
-                  </div>
-                  <p className="text-sm text-gray-200">
-                    {new Date(selectedSlot).toLocaleDateString('fr-FR', {
-                      weekday: 'long', day: 'numeric', month: 'long', timeZone: 'Africa/Abidjan',
-                    })}
-                    {' à '}
-                    {new Date(selectedSlot).toLocaleTimeString('fr-FR', {
-                      hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Abidjan',
-                    })}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    Un email de confirmation avec fichier .ics sera envoyé automatiquement.
-                  </p>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Error from booking */}
-          {bookMutation.isError && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/30 px-4 py-2.5 text-sm text-red-400 mb-3">
-              {(bookMutation.error as { response?: { data?: { message?: string } } }).response?.data?.message
-                ?? 'Erreur lors de la réservation.'}
-            </div>
-          )}
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-xl bg-gray-900 border border-gray-800 p-5 shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-100 flex items-center gap-2">
+            <Link2 size={14} className="text-indigo-400" />
+            Lier une transaction à {leadName}
+          </h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-300"><X size={16} /></button>
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-5 py-4 border-t border-gray-800">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors">
-            Annuler
-          </button>
-          <button
-            disabled={!selectedSlot || bookMutation.isPending}
-            onClick={() => selectedSlot && bookMutation.mutate(selectedSlot)}
-            className="flex items-center gap-2 px-5 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          >
-            {bookMutation.isPending && <Loader2 size={13} className="animate-spin" />}
-            {bookMutation.isPending ? 'Réservation...' : 'Confirmer le RDV'}
-          </button>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher par description, email, montant…"
+          className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:border-indigo-500 focus:outline-none mb-3"
+          autoFocus
+        />
+
+        <div className="space-y-1.5 max-h-72 overflow-y-auto">
+          {isLoading && <p className="text-center text-xs text-gray-500 py-4">Chargement…</p>}
+          {!isLoading && (data?.data ?? []).length === 0 && (
+            <p className="text-center text-xs text-gray-600 py-4">Aucune transaction trouvée</p>
+          )}
+          {(data?.data ?? []).map((tx) => (
+            <button
+              key={tx._id}
+              onClick={() => linkMutation.mutate(tx._id)}
+              disabled={linkMutation.isPending}
+              className="flex w-full items-center gap-3 rounded-lg bg-gray-800/60 px-3 py-2.5 text-left hover:bg-gray-800 transition-colors disabled:opacity-50"
+            >
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-gray-200 truncate">{tx.description}</p>
+                <div className="flex gap-2 mt-0.5 text-[11px] text-gray-500">
+                  <span>{new Date(tx.date).toLocaleDateString('fr-FR')}</span>
+                  <span>{GATEWAY_LABELS[tx.gateway] ?? tx.gateway}</span>
+                  {tx.leadName && <span className="text-yellow-500">→ {tx.leadName}</span>}
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-green-400 shrink-0">
+                {tx.amount.toLocaleString('fr-FR')} {tx.currency}
+              </p>
+            </button>
+          ))}
         </div>
       </div>
     </div>
@@ -574,8 +646,13 @@ export function LeadDetailPage() {
 
   const [editNotes, setEditNotes] = useState(false)
   const [notes, setNotes] = useState('')
+  const [editBudget, setEditBudget] = useState(false)
+  const [budgetInput, setBudgetInput] = useState('')
+  const [showAddOffer, setShowAddOffer] = useState(false)
   const [showAddCall, setShowAddCall] = useState(false)
+  const [showPreBooking, setShowPreBooking] = useState(false)
   const [showCalBooking, setShowCalBooking] = useState(false)
+  const [pollingCalls, setPollingCalls] = useState(false)
   const [showCallLink, setShowCallLink] = useState(false)
   const [callLinkUrl, setCallLinkUrl] = useState('')
   const [callLinkMsg, setCallLinkMsg] = useState('')
@@ -590,6 +667,22 @@ export function LeadDetailPage() {
     queryKey: ['lead-calls', id],
     queryFn: () => api.get(`/leads/${id}/calls`).then((r) => r.data as LeadCall[]),
     enabled: !!id,
+    refetchInterval: pollingCalls ? 2000 : false,
+  })
+
+  const { data: txData, refetch: refetchTx } = useQuery({
+    queryKey: ['lead-transactions', id],
+    queryFn: () => api.get('/finances/transactions', { params: { leadId: id, limit: 50 } })
+      .then(r => r.data as { data: Transaction[]; total: number }),
+    enabled: !!id,
+  })
+  const linkedTransactions = txData?.data ?? []
+
+  const [showLinkTxModal, setShowLinkTxModal] = useState(false)
+
+  const unlinkTxMutation = useMutation({
+    mutationFn: (txId: string) => api.patch(`/finances/transactions/${txId}`, { leadId: null, leadName: null }),
+    onSuccess: () => refetchTx(),
   })
 
   const { data: offers = [] } = useQuery({
@@ -601,6 +694,15 @@ export function LeadDetailPage() {
     queryKey: ['app-settings'],
     queryFn: () => api.get('/app-settings').then((r) => r.data),
   })
+
+  // Auto-discover the current user's Cal.com booking URL from the Cal.com DB
+  const { data: calcomUrlData } = useQuery({
+    queryKey: ['calcom-my-booking-url'],
+    queryFn: () => api.get('/calcom/my-booking-url').then((r) => r.data as { url: string | null }),
+    staleTime: 5 * 60_000,
+    retry: false,
+  })
+  const myBookingUrl = calcomUrlData?.url ?? appSettings?.callBookingUrl ?? ''
 
   const sendCallLinkMutation = useMutation({
     mutationFn: ({ bookingUrl, message }: { bookingUrl: string; message: string }) =>
@@ -617,6 +719,16 @@ export function LeadDetailPage() {
   const notesMutation = useMutation({
     mutationFn: (n: string) => api.patch(`/leads/${id}`, { notes: n }),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['lead', id] }); setEditNotes(false) },
+  })
+
+  const budgetMutation = useMutation({
+    mutationFn: (amount: number | null) => api.patch(`/leads/${id}`, { opportunity_amount: amount }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['lead', id] }); setEditBudget(false) },
+  })
+
+  const offersMutation = useMutation({
+    mutationFn: (offerIds: string[]) => api.patch(`/leads/${id}`, { offer_ids: offerIds }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['lead', id] }); setShowAddOffer(false) },
   })
 
   const deleteMutation = useMutation({
@@ -647,12 +759,27 @@ export function LeadDetailPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      {showAddCall && id && <AddCallModal leadId={id} onClose={() => setShowAddCall(false)} />}
+      {showAddCall && id && <AddCallModal leadId={id} leadEmail={lead?.email} onClose={() => setShowAddCall(false)} />}
+      {showPreBooking && id && (
+        <PreBookingModal
+          leadId={id}
+          leadEmail={lead?.email}
+          onConfirm={() => { setShowPreBooking(false); setShowCalBooking(true) }}
+          onClose={() => setShowPreBooking(false)}
+        />
+      )}
       {showCalBooking && id && (
         <CalComBookingModal
-          leadId={id}
           leadName={lead?.name ?? ''}
-          onClose={() => setShowCalBooking(false)}
+          leadEmail={lead?.email}
+          bookingUrl={myBookingUrl}
+          onClose={() => {
+            setShowCalBooking(false)
+            qc.invalidateQueries({ queryKey: ['lead-calls', id] })
+            qc.invalidateQueries({ queryKey: ['lead', id] })
+            setPollingCalls(true)
+            setTimeout(() => setPollingCalls(false), 15000)
+          }}
         />
       )}
 
@@ -688,9 +815,9 @@ export function LeadDetailPage() {
                   onChange={(e) => setCallLinkUrl(e.target.value)}
                   autoFocus
                 />
-                {appSettings?.callBookingUrl && !callLinkUrl && (
+                {myBookingUrl && !callLinkUrl && (
                   <button
-                    onClick={() => setCallLinkUrl(appSettings.callBookingUrl ?? '')}
+                    onClick={() => setCallLinkUrl(myBookingUrl)}
                     className="mt-1 text-xs text-indigo-400 hover:text-indigo-300"
                   >
                     Utiliser le lien par défaut
@@ -749,16 +876,16 @@ export function LeadDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowCalBooking(true)}
+            onClick={() => myBookingUrl ? setShowPreBooking(true) : setShowAddCall(true)}
             className="flex items-center gap-2 rounded-lg border border-indigo-700/50 bg-indigo-900/30 px-3 py-1.5 text-xs text-indigo-300 hover:border-indigo-500 hover:bg-indigo-900/60 transition-colors"
-            title="Programmer un appel via Cal.com"
+            title={myBookingUrl ? 'Programmer un appel via Cal.com' : 'Programmer un appel manuellement'}
           >
             <CalendarDays size={14} />
             Programmer un appel
           </button>
           <button
             onClick={() => {
-              setCallLinkUrl(appSettings?.callBookingUrl ?? '')
+              setCallLinkUrl(myBookingUrl)
               setCallLinkMsg('')
               sendCallLinkMutation.reset()
               setShowCallLink(true)
@@ -819,6 +946,48 @@ export function LeadDetailPage() {
               </select>
             </div>
 
+            {/* Budget / montant opportunité */}
+            <div>
+              <label className="text-xs text-gray-500 mb-1 block">Budget / valeur opportunité</label>
+              {editBudget ? (
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    value={budgetInput}
+                    onChange={e => setBudgetInput(e.target.value)}
+                    placeholder="0"
+                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                    autoFocus
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') budgetMutation.mutate(budgetInput ? Number(budgetInput) : null)
+                      if (e.key === 'Escape') setEditBudget(false)
+                    }}
+                  />
+                  <button
+                    onClick={() => budgetMutation.mutate(budgetInput ? Number(budgetInput) : null)}
+                    disabled={budgetMutation.isPending}
+                    className="px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-xs text-white font-medium disabled:opacity-50"
+                  >
+                    {budgetMutation.isPending ? '…' : 'OK'}
+                  </button>
+                  <button onClick={() => setEditBudget(false)} className="px-2 text-gray-500 hover:text-gray-300">
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { setBudgetInput(String(lead.opportunity_amount ?? '')); setEditBudget(true) }}
+                  className="flex items-center gap-2 w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-left hover:border-indigo-600/50 transition-colors group"
+                >
+                  <span className={lead.opportunity_amount ? 'text-emerald-400 font-semibold' : 'text-gray-600'}>
+                    {lead.opportunity_amount
+                      ? `${lead.opportunity_amount.toLocaleString('fr-FR')} F CFA`
+                      : 'Non renseigné'}
+                  </span>
+                  <Pencil size={11} className="text-gray-600 group-hover:text-gray-400 ml-auto" />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Convert to student — shown when Won */}
@@ -860,7 +1029,40 @@ export function LeadDetailPage() {
 
           {/* Offres liées */}
           <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Offres liées</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Offres liées</h3>
+              <button
+                onClick={() => setShowAddOffer(v => !v)}
+                className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+              >
+                <Plus size={12} /> Ajouter
+              </button>
+            </div>
+
+            {/* Offer selector */}
+            {showAddOffer && (
+              <div className="mb-3">
+                <select
+                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-200 focus:border-indigo-500 focus:outline-none"
+                  defaultValue=""
+                  onChange={(e) => {
+                    if (!e.target.value) return
+                    const current = lead.offer_ids.map(o => o._id)
+                    if (current.includes(e.target.value)) return
+                    offersMutation.mutate([...current, e.target.value])
+                  }}
+                  disabled={offersMutation.isPending}
+                >
+                  <option value="">— Sélectionner une offre —</option>
+                  {offers
+                    .filter(o => !lead.offer_ids.some(lo => lo._id === o._id))
+                    .map(o => (
+                      <option key={o._id} value={o._id}>{o.name}</option>
+                    ))}
+                </select>
+              </div>
+            )}
+
             {lead.offer_ids.length > 0 ? (
               <div className="space-y-1.5">
                 {lead.offer_ids.map((offer) => {
@@ -868,11 +1070,24 @@ export function LeadDetailPage() {
                   return (
                     <div key={offer._id} className="flex items-center justify-between rounded-lg bg-gray-800 px-3 py-2">
                       <span className="text-sm text-gray-200">{offer.name}</span>
-                      {plan && (
-                        <span className="text-xs text-gray-400">
-                          {plan.price.toLocaleString()} {plan.currency}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {plan && (
+                          <span className="text-xs text-gray-400">
+                            {plan.price.toLocaleString()} {plan.currency}
+                          </span>
+                        )}
+                        <button
+                          onClick={() => {
+                            const remaining = lead.offer_ids.filter(o => o._id !== offer._id).map(o => o._id)
+                            offersMutation.mutate(remaining)
+                          }}
+                          disabled={offersMutation.isPending}
+                          className="text-gray-600 hover:text-red-400 transition-colors"
+                          title="Délier cette offre"
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
                     </div>
                   )
                 })}
@@ -935,6 +1150,70 @@ export function LeadDetailPage() {
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">Historique</h3>
               <LeadTimeline events={[...lead.events].reverse()} />
             </div>
+          )}
+
+          {/* Paiements liés */}
+          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 flex items-center gap-1.5">
+                <CreditCard size={12} />
+                Paiements liés ({linkedTransactions.length})
+              </h3>
+              <button
+                onClick={() => setShowLinkTxModal(true)}
+                className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300"
+              >
+                <Link2 size={12} /> Lier une transaction
+              </button>
+            </div>
+            {linkedTransactions.length > 0 ? (
+              <div className="space-y-2">
+                {linkedTransactions.map((tx) => (
+                  <div key={tx._id} className="flex items-center gap-3 rounded-lg bg-gray-800/60 px-3 py-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-200 truncate">{tx.description}</span>
+                        <span className={cn('text-[11px] font-medium shrink-0', TX_STATUS_COLOR[tx.status] ?? 'text-gray-400')}>
+                          {TX_STATUS_LABEL[tx.status] ?? tx.status}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5 text-[11px] text-gray-500">
+                        <span>{new Date(tx.date).toLocaleDateString('fr-FR')}</span>
+                        <span>{GATEWAY_LABELS[tx.gateway] ?? tx.gateway}</span>
+                        {tx.offerName && <span className="text-indigo-400">{tx.offerName}</span>}
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={cn('text-sm font-semibold', tx.type === 'income' ? 'text-green-400' : 'text-red-400')}>
+                        {tx.type === 'expense' ? '−' : '+'}{tx.amount.toLocaleString('fr-FR')} {tx.currency}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => unlinkTxMutation.mutate(tx._id)}
+                      disabled={unlinkTxMutation.isPending}
+                      className="text-gray-600 hover:text-red-400 transition-colors shrink-0"
+                      title="Délier"
+                    >
+                      <Link2Off size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-xs text-gray-600 py-4">
+                Aucun paiement lié. Liez une transaction depuis les finances ou ci-dessus.
+              </p>
+            )}
+          </div>
+
+          {/* Link transaction modal */}
+          {showLinkTxModal && id && lead && (
+            <LinkTransactionModal
+              leadId={id}
+              leadName={lead.name}
+              onClose={() => setShowLinkTxModal(false)}
+              onLinked={() => { refetchTx(); setShowLinkTxModal(false) }}
+            />
           )}
 
           {/* Calls */}

@@ -54,6 +54,7 @@ export class Transaction {
   // ── Entity links ───────────────────────────────────────────────────────────
   @Prop({ type: Types.ObjectId, ref: 'Student', default: null }) studentId: Types.ObjectId | null
   @Prop({ type: Types.ObjectId, ref: 'Lead', default: null }) leadId: Types.ObjectId | null
+  @Prop({ type: String, default: null }) leadName: string | null
 }
 
 export const TransactionSchema = SchemaFactory.createForClass(Transaction)

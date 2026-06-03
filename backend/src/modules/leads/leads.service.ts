@@ -145,6 +145,7 @@ export interface CreateCallDto {
   status?: 'planned' | 'completed' | 'cancelled'
   closer_id?: string
   offer_proposed_id?: string
+  sendEmail?: boolean
 }
 
 export interface UpdateCallDto {
@@ -195,6 +196,7 @@ export interface CreateTrackingLinkDto {
 @Injectable()
 export class LeadsService implements OnApplicationBootstrap {
   private readonly logger = new Logger(LeadsService.name)
+  private readonly bookingEmailPrefs = new Map<string, boolean>()
 
   constructor(
     @InjectModel(Lead.name) private leadModel: Model<LeadDocument>,
@@ -428,6 +430,16 @@ export class LeadsService implements OnApplicationBootstrap {
 
     const dateLabel = dto.date ? new Date(dto.date).toLocaleDateString('fr-FR') : 'date non définie'
     this.pushEvent(leadId, 'call_planned', `Appel planifié — ${dateLabel}`, userId)
+
+    if (dto.sendEmail && dto.date && dto.google_meet_link && lead.email) {
+      const closerId = dto.closer_id ?? userId
+      const closer = closerId ? await this.userModel.findById(closerId).lean() : null
+      if (closer) {
+        const start = new Date(dto.date)
+        const end = new Date(start.getTime() + (dto.duration ?? 60) * 60_000)
+        await this.sendCalComConfirmationEmail(lead, closer as UserDocument, start.toISOString(), end.toISOString(), dto.google_meet_link)
+      }
+    }
 
     return call
   }
@@ -944,6 +956,13 @@ Sois concis et factuel. Réponds en français.`
     }
   }
 
+  // ── Cal.com Booking Email Pref ────────────────────────────────────────────
+
+  setBookingEmailPref(leadId: string, sendEmail: boolean): void {
+    this.bookingEmailPrefs.set(leadId, sendEmail)
+    setTimeout(() => this.bookingEmailPrefs.delete(leadId), 30 * 60 * 1000)
+  }
+
   // ── Cal.com Webhook ───────────────────────────────────────────────────────
 
   async handleCalComWebhook(payload: Record<string, unknown>): Promise<void> {
@@ -987,7 +1006,10 @@ Sois concis et factuel. Réponds en français.`
     const existing = await this.callModel.findOne({ lead_id: lead._id, calcom_booking_uid: bookingUid })
     if (existing) return
 
-    await this.updatePipeline(String(lead._id), 'rdv_programme')
+    const BELOW_RDV: string[] = ['nouveau', 'mql', 'sql']
+    if (BELOW_RDV.includes(lead.pipeline_status ?? '')) {
+      await this.updatePipeline(String(lead._id), 'rdv_programme')
+    }
 
     let closerId: string | undefined
     if (organizer?.email) {
@@ -1007,8 +1029,15 @@ Sois concis et factuel. Réponds en français.`
       { $set: { calcom_booking_uid: bookingUid } },
     )
 
+    // Check email pref stored by frontend before opening iframe (default: send)
+    const leadIdStr = String(lead._id)
+    const sendEmail = this.bookingEmailPrefs.has(leadIdStr)
+      ? this.bookingEmailPrefs.get(leadIdStr)!
+      : true
+    this.bookingEmailPrefs.delete(leadIdStr)
+
     // Send confirmation email with .ics
-    if (lead.email && endTime) {
+    if (sendEmail && lead.email && endTime) {
       const closer = closerId
         ? await this.userModel.findById(closerId).lean() as UserDocument | null
         : null

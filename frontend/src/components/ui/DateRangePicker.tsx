@@ -146,6 +146,7 @@ export function DateRangePicker({
   className,
 }: DateRangePickerProps) {
   const [open, setOpen] = useState(false)
+  const [alignRight, setAlignRight] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
   const { from: displayFrom, to: displayTo } = getDisplayDates(period, customFrom, customTo)
@@ -210,7 +211,13 @@ export function DateRangePicker({
     <div ref={ref} className={cn('relative', className)}>
       {/* Trigger */}
       <button
-        onClick={() => setOpen(o => !o)}
+        onClick={() => {
+          if (!open && ref.current) {
+            const rect = ref.current.getBoundingClientRect()
+            setAlignRight(window.innerWidth - rect.left < 660)
+          }
+          setOpen(o => !o)
+        }}
         className={cn(
           'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-colors select-none',
           isActive
@@ -225,7 +232,7 @@ export function DateRangePicker({
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute left-0 top-full mt-2 z-[100] flex rounded-xl border border-gray-700/80 bg-gray-900 shadow-2xl shadow-black/40 overflow-hidden" style={{ minWidth: 640 }}>
+        <div className={cn('absolute top-full mt-2 z-[100] flex rounded-xl border border-gray-700/80 bg-gray-900 shadow-2xl shadow-black/40 overflow-hidden', alignRight ? 'right-0' : 'left-0')} style={{ minWidth: 640 }}>
 
           {/* Left — quick select */}
           <div className="w-52 shrink-0 border-r border-gray-800 p-4 flex flex-col gap-0.5">

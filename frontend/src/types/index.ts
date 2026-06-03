@@ -218,6 +218,7 @@ export interface Transaction {
   offerName?: string | null
   studentId?: string | null
   leadId?: string | null
+  leadName?: string | null
 }
 
 export interface MonthStat {
