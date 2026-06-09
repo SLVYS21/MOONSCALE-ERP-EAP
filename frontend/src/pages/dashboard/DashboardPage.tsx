@@ -7,7 +7,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import {
-  TrendingUp, TrendingDown, DollarSign, Users, Zap, FileText,
+  TrendingUp, TrendingDown, DollarSign, Zap, FileText,
   CheckCircle, ArrowUpRight, ArrowDownLeft, Trophy,
   FolderKanban, Wallet, Clock,
   CreditCard, BarChart2, Activity,
