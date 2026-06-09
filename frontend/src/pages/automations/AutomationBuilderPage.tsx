@@ -46,39 +46,39 @@ const fetchCirclePlans = (): Promise<CirclePlan[]> =>
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
 const TRIGGER_META: Record<TriggerType, { label: string; Icon: LucideIcon; color: string; desc: string }> = {
-  form_submitted:   { label: 'Formulaire soumis',    Icon: ClipboardList,  color: 'text-blue-400 bg-blue-500/10 border-blue-500/30',    desc: 'Se déclenche quand un formulaire est soumis' },
-  payment_created:  { label: 'Paiement créé',        Icon: CreditCard,     color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', desc: 'Se déclenche quand un paiement est créé' },
-  payment_treated:  { label: 'Paiement traité',      Icon: CheckCircle2,   color: 'text-green-400 bg-green-500/10 border-green-500/30',  desc: 'Se déclenche quand un paiement est traité' },
-  student_created:  { label: 'Étudiant créé',        Icon: GraduationCap,  color: 'text-purple-400 bg-purple-500/10 border-purple-500/30', desc: 'Se déclenche quand un étudiant est créé' },
+  form_submitted:   { label: 'Formulaire soumis',    Icon: ClipboardList,  color: 'text-blue-600 bg-blue-500/10 border-blue-500/30',    desc: 'Se déclenche quand un formulaire est soumis' },
+  payment_created:  { label: 'Paiement créé',        Icon: CreditCard,     color: 'text-emerald-600 bg-emerald-50 border-emerald-500/30', desc: 'Se déclenche quand un paiement est créé' },
+  payment_treated:  { label: 'Paiement traité',      Icon: CheckCircle2,   color: 'text-green-600 bg-green-500/10 border-green-500/30',  desc: 'Se déclenche quand un paiement est traité' },
+  student_created:  { label: 'Étudiant créé',        Icon: GraduationCap,  color: 'text-purple-700 bg-purple-500/10 border-purple-500/30', desc: 'Se déclenche quand un étudiant est créé' },
   manual:           { label: 'Déclenchement manuel', Icon: Play,           color: 'text-gray-400 bg-gray-500/10 border-gray-500/30',    desc: 'Déclenchement manuel uniquement' },
-  incoming_webhook: { label: 'Webhook entrant',      Icon: Link2,          color: 'text-orange-400 bg-orange-500/10 border-orange-500/30', desc: 'Se déclenche par un appel HTTP externe' },
+  incoming_webhook: { label: 'Webhook entrant',      Icon: Link2,          color: 'text-orange-600 bg-orange-500/10 border-orange-500/30', desc: 'Se déclenche par un appel HTTP externe' },
   reminder_due:     { label: 'Rappel dû',            Icon: AlarmClock,     color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',   desc: 'Se déclenche quand un rappel de paiement est dû' },
   debt_detected:    { label: 'Débiteur détecté',     Icon: AlertTriangle,  color: 'text-red-400 bg-red-500/10 border-red-500/30',         desc: 'Se déclenche quand un étudiant est identifié comme débiteur potentiel' },
   lead_created:     { label: 'Lead créé',            Icon: Crosshair,      color: 'text-teal-400 bg-teal-500/10 border-teal-500/30',      desc: 'Se déclenche quand un nouveau lead entre dans le système' },
   lead_stage_changed: { label: 'Étape lead changée', Icon: TrendingUp,    color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',      desc: "Se déclenche quand l'étape pipeline d'un lead change" },
-  lead_won:         { label: 'Lead converti (Won)',  Icon: Trophy,         color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30', desc: 'Se déclenche quand un lead est marqué Won' },
-  call_completed:   { label: 'Appel terminé',        Icon: Phone,          color: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/30', desc: "Se déclenche quand un appel diagnostic est marqué réalisé" },
+  lead_won:         { label: 'Lead converti (Won)',  Icon: Trophy,         color: 'text-yellow-600 bg-yellow-500/10 border-yellow-500/30', desc: 'Se déclenche quand un lead est marqué Won' },
+  call_completed:   { label: 'Appel terminé',        Icon: Phone,          color: 'text-indigo-600 bg-indigo-50 border-indigo-500/30', desc: "Se déclenche quand un appel diagnostic est marqué réalisé" },
   cron_schedule:         { label: 'Planification',           Icon: CalendarClock,  color: 'text-violet-400 bg-violet-500/10 border-violet-500/30', desc: 'Se déclenche automatiquement selon un calendrier défini' },
-  subscription_created:  { label: 'Souscription créée',      Icon: CheckCircle2,   color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', desc: "Se déclenche quand un étudiant souscrit à une offre" },
+  subscription_created:  { label: 'Souscription créée',      Icon: CheckCircle2,   color: 'text-emerald-600 bg-emerald-50 border-emerald-500/30', desc: "Se déclenche quand un étudiant souscrit à une offre" },
   subscription_expiring: { label: 'Souscription expirante',  Icon: AlarmClock,     color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',   desc: 'Se déclenche 7, 3 et 1 jour(s) avant la fin d\'accès' },
   partial_payment_due:   { label: 'Échéance partielle due',   Icon: AlertTriangle,  color: 'text-red-400 bg-red-500/10 border-red-500/30',         desc: 'Se déclenche quand un solde partiel arrive à échéance' },
   audience_based:        { label: 'Campagne audience',        Icon: Filter,         color: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/30', desc: 'Lance l\'automatisation pour chaque entité correspondant aux filtres définis' },
 }
 
 const STEP_META: Record<StepType, { label: string; Icon: LucideIcon; color: string; desc: string }> = {
-  send_email:     { label: 'Envoyer un email',        Icon: Mail,        color: 'text-blue-400 bg-blue-500/10 border-blue-500/30',    desc: 'Envoie un email à un destinataire' },
-  http_request:   { label: 'Requête HTTP',            Icon: Globe,       color: 'text-purple-400 bg-purple-500/10 border-purple-500/30', desc: 'Envoie une requête HTTP à une URL' },
-  wait:           { label: 'Attente',                 Icon: Timer,       color: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/30', desc: "Pause l'exécution pendant une durée" },
+  send_email:     { label: 'Envoyer un email',        Icon: Mail,        color: 'text-blue-600 bg-blue-500/10 border-blue-500/30',    desc: 'Envoie un email à un destinataire' },
+  http_request:   { label: 'Requête HTTP',            Icon: Globe,       color: 'text-purple-700 bg-purple-500/10 border-purple-500/30', desc: 'Envoie une requête HTTP à une URL' },
+  wait:           { label: 'Attente',                 Icon: Timer,       color: 'text-yellow-600 bg-yellow-500/10 border-yellow-500/30', desc: "Pause l'exécution pendant une durée" },
   condition:      { label: 'Condition',               Icon: GitBranch,   color: 'text-pink-400 bg-pink-500/10 border-pink-500/30',     desc: "Arrête l'exécution si la condition est fausse" },
   notify_team:    { label: "Notifier l'équipe",       Icon: Bell,        color: 'text-amber-400 bg-amber-500/10 border-amber-500/30',  desc: "Envoie un email aux membres de l'équipe" },
   add_note:       { label: 'Ajouter une note',        Icon: FileText,    color: 'text-teal-400 bg-teal-500/10 border-teal-500/30',    desc: "Ajoute une note au dossier de l'étudiant" },
   update_student: { label: "Mettre à jour l'étudiant", Icon: Pencil,    color: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/30',    desc: "Met à jour un champ du dossier étudiant" },
-  create_task:      { label: 'Créer une tâche',          Icon: CheckSquare, color: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30', desc: 'Crée une tâche dans le gestionnaire de projets' },
-  create_payment:   { label: 'Créer un paiement',        Icon: CreditCard,  color: 'text-green-400 bg-green-500/10 border-green-500/30',      desc: 'Crée un paiement NON TRAITÉ pour un étudiant' },
-  create_student:   { label: 'Créer un étudiant',        Icon: UserPlus,    color: 'text-purple-400 bg-purple-500/10 border-purple-500/30',   desc: "Crée un étudiant s'il n'existe pas déjà" },
+  create_task:      { label: 'Créer une tâche',          Icon: CheckSquare, color: 'text-emerald-600 bg-emerald-50 border-emerald-500/30', desc: 'Crée une tâche dans le gestionnaire de projets' },
+  create_payment:   { label: 'Créer un paiement',        Icon: CreditCard,  color: 'text-green-600 bg-green-500/10 border-green-500/30',      desc: 'Crée un paiement NON TRAITÉ pour un étudiant' },
+  create_student:   { label: 'Créer un étudiant',        Icon: UserPlus,    color: 'text-purple-700 bg-purple-500/10 border-purple-500/30',   desc: "Crée un étudiant s'il n'existe pas déjà" },
   circle_invite:    { label: 'Inviter dans Circle',      Icon: Send,        color: 'text-sky-400 bg-sky-500/10 border-sky-500/30',            desc: "Envoie une invitation Circle à l'étudiant" },
   circle_tag_add:   { label: 'Ajouter un tag Circle',    Icon: Tag,         color: 'text-teal-400 bg-teal-500/10 border-teal-500/30',         desc: 'Ajoute un tag / plan Circle à un membre' },
-  circle_tag_remove: { label: 'Retirer un tag Circle',  Icon: TagX,        color: 'text-rose-400 bg-rose-500/10 border-rose-500/30',         desc: 'Retire un tag / plan Circle d\'un membre' },
+  circle_tag_remove: { label: 'Retirer un tag Circle',  Icon: TagX,        color: 'text-rose-600 bg-rose-50 border-rose-500/30',         desc: 'Retire un tag / plan Circle d\'un membre' },
   create_subscription: { label: 'Créer une souscription', Icon: Repeat,    color: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/30', desc: 'Crée une souscription à partir du paiement traité' },
 }
 
@@ -282,7 +282,7 @@ function makeStep(type: StepType): AutomationStep {
 }
 
 const inputCls =
-  'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+  'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 const labelCls = 'mb-1.5 block text-xs font-medium text-gray-400'
 
 // ── Flow blocks ───────────────────────────────────────────────────────────────
@@ -296,7 +296,7 @@ function TriggerBlock({
       onClick={onClick}
       className={cn(
         'w-full rounded-xl border-2 p-4 text-left transition-all',
-        selected ? 'border-indigo-500 bg-indigo-600/10' : 'border-gray-700 bg-gray-900 hover:border-gray-600',
+        selected ? 'border-indigo-500 bg-indigo-600/10' : 'border-gray-200 bg-white hover:border-gray-600',
       )}
     >
       <div className="flex items-center gap-3">
@@ -305,7 +305,7 @@ function TriggerBlock({
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Déclencheur</p>
-          <p className="text-sm font-medium text-gray-100">{meta.label}</p>
+          <p className="text-sm font-medium text-gray-900">{meta.label}</p>
         </div>
         {selected && <div className="ml-auto h-2 w-2 rounded-full bg-indigo-400" />}
       </div>
@@ -322,18 +322,18 @@ function StepBlock({
       onClick={onClick}
       className={cn(
         'group w-full rounded-xl border-2 p-4 text-left transition-all',
-        selected ? 'border-indigo-500 bg-indigo-600/10' : 'border-gray-700 bg-gray-900 hover:border-gray-600',
+        selected ? 'border-indigo-500 bg-indigo-600/10' : 'border-gray-200 bg-white hover:border-gray-600',
       )}
     >
       <div className="flex items-center gap-3">
-        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-700 text-xs text-gray-400">
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs text-gray-400">
           {index + 1}
         </div>
         <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border', meta.color)}>
           <meta.Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-gray-100">{step.name || meta.label}</p>
+          <p className="truncate text-sm font-medium text-gray-900">{step.name || meta.label}</p>
           <p className="text-xs text-gray-500">{meta.label}</p>
         </div>
         {(step.conditions?.length ?? 0) > 0 && (
@@ -359,31 +359,31 @@ function Connector({ onAdd }: { onAdd: (type: StepType) => void }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="relative flex flex-col items-center">
-      <div className="h-5 w-px bg-gray-800" />
+      <div className="h-5 w-px bg-gray-100" />
       <div className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
-          className="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-gray-700 bg-gray-950 text-gray-600 transition-colors hover:border-indigo-500 hover:text-indigo-400"
+          className="flex h-7 w-7 items-center justify-center rounded-full border border-dashed border-gray-200 bg-[#f5f6fa] text-gray-600 transition-colors hover:border-indigo-500 hover:text-indigo-600"
         >
           <Plus className="h-3.5 w-3.5" />
         </button>
         {open && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-            <div className="absolute left-1/2 z-20 mt-2 w-60 -translate-x-1/2 rounded-xl border border-gray-700 bg-gray-900 p-1.5 shadow-xl">
+            <div className="absolute left-1/2 z-20 mt-2 w-60 -translate-x-1/2 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl">
               {STEP_TYPES.map((type) => {
                 const meta = STEP_META[type]
                 return (
                   <button
                     key={type}
                     onClick={() => { onAdd(type); setOpen(false) }}
-                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-gray-800 transition-colors"
+                    className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left hover:bg-gray-100 transition-colors"
                   >
                     <div className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border', meta.color)}>
                       <meta.Icon className="h-3.5 w-3.5" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-200">{meta.label}</p>
+                      <p className="text-sm text-gray-800">{meta.label}</p>
                       <p className="text-xs text-gray-500">{meta.desc}</p>
                     </div>
                   </button>
@@ -393,7 +393,7 @@ function Connector({ onAdd }: { onAdd: (type: StepType) => void }) {
           </>
         )}
       </div>
-      <div className="h-5 w-px bg-gray-800" />
+      <div className="h-5 w-px bg-gray-100" />
     </div>
   )
 }
@@ -431,7 +431,7 @@ function VariablesPanel({
       key={token}
       onClick={() => navigator.clipboard.writeText(token)}
       title="Cliquer pour copier"
-      className="cursor-pointer rounded bg-gray-800 px-1.5 py-0.5 text-xs text-indigo-300 transition-colors hover:bg-gray-700"
+      className="cursor-pointer rounded bg-gray-100 px-1.5 py-0.5 text-xs text-indigo-300 transition-colors hover:bg-gray-200"
     >
       {token}
     </code>
@@ -440,7 +440,7 @@ function VariablesPanel({
   return (
     <div className="mt-6 space-y-3">
       {allVars.length > 0 && (
-        <div className="rounded-lg border border-gray-800 bg-gray-950 p-3">
+        <div className="rounded-lg border border-gray-200 bg-[#f5f6fa] p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Variables disponibles</p>
           <div className="space-y-1.5">
             {allVars.map((v) => (
@@ -459,7 +459,7 @@ function VariablesPanel({
           <div className="space-y-3">
             {stepOutputGroups.map((group) => (
               <div key={group.stepName}>
-                <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-indigo-400/60">{group.stepName}</p>
+                <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-indigo-600/60">{group.stepName}</p>
                 <div className="space-y-1.5">
                   {group.vars.map((v) => (
                     <div key={v.token} className="flex items-center gap-2">
@@ -507,7 +507,7 @@ function AudienceEditor({
                 'flex flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors',
                 audience.entity === e
                   ? 'border-fuchsia-500 bg-fuchsia-600/10 text-fuchsia-300'
-                  : 'border-gray-700 bg-gray-800/40 text-gray-400 hover:border-gray-600',
+                  : 'border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-600',
               )}
             >
               <Users className="h-3.5 w-3.5" />
@@ -529,13 +529,13 @@ function AudienceEditor({
           </button>
         </div>
         {audience.filters.length === 0 && (
-          <p className="rounded-lg border border-dashed border-gray-700 py-3 text-center text-xs text-gray-600">
+          <p className="rounded-lg border border-dashed border-gray-200 py-3 text-center text-xs text-gray-600">
             Aucun filtre — toutes les entités seront ciblées
           </p>
         )}
         <div className="space-y-2">
           {audience.filters.map((f, i) => (
-            <div key={i} className="rounded-lg border border-gray-700/70 bg-gray-800/40 p-2.5 space-y-2">
+            <div key={i} className="rounded-lg border border-gray-200/70 bg-gray-50 p-2.5 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">Filtre {i + 1}</span>
                 <button type="button" onClick={() => removeFilter(i)} className="text-gray-600 hover:text-red-400 transition-colors">
@@ -640,12 +640,12 @@ function TriggerConfig({
       {trigger.type === 'incoming_webhook' && webhookUrl && (
         <div>
           <label className={labelCls}>URL du webhook</label>
-          <div className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2">
+          <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
             <code className="flex-1 truncate text-xs text-orange-300">{webhookUrl}</code>
             <button
               onClick={() => navigator.clipboard.writeText(webhookUrl)}
               title="Copier"
-              className="shrink-0 text-gray-500 transition-colors hover:text-gray-300"
+              className="shrink-0 text-gray-500 transition-colors hover:text-gray-600"
             >
               <Copy className="h-3.5 w-3.5" />
             </button>
@@ -689,14 +689,14 @@ function ConditionsEditor({
   }
 
   return (
-    <div className="rounded-lg border border-gray-700/60 bg-gray-900/60">
+    <div className="rounded-lg border border-gray-200/60 bg-white">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
       >
         <Filter className="h-3.5 w-3.5 shrink-0 text-violet-400" />
-        <span className="flex-1 text-xs font-semibold text-gray-300">
+        <span className="flex-1 text-xs font-semibold text-gray-600">
           Conditions d'exécution
         </span>
         {conditions.length > 0 && (
@@ -708,7 +708,7 @@ function ConditionsEditor({
       </button>
 
       {open && (
-        <div className="space-y-2 border-t border-gray-700/60 px-3 pb-3 pt-2">
+        <div className="space-y-2 border-t border-gray-200/60 px-3 pb-3 pt-2">
           {conditions.length === 0 && (
             <p className="py-1 text-xs text-gray-600">
               Aucune condition — l'étape s'exécute toujours.
@@ -716,7 +716,7 @@ function ConditionsEditor({
           )}
 
           {conditions.map((cond, i) => (
-            <div key={i} className="rounded-lg border border-gray-700/70 bg-gray-800/40 p-2.5 space-y-2">
+            <div key={i} className="rounded-lg border border-gray-200/70 bg-gray-50 p-2.5 space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">
                   Condition {i + 1}
@@ -879,7 +879,7 @@ function CreateSubscriptionConfig({
   const patch = (fields: Partial<AutomationStep['config']>) =>
     onChange({ ...step, config: { ...cfg, ...fields } })
 
-  const sel = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+  const sel = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
   return (
     <div className="space-y-3">
@@ -892,7 +892,7 @@ function CreateSubscriptionConfig({
             className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
               matchMode === m
                 ? 'border-fuchsia-500/50 bg-fuchsia-500/10 text-fuchsia-400'
-                : 'border-gray-700 bg-gray-800/50 text-gray-400 hover:text-gray-200'
+                : 'border-gray-200 bg-white text-gray-400 hover:text-gray-800'
             }`}
           >
             {m === 'auto' ? 'Auto (depuis le paiement)' : 'Manuel (choisir l\'offre)'}
@@ -966,7 +966,7 @@ function EmailBlockEditor({ blocks, onChange }: { blocks: EmailBlock[]; onChange
     onChange([...blocks, defaults[type]])
   }
 
-  const inputCls = 'w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+  const inputCls = 'w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
   return (
     <div className="space-y-2">
@@ -1001,7 +1001,7 @@ function EmailBlockEditor({ blocks, onChange }: { blocks: EmailBlock[]; onChange
                       <button
                         key={a}
                         onClick={() => upd(i, { align: a })}
-                        className={cn('p-1 rounded transition-colors', block.align === a ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300')}
+                        className={cn('p-1 rounded transition-colors', block.align === a ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-600')}
                       >
                         <Icon className="h-3 w-3" />
                       </button>
@@ -1047,7 +1047,7 @@ function EmailBlockEditor({ blocks, onChange }: { blocks: EmailBlock[]; onChange
                     <button
                       key={r}
                       onClick={() => upd(i, { radius: r })}
-                      className={cn('px-2 py-0.5 text-[10px] rounded border transition-colors', block.radius === r ? 'border-indigo-500 bg-indigo-600/30 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-300')}
+                      className={cn('px-2 py-0.5 text-[10px] rounded border transition-colors', block.radius === r ? 'border-indigo-500 bg-indigo-600/30 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-600')}
                     >
                       {r === 'none' ? 'Carré' : r === 'md' ? 'Arrondi' : 'Pill'}
                     </button>
@@ -1059,7 +1059,7 @@ function EmailBlockEditor({ blocks, onChange }: { blocks: EmailBlock[]; onChange
                       <button
                         key={a}
                         onClick={() => upd(i, { align: a })}
-                        className={cn('p-1 rounded transition-colors', block.align === a ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300')}
+                        className={cn('p-1 rounded transition-colors', block.align === a ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-600')}
                       >
                         <Icon className="h-3 w-3" />
                       </button>
@@ -1101,19 +1101,19 @@ function EmailBlockEditor({ blocks, onChange }: { blocks: EmailBlock[]; onChange
 
       {/* Add block buttons */}
       <div className="flex flex-wrap gap-1.5 pt-1">
-        <button onClick={() => add('text')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+        <button onClick={() => add('text')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-800 hover:border-white/20 transition-colors">
           <Mail className="h-3 w-3" /> Texte
         </button>
-        <button onClick={() => add('image')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+        <button onClick={() => add('image')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-800 hover:border-white/20 transition-colors">
           <Image className="h-3 w-3" /> Image
         </button>
-        <button onClick={() => add('button')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+        <button onClick={() => add('button')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-800 hover:border-white/20 transition-colors">
           <MousePointerClick className="h-3 w-3" /> Bouton
         </button>
-        <button onClick={() => add('divider')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+        <button onClick={() => add('divider')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-800 hover:border-white/20 transition-colors">
           <Minus className="h-3 w-3" /> Séparateur
         </button>
-        <button onClick={() => add('spacer')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-200 hover:border-white/20 transition-colors">
+        <button onClick={() => add('spacer')} className="flex items-center gap-1 px-2 py-1 rounded border border-white/10 text-[10px] text-gray-400 hover:text-gray-800 hover:border-white/20 transition-colors">
           <Plus className="h-3 w-3" /> Espacement
         </button>
       </div>
@@ -1156,8 +1156,8 @@ function StepConfig({
                 className={cn(
                   'flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left text-xs transition-colors',
                   step.type === t
-                    ? 'border-indigo-500 bg-indigo-600/15 text-indigo-300'
-                    : 'border-gray-700 text-gray-400 hover:border-gray-600',
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-300'
+                    : 'border-gray-200 text-gray-400 hover:border-gray-600',
                 )}
               >
                 <meta.Icon className="h-3.5 w-3.5 shrink-0" />
@@ -1185,13 +1185,13 @@ function StepConfig({
               <div className="flex gap-1.5">
                 <button
                   onClick={() => upd({ blocks: cfg.blocks ?? [], body: undefined })}
-                  className={cn('text-[10px] px-2 py-0.5 rounded border transition-colors', !cfg.body && cfg.blocks !== undefined ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-300')}
+                  className={cn('text-[10px] px-2 py-0.5 rounded border transition-colors', !cfg.body && cfg.blocks !== undefined ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-600')}
                 >
                   Éditeur blocs
                 </button>
                 <button
                   onClick={() => upd({ body: cfg.body ?? '', blocks: undefined })}
-                  className={cn('text-[10px] px-2 py-0.5 rounded border transition-colors', cfg.body !== undefined || cfg.blocks === undefined ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-300')}
+                  className={cn('text-[10px] px-2 py-0.5 rounded border transition-colors', cfg.body !== undefined || cfg.blocks === undefined ? 'border-indigo-500 bg-indigo-600/20 text-indigo-300' : 'border-white/10 text-gray-500 hover:text-gray-600')}
                 >
                   Texte brut
                 </button>
@@ -1236,7 +1236,7 @@ function StepConfig({
               <label className={cn(labelCls, 'mb-0')}>En-têtes</label>
               <button
                 onClick={() => upd({ headers: [...(cfg.headers ?? []), { key: '', value: '' }] })}
-                className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+                className="text-xs text-indigo-600 hover:text-indigo-300 transition-colors"
               >
                 + Ajouter
               </button>
@@ -1500,7 +1500,7 @@ function StepConfig({
               <option value="urgent">Urgente</option>
             </select>
           </div>
-          <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-300">
+          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-300">
             La tâche sera créée avec le tag "automatisation" et assignée à l'équipe.
           </p>
         </>
@@ -1582,12 +1582,12 @@ function StepConfig({
               />
             )}
             {cfg.circleTagName && (
-              <p className="mt-1 text-xs text-gray-500">Tag sélectionné : <span className="text-gray-300">{cfg.circleTagName}</span></p>
+              <p className="mt-1 text-xs text-gray-500">Tag sélectionné : <span className="text-gray-600">{cfg.circleTagName}</span></p>
             )}
           </div>
           <p className={cn(
             'rounded-lg px-3 py-2 text-xs',
-            step.type === 'circle_tag_add' ? 'bg-teal-500/10 text-teal-300' : 'bg-rose-500/10 text-rose-300',
+            step.type === 'circle_tag_add' ? 'bg-teal-500/10 text-teal-300' : 'bg-rose-50 text-rose-300',
           )}>
             {step.type === 'circle_tag_add'
               ? 'Ajoute le tag au membre — les automations Circle se déclencheront ensuite.'
@@ -1618,22 +1618,22 @@ function RunItem({ run }: { run: AutomationRun }) {
   const [expanded, setExpanded] = useState(false)
 
   const statusMeta = {
-    completed: { icon: <CheckCircle2 className="h-4 w-4" />, color: 'text-emerald-400', label: 'Terminé' },
+    completed: { icon: <CheckCircle2 className="h-4 w-4" />, color: 'text-emerald-600', label: 'Terminé' },
     failed:    { icon: <XCircle className="h-4 w-4" />,       color: 'text-red-400',     label: 'Échoué' },
-    running:   { icon: <RefreshCw className="h-4 w-4 animate-spin" />, color: 'text-blue-400', label: 'En cours' },
+    running:   { icon: <RefreshCw className="h-4 w-4 animate-spin" />, color: 'text-blue-600', label: 'En cours' },
   }[run.status]
 
   const logMeta = {
-    ok:      { icon: <CheckCircle2 className="h-3 w-3" />, color: 'text-emerald-400' },
+    ok:      { icon: <CheckCircle2 className="h-3 w-3" />, color: 'text-emerald-600' },
     error:   { icon: <XCircle className="h-3 w-3" />,      color: 'text-red-400' },
-    skipped: { icon: <SkipForward className="h-3 w-3" />,  color: 'text-yellow-400' },
+    skipped: { icon: <SkipForward className="h-3 w-3" />,  color: 'text-yellow-600' },
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-800 bg-gray-900">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
       <button
         onClick={() => setExpanded((e) => !e)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-gray-800/50"
+        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-white"
       >
         <span className={statusMeta.color}>{statusMeta.icon}</span>
         <div className="min-w-0 flex-1">
@@ -1650,7 +1650,7 @@ function RunItem({ run }: { run: AutomationRun }) {
       </button>
 
       {expanded && (
-        <div className="space-y-2 border-t border-gray-800 px-4 py-3">
+        <div className="space-y-2 border-t border-gray-200 px-4 py-3">
           {run.logs.length === 0 && <p className="text-xs text-gray-600">Aucun log disponible</p>}
           {run.logs.map((log, i) => {
             const lm = logMeta[log.status]
@@ -1658,7 +1658,7 @@ function RunItem({ run }: { run: AutomationRun }) {
               <div key={i} className="flex items-start gap-2 text-xs">
                 <span className={cn('mt-0.5 shrink-0', lm.color)}>{lm.icon}</span>
                 <div className="min-w-0">
-                  <span className="font-medium text-gray-300">{log.stepName}</span>
+                  <span className="font-medium text-gray-600">{log.stepName}</span>
                   <span className="mx-1.5 text-gray-700">·</span>
                   <span className="text-gray-500">{log.message}</span>
                 </div>
@@ -1702,20 +1702,20 @@ function BuilderCampaignModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-xl bg-white border border-gray-200 p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 mb-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/30">
             <Users className="h-4 w-4 text-fuchsia-400" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-gray-100">Lancer la campagne</h2>
+            <h2 className="text-sm font-semibold text-gray-900">Lancer la campagne</h2>
             <p className="text-xs text-gray-500">{automationName}</p>
           </div>
         </div>
 
         {!result ? (
           <>
-            <div className="rounded-lg border border-gray-800 bg-gray-950 p-4 mb-4">
+            <div className="rounded-lg border border-gray-200 bg-[#f5f6fa] p-4 mb-4">
               {loadingPreview ? (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <div className="h-3 w-3 animate-spin rounded-full border border-gray-500 border-t-transparent" />
@@ -1751,7 +1751,7 @@ function BuilderCampaignModal({
               L'automatisation sera exécutée une fois pour chaque entité correspondante.
             </p>
             <div className="flex justify-end gap-3">
-              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-800">
                 Annuler
               </button>
               <button
@@ -1769,10 +1769,10 @@ function BuilderCampaignModal({
           </>
         ) : (
           <div className="text-center py-4">
-            <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-100 mb-1">Campagne lancée</p>
+            <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-900 mb-1">Campagne lancée</p>
             <p className="text-xs text-gray-500">{result.ran} {entityLabel} traité(s)</p>
-            <button onClick={onClose} className="mt-4 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-200 transition-colors">
+            <button onClick={onClose} className="mt-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-800 transition-colors">
               Fermer
             </button>
           </div>
@@ -1919,10 +1919,10 @@ export function AutomationBuilderPage() {
         />
       )}
       {/* Top bar */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-gray-800 bg-gray-950 px-4 py-3">
+      <div className="flex shrink-0 items-center gap-3 border-b border-gray-200 bg-[#f5f6fa] px-4 py-3">
         <button
           onClick={() => navigate('/automations')}
-          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-800 hover:text-gray-300"
+          className="rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -1930,7 +1930,7 @@ export function AutomationBuilderPage() {
         <input
           value={name}
           onChange={(e) => changeName(e.target.value)}
-          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-gray-100 focus:outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-gray-900 focus:outline-none"
           placeholder="Nom de l'automatisation"
         />
 
@@ -1939,7 +1939,7 @@ export function AutomationBuilderPage() {
             'shrink-0 text-xs',
             saveStatus === 'saved' ? 'text-gray-600'
             : saveStatus === 'saving' ? 'text-yellow-500'
-            : 'text-orange-400',
+            : 'text-orange-600',
           )}
         >
           {saveStatus === 'saved' ? 'Enregistré' : saveStatus === 'saving' ? 'Enregistrement…' : 'Non enregistré'}
@@ -1948,7 +1948,7 @@ export function AutomationBuilderPage() {
         <button
           onClick={() => toggleMut.mutate()}
           disabled={toggleMut.isPending}
-          className={cn('relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors', isActive ? 'bg-indigo-600' : 'bg-gray-700')}
+          className={cn('relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors', isActive ? 'bg-indigo-600' : 'bg-gray-200')}
         >
           <span
             className={cn(
@@ -1971,7 +1971,7 @@ export function AutomationBuilderPage() {
           <button
             onClick={() => runMut.mutate()}
             disabled={runMut.isPending}
-            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600/15 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-600/25 disabled:opacity-50"
+            className="flex shrink-0 items-center gap-1.5 rounded-lg bg-emerald-600/15 px-3 py-1.5 text-xs font-medium text-emerald-600 transition-colors hover:bg-emerald-600/25 disabled:opacity-50"
           >
             <Play className="h-3.5 w-3.5" />
             {runMut.isPending ? 'Exécution…' : 'Exécuter'}
@@ -1980,7 +1980,7 @@ export function AutomationBuilderPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex shrink-0 gap-1 border-b border-gray-800 px-4">
+      <div className="flex shrink-0 gap-1 border-b border-gray-200 px-4">
         {([
           { key: 'workflow', label: 'Workflow' },
           { key: 'history', label: runsData?.total ? `Historique (${runsData.total})` : 'Historique' },
@@ -1990,7 +1990,7 @@ export function AutomationBuilderPage() {
             onClick={() => setTab(t.key)}
             className={cn(
               'px-3 py-2.5 text-sm font-medium transition-colors',
-              tab === t.key ? 'border-b-2 border-indigo-500 text-indigo-400' : 'text-gray-500 hover:text-gray-300',
+              tab === t.key ? 'border-b-2 border-indigo-500 text-indigo-600' : 'text-gray-500 hover:text-gray-600',
             )}
           >
             {t.label}
@@ -2013,7 +2013,7 @@ export function AutomationBuilderPage() {
               {steps.length === 0 ? (
                 <>
                   <Connector onAdd={(type) => addStepAt(type, 0)} />
-                  <div className="rounded-xl border border-dashed border-gray-800 px-6 py-5 text-center">
+                  <div className="rounded-xl border border-dashed border-gray-200 px-6 py-5 text-center">
                     <Zap className="mx-auto mb-2 h-6 w-6 text-gray-700" />
                     <p className="text-sm text-gray-600">Ajoutez votre première étape</p>
                   </div>
@@ -2039,7 +2039,7 @@ export function AutomationBuilderPage() {
           </div>
 
           {/* Config panel */}
-          <div className="w-80 shrink-0 overflow-y-auto border-l border-gray-800 bg-gray-950 p-4">
+          <div className="w-80 shrink-0 overflow-y-auto border-l border-gray-200 bg-[#f5f6fa] p-4">
             {selected === 'trigger' ? (
               <>
                 <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-gray-500">

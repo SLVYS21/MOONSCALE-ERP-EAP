@@ -111,9 +111,9 @@ const fmtDate = (d: string) => {
 
 function StatCard({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-4">
       <p className="text-xs text-gray-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-gray-100">{value}</p>
+      <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
       {sub && <p className="mt-0.5 text-xs text-gray-500">{sub}</p>}
     </div>
   )
@@ -258,8 +258,8 @@ export function AnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <BarChart2 className="h-6 w-6 text-indigo-400" />
-          <h1 className="text-xl font-bold text-gray-100">Analytics</h1>
+          <BarChart2 className="h-6 w-6 text-indigo-600" />
+          <h1 className="text-xl font-bold text-gray-900">Analytics</h1>
         </div>
         <DateRangePicker
           period={period}
@@ -272,7 +272,7 @@ export function AnalyticsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-800">
+      <div className="flex gap-1 border-b border-gray-200">
         {TABS.map(t => (
           <button
             key={t}
@@ -280,8 +280,8 @@ export function AnalyticsPage() {
             className={cn(
               'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
               tab === t
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300',
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-600',
             )}
           >
             {t}
@@ -297,15 +297,15 @@ export function AnalyticsPage() {
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <div className="rounded-xl border border-indigo-800/40 bg-indigo-950/20 p-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <Crosshair className="h-4 w-4 text-indigo-400" />
+                  <Crosshair className="h-4 w-4 text-indigo-600" />
                   <p className="text-xs text-gray-500">Total leads</p>
                 </div>
-                <p className="text-2xl font-bold text-indigo-400">{fmt(leadKpis.data.total)}</p>
+                <p className="text-2xl font-bold text-indigo-600">{fmt(leadKpis.data.total)}</p>
                 <p className="text-xs text-gray-600 mt-0.5">+{leadKpis.data.new_last_7d} cette semaine</p>
               </div>
               <div className="rounded-xl border border-green-800/40 bg-green-950/20 p-4">
                 <p className="text-xs text-gray-500 mb-1">Won</p>
-                <p className="text-2xl font-bold text-green-400">{fmt(leadKpis.data.won)}</p>
+                <p className="text-2xl font-bold text-green-600">{fmt(leadKpis.data.won)}</p>
                 <p className="text-xs text-gray-600 mt-0.5">Taux : {leadKpis.data.conversion_rate}%</p>
               </div>
               <StatCard
@@ -333,7 +333,7 @@ export function AnalyticsPage() {
                   : 'Jamais synchronisé'}
               />
               <StatCard label="Vues TikTok" value={fmt(overview.data.tiktok.views_delta)} />
-              <div className="col-span-2 rounded-xl border border-gray-800 bg-gray-900 p-4 flex items-center">
+              <div className="col-span-2 rounded-xl border border-gray-200 bg-white p-4 flex items-center">
                 <p className="text-xs text-gray-600">
                   Période : {range.from || '…'} → {range.to || '…'}
                 </p>
@@ -355,8 +355,8 @@ export function AnalyticsPage() {
             return (
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {/* Funnel chart */}
-                <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
-                  <p className="mb-3 text-sm font-semibold text-gray-200">Entonnoir pipeline</p>
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="mb-3 text-sm font-semibold text-gray-800">Entonnoir pipeline</p>
                   {funnelData.length > 0 ? (
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={funnelData} layout="vertical" margin={{ left: 0, right: 40 }}>
@@ -380,8 +380,8 @@ export function AnalyticsPage() {
                 </div>
 
                 {/* Sources */}
-                <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
-                  <p className="mb-3 text-sm font-semibold text-gray-200">Sources d'acquisition</p>
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="mb-3 text-sm font-semibold text-gray-800">Sources d'acquisition</p>
                   {leadKpis.data.by_source.length > 0 ? (
                     <div className="space-y-2.5">
                       {leadKpis.data.by_source.map((s) => {
@@ -394,7 +394,7 @@ export function AnalyticsPage() {
                               <span className="text-gray-400">{SOURCE_LABELS[s._id] ?? s._id ?? 'Inconnu'}</span>
                               <span className="text-gray-500">{s.count} · {pct}%</span>
                             </div>
-                            <div className="h-1.5 rounded-full bg-gray-800">
+                            <div className="h-1.5 rounded-full bg-gray-100">
                               <div className="h-1.5 rounded-full bg-indigo-500" style={{ width: `${pct}%` }} />
                             </div>
                           </div>
@@ -415,9 +415,9 @@ export function AnalyticsPage() {
               <button
                 key={t}
                 onClick={() => setTab(t as Tab)}
-                className="rounded-xl border border-gray-800 bg-gray-900 p-3 text-left hover:border-gray-700 transition-colors"
+                className="rounded-xl border border-gray-200 bg-white p-3 text-left hover:border-gray-200 transition-colors"
               >
-                <p className="text-sm font-medium text-gray-300">{t}</p>
+                <p className="text-sm font-medium text-gray-600">{t}</p>
                 <p className="text-xs text-gray-600 mt-0.5">Voir le détail →</p>
               </button>
             ))}
@@ -441,7 +441,7 @@ export function AnalyticsPage() {
               <RefreshCw className={cn('h-4 w-4', pullMeta.isPending && 'animate-spin')} />
               Synchroniser hier
             </button>
-            {pullMeta.isSuccess && <span className="flex items-center gap-1 text-sm text-green-400"><CheckCircle className="h-4 w-4" /> Synchronisé</span>}
+            {pullMeta.isSuccess && <span className="flex items-center gap-1 text-sm text-green-600"><CheckCircle className="h-4 w-4" /> Synchronisé</span>}
             {pullMeta.isError && <span className="flex items-center gap-1 text-sm text-red-400"><AlertCircle className="h-4 w-4" /> Erreur</span>}
           </div>
 
@@ -459,8 +459,8 @@ export function AnalyticsPage() {
               </div>
 
               {metaByDay.length > 0 && (
-                <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
-                  <p className="mb-3 text-sm font-medium text-gray-300">Dépenses & Conversations par jour</p>
+                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="mb-3 text-sm font-medium text-gray-600">Dépenses & Conversations par jour</p>
                   <ResponsiveContainer width="100%" height={260}>
                     <ComposedChart data={metaByDay}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -477,9 +477,9 @@ export function AnalyticsPage() {
               )}
 
               {metaStats.data.stats.length > 0 && (
-                <div className="overflow-x-auto rounded-xl border border-gray-800">
+                <div className="overflow-x-auto rounded-xl border border-gray-200">
                   <table className="w-full text-sm">
-                    <thead className="bg-gray-900">
+                    <thead className="bg-white">
                       <tr>
                         {['Date', 'Campagne', 'Adset', 'Dépenses', 'Impressions', 'Clics', 'Conv.', 'CPConv.'].map(h => (
                           <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold text-gray-400">{h}</th>
@@ -488,14 +488,14 @@ export function AnalyticsPage() {
                     </thead>
                     <tbody className="divide-y divide-gray-800">
                       {metaStats.data.stats.map((row, i) => (
-                        <tr key={i} className="hover:bg-gray-800/40">
+                        <tr key={i} className="hover:bg-gray-50">
                           <td className="px-3 py-2 text-gray-400">{fmtDate(row.date)}</td>
-                          <td className="px-3 py-2 text-gray-300 max-w-[180px] truncate">{row.campaign_name}</td>
+                          <td className="px-3 py-2 text-gray-600 max-w-[180px] truncate">{row.campaign_name}</td>
                           <td className="px-3 py-2 text-gray-400 max-w-[160px] truncate">{row.adset_name}</td>
-                          <td className="px-3 py-2 text-gray-300">{fmt(row.spend, 0)}</td>
+                          <td className="px-3 py-2 text-gray-600">{fmt(row.spend, 0)}</td>
                           <td className="px-3 py-2 text-gray-400">{fmt(row.impressions)}</td>
                           <td className="px-3 py-2 text-gray-400">{fmt(row.clicks)}</td>
-                          <td className="px-3 py-2 text-green-400 font-medium">{row.conversations}</td>
+                          <td className="px-3 py-2 text-green-600 font-medium">{row.conversations}</td>
                           <td className="px-3 py-2 text-gray-400">{row.cost_per_conversation != null ? fmt(row.cost_per_conversation, 0) : '—'}</td>
                         </tr>
                       ))}
@@ -515,12 +515,12 @@ export function AnalyticsPage() {
           {/* Config status */}
           <div className="flex flex-wrap items-center gap-3">
             {ytConfig.data && (
-              <div className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-900 px-4 py-2 text-sm">
+              <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm">
                 <PlayCircle className="h-4 w-4 text-red-500" />
                 {ytConfig.data.has_refresh_token ? (
-                  <span className="flex items-center gap-1.5 text-green-400"><CheckCircle className="h-3.5 w-3.5" /> Connecté</span>
+                  <span className="flex items-center gap-1.5 text-green-600"><CheckCircle className="h-3.5 w-3.5" /> Connecté</span>
                 ) : (
-                  <span className="flex items-center gap-1.5 text-yellow-400"><AlertCircle className="h-3.5 w-3.5" /> Non connecté</span>
+                  <span className="flex items-center gap-1.5 text-yellow-600"><AlertCircle className="h-3.5 w-3.5" /> Non connecté</span>
                 )}
                 {ytConfig.data.channel_id && <span className="text-gray-500 text-xs">#{ytConfig.data.channel_id}</span>}
               </div>
@@ -531,7 +531,7 @@ export function AnalyticsPage() {
                 href={ytAuthUrl.data.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors"
+                className="flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-sm text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-colors"
               >
                 <ExternalLink className="h-4 w-4" />
                 Connecter YouTube
@@ -546,13 +546,13 @@ export function AnalyticsPage() {
               <RefreshCw className={cn('h-4 w-4', pullYT.isPending && 'animate-spin')} />
               Synchroniser hier
             </button>
-            {pullYT.isSuccess && <span className="flex items-center gap-1 text-sm text-green-400"><CheckCircle className="h-4 w-4" /> Synchronisé</span>}
+            {pullYT.isSuccess && <span className="flex items-center gap-1 text-sm text-green-600"><CheckCircle className="h-4 w-4" /> Synchronisé</span>}
             {pullYT.isError && <span className="flex items-center gap-1 text-sm text-red-400"><AlertCircle className="h-4 w-4" /> Erreur</span>}
           </div>
 
           {ytByDay.length > 0 && (
-            <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
-              <p className="mb-3 text-sm font-medium text-gray-300">Vues par jour (delta)</p>
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="mb-3 text-sm font-medium text-gray-600">Vues par jour (delta)</p>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={ytByDay}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -566,9 +566,9 @@ export function AnalyticsPage() {
           )}
 
           {ytStats.data && ytStats.data.length > 0 && (
-            <div className="overflow-x-auto rounded-xl border border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-gray-200">
               <table className="w-full text-sm">
-                <thead className="bg-gray-900">
+                <thead className="bg-white">
                   <tr>
                     {['Titre', 'Date', 'Vues (cumul)', 'Δ Vues', 'Likes', 'Commentaires', 'Watch time (min)'].map(h => (
                       <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold text-gray-400">{h}</th>
@@ -577,11 +577,11 @@ export function AnalyticsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {ytStats.data.slice(0, 50).map((row, i) => (
-                    <tr key={i} className="hover:bg-gray-800/40">
-                      <td className="px-3 py-2 text-gray-300 max-w-[220px] truncate" title={row.title}>{row.title}</td>
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-gray-600 max-w-[220px] truncate" title={row.title}>{row.title}</td>
                       <td className="px-3 py-2 text-gray-400">{fmtDate(row.date)}</td>
-                      <td className="px-3 py-2 text-gray-300">{fmt(row.views)}</td>
-                      <td className="px-3 py-2 text-indigo-400 font-medium">{fmt(row.views_delta)}</td>
+                      <td className="px-3 py-2 text-gray-600">{fmt(row.views)}</td>
+                      <td className="px-3 py-2 text-indigo-600 font-medium">{fmt(row.views_delta)}</td>
                       <td className="px-3 py-2 text-gray-400">{fmt(row.likes)}</td>
                       <td className="px-3 py-2 text-gray-400">{fmt(row.comments)}</td>
                       <td className="px-3 py-2 text-gray-400">{row.watch_time_minutes != null ? fmt(row.watch_time_minutes) : '—'}</td>
@@ -619,7 +619,7 @@ export function AnalyticsPage() {
               Importer CSV TikTok
             </button>
             {importTT.isSuccess && (
-              <span className="flex items-center gap-1 text-sm text-green-400">
+              <span className="flex items-center gap-1 text-sm text-green-600">
                 <CheckCircle className="h-4 w-4" />
                 {(importTT.data?.data as { upserted?: number })?.upserted ?? 0} lignes importées
               </span>
@@ -629,8 +629,8 @@ export function AnalyticsPage() {
           </div>
 
           {ttByDay.length > 0 && (
-            <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
-              <p className="mb-3 text-sm font-medium text-gray-300">Vues par jour (delta)</p>
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="mb-3 text-sm font-medium text-gray-600">Vues par jour (delta)</p>
               <ResponsiveContainer width="100%" height={240}>
                 <BarChart data={ttByDay}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
@@ -644,9 +644,9 @@ export function AnalyticsPage() {
           )}
 
           {ttStats.data && ttStats.data.length > 0 && (
-            <div className="overflow-x-auto rounded-xl border border-gray-800">
+            <div className="overflow-x-auto rounded-xl border border-gray-200">
               <table className="w-full text-sm">
-                <thead className="bg-gray-900">
+                <thead className="bg-white">
                   <tr>
                     {['Titre', 'Date', 'Vues (cumul)', 'Δ Vues', 'Likes', 'Commentaires', 'Partages'].map(h => (
                       <th key={h} className="px-3 py-2.5 text-left text-xs font-semibold text-gray-400">{h}</th>
@@ -655,10 +655,10 @@ export function AnalyticsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-800">
                   {ttStats.data.slice(0, 50).map((row, i) => (
-                    <tr key={i} className="hover:bg-gray-800/40">
-                      <td className="px-3 py-2 text-gray-300 max-w-[220px] truncate" title={row.title}>{row.title}</td>
+                    <tr key={i} className="hover:bg-gray-50">
+                      <td className="px-3 py-2 text-gray-600 max-w-[220px] truncate" title={row.title}>{row.title}</td>
                       <td className="px-3 py-2 text-gray-400">{fmtDate(row.date)}</td>
-                      <td className="px-3 py-2 text-gray-300">{fmt(row.views)}</td>
+                      <td className="px-3 py-2 text-gray-600">{fmt(row.views)}</td>
                       <td className="px-3 py-2 text-pink-400 font-medium">{fmt(row.views_delta)}</td>
                       <td className="px-3 py-2 text-gray-400">{fmt(row.likes)}</td>
                       <td className="px-3 py-2 text-gray-400">{fmt(row.comments)}</td>
@@ -677,13 +677,13 @@ export function AnalyticsPage() {
       {tab === 'Corrélation' && (
         <div className="space-y-6">
           <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-indigo-400" />
+            <TrendingUp className="h-5 w-5 text-indigo-600" />
             <p className="text-sm text-gray-400">Corrélation entre les vues vidéo et la création de leads</p>
           </div>
 
           {corrData.length > 0 ? (
-            <div className="rounded-xl border border-gray-800 bg-gray-900 p-4">
-              <p className="mb-3 text-sm font-medium text-gray-300">Vues delta vs Leads créés</p>
+            <div className="rounded-xl border border-gray-200 bg-white p-4">
+              <p className="mb-3 text-sm font-medium text-gray-600">Vues delta vs Leads créés</p>
               <ResponsiveContainer width="100%" height={320}>
                 <ComposedChart data={corrData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />

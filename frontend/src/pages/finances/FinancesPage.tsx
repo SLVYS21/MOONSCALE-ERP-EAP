@@ -36,7 +36,7 @@ function useAllGateways() {
   return [...SYSTEM_GATEWAYS, ...custom]
 }
 
-const selectCls = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+const selectCls = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
 // ── Edit transaction modal ────────────────────────────────────────────────────
 
@@ -81,13 +81,13 @@ function EditTransactionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="mb-0.5 text-xs text-gray-500">Modifier la transaction</p>
-            <h2 className="truncate text-sm font-semibold text-gray-100">{tx.description}</h2>
+            <h2 className="truncate text-sm font-semibold text-gray-900">{tx.description}</h2>
           </div>
-          <button onClick={onClose} className="shrink-0 rounded p-1 text-gray-500 transition-colors hover:text-gray-300">
+          <button onClick={onClose} className="shrink-0 rounded p-1 text-gray-500 transition-colors hover:text-gray-600">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -152,7 +152,7 @@ function EditTransactionModal({
                   className={selectCls}
                 />
                 {showLeadDrop && (leadResults?.data ?? []).length > 0 && (
-                  <div className="absolute left-0 right-0 top-full mt-1 z-[200] rounded-lg border border-gray-700 bg-gray-900 shadow-xl overflow-hidden">
+                  <div className="absolute left-0 right-0 top-full mt-1 z-[200] rounded-lg border border-gray-200 bg-white shadow-xl overflow-hidden">
                     {(leadResults?.data ?? []).map((l) => (
                       <button
                         key={l._id}
@@ -163,9 +163,9 @@ function EditTransactionModal({
                           setLeadSearch('')
                           setShowLeadDrop(false)
                         }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-gray-800 transition-colors"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-gray-100 transition-colors"
                       >
-                        <span className="text-sm text-gray-200 truncate">{l.name}</span>
+                        <span className="text-sm text-gray-800 truncate">{l.name}</span>
                         {l.email && <span className="text-xs text-gray-500 truncate">{l.email}</span>}
                       </button>
                     ))}
@@ -260,11 +260,11 @@ function CreateTransactionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-100">Nouvelle transaction</h2>
+      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-base font-semibold text-gray-900">Nouvelle transaction</h2>
 
         {/* Type toggle */}
-        <div className="mb-4 flex rounded-lg border border-gray-700 p-1">
+        <div className="mb-4 flex rounded-lg border border-gray-200 p-1">
           {(['income', 'expense'] as const).map((t) => (
             <button
               key={t}
@@ -272,8 +272,8 @@ function CreateTransactionModal({
               className={cn(
                 'flex-1 rounded-md py-1.5 text-sm font-medium transition-colors',
                 type === t
-                  ? t === 'income' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                  : 'text-gray-500 hover:text-gray-300',
+                  ? t === 'income' ? 'bg-emerald-500/20 text-emerald-600' : 'bg-red-500/20 text-red-400'
+                  : 'text-gray-500 hover:text-gray-600',
               )}
             >
               {t === 'income' ? '↑ Revenu' : '↓ Dépense'}
@@ -377,14 +377,14 @@ function CategoryModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-100">Catégories</h2>
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-base font-semibold text-gray-900">Catégories</h2>
 
         {/* Create */}
         <div className="mb-4 flex gap-2">
-          <input type="text" value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={2} className="w-12 rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-center text-lg focus:outline-none" />
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nouvelle catégorie" className="flex-1 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none" />
-          <select value={type} onChange={(e) => setType(e.target.value)} className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-sm text-gray-100 focus:outline-none">
+          <input type="text" value={icon} onChange={(e) => setIcon(e.target.value)} maxLength={2} className="w-12 rounded-lg border border-gray-200 bg-white px-2 py-2 text-center text-lg focus:outline-none" />
+          <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nouvelle catégorie" className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none" />
+          <select value={type} onChange={(e) => setType(e.target.value)} className="rounded-lg border border-gray-200 bg-white px-2 py-2 text-sm text-gray-900 focus:outline-none">
             <option value="income">Revenu</option>
             <option value="expense">Dépense</option>
             <option value="both">Les deux</option>
@@ -400,9 +400,9 @@ function CategoryModal({ onClose }: { onClose: () => void }) {
         {/* List */}
         <div className="max-h-64 space-y-1 overflow-y-auto">
           {cats.map((c) => (
-            <div key={c._id} className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-800/40">
+            <div key={c._id} className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50">
               <span className="text-lg">{c.icon}</span>
-              <span className="flex-1 text-sm text-gray-200">{c.name}</span>
+              <span className="flex-1 text-sm text-gray-800">{c.name}</span>
               <Badge variant={c.type === 'income' ? 'success' : c.type === 'expense' ? 'danger' : 'default'}>
                 {c.type === 'income' ? 'Revenu' : c.type === 'expense' ? 'Dépense' : 'Les deux'}
               </Badge>
@@ -542,7 +542,7 @@ function DashboardTab({ currency }: { currency: string }) {
           onClick={() => { setPeriod(''); setDateFrom(''); setDateTo('') }}
           className={cn(
             'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-            !period ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+            !period ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-800',
           )}
         >
           Ce mois
@@ -553,7 +553,7 @@ function DashboardTab({ currency }: { currency: string }) {
             onClick={() => applyDashPreset(p.key)}
             className={cn(
               'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-              period === p.key ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+              period === p.key ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-800',
             )}
           >
             {p.label}
@@ -564,7 +564,7 @@ function DashboardTab({ currency }: { currency: string }) {
           onClick={() => applyDashPreset('custom')}
           className={cn(
             'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-            period === 'custom' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+            period === 'custom' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-800',
           )}
         >
           Custom
@@ -572,10 +572,10 @@ function DashboardTab({ currency }: { currency: string }) {
         {period === 'custom' && (
           <div className="flex items-center gap-1">
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1 text-xs text-gray-200 focus:outline-none" />
+              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none" />
             <span className="text-xs text-gray-600">→</span>
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1 text-xs text-gray-200 focus:outline-none" />
+              className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-gray-800 focus:outline-none" />
           </div>
         )}
       </div>
@@ -583,10 +583,10 @@ function DashboardTab({ currency }: { currency: string }) {
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: `Revenus (${periodLabel})`, value: formatAmount(dispIncome, currency), icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+          { label: `Revenus (${periodLabel})`, value: formatAmount(dispIncome, currency), icon: TrendingUp, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: `Dépenses (${periodLabel})`, value: formatAmount(dispExpense, currency), icon: TrendingDown, color: 'text-red-400', bg: 'bg-red-500/10' },
-          { label: `Net (${periodLabel})`, value: formatAmount(dispNet, currency), icon: DollarSign, color: dispNet >= 0 ? 'text-emerald-400' : 'text-red-400', bg: dispNet >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/10' },
-          { label: 'Net (année)', value: formatAmount(yearNet, currency), icon: DollarSign, color: yearNet >= 0 ? 'text-indigo-400' : 'text-red-400', bg: 'bg-indigo-500/10' },
+          { label: `Net (${periodLabel})`, value: formatAmount(dispNet, currency), icon: DollarSign, color: dispNet >= 0 ? 'text-emerald-600' : 'text-red-400', bg: dispNet >= 0 ? 'bg-emerald-50' : 'bg-red-500/10' },
+          { label: 'Net (année)', value: formatAmount(yearNet, currency), icon: DollarSign, color: yearNet >= 0 ? 'text-indigo-600' : 'text-red-400', bg: 'bg-indigo-50' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
           <Card key={label}>
             <div className="flex items-center justify-between">
@@ -612,7 +612,7 @@ function DashboardTab({ currency }: { currency: string }) {
             {/* Monthly chart */}
             <Card>
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-200">Évolution (12 mois)</h3>
+                <h3 className="text-sm font-semibold text-gray-800">Évolution (12 mois)</h3>
                 <div className="flex items-center gap-3 text-xs text-gray-500">
                   <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-500" />Revenus</span>
                   <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-red-500" />Dépenses</span>
@@ -623,7 +623,7 @@ function DashboardTab({ currency }: { currency: string }) {
 
             {/* By category */}
             <Card>
-              <h3 className="mb-3 text-sm font-semibold text-gray-200">Par catégorie</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-800">Par catégorie</h3>
               {topCategories.length === 0 ? (
                 <p className="py-4 text-center text-sm text-gray-600">Aucune donnée.</p>
               ) : (
@@ -633,10 +633,10 @@ function DashboardTab({ currency }: { currency: string }) {
                       <span className="text-base">{c.icon}</span>
                       <div className="flex-1">
                         <div className="mb-0.5 flex items-center justify-between text-xs">
-                          <span className="text-gray-300">{c.name}</span>
+                          <span className="text-gray-600">{c.name}</span>
                           <span className="text-gray-500">{formatAmount(c.income - c.expense, currency)}</span>
                         </div>
-                        <div className="h-1 w-full rounded-full bg-gray-800">
+                        <div className="h-1 w-full rounded-full bg-gray-100">
                           <div
                             className="h-1 rounded-full"
                             style={{
@@ -656,13 +656,13 @@ function DashboardTab({ currency }: { currency: string }) {
           {/* By gateway */}
           {topGateways.length > 0 && (
             <Card>
-              <h3 className="mb-3 text-sm font-semibold text-gray-200">Par gateway</h3>
+              <h3 className="mb-3 text-sm font-semibold text-gray-800">Par gateway</h3>
               <div className="divide-y divide-gray-800">
                 {topGateways.map((g, i) => (
                   <div key={i} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
-                    <span className="text-sm text-gray-300">{GATEWAY_LABELS[g.gateway] ?? g.gateway}</span>
+                    <span className="text-sm text-gray-600">{GATEWAY_LABELS[g.gateway] ?? g.gateway}</span>
                     <div className="flex gap-4 text-sm">
-                      <span className="text-emerald-400">{formatAmount(g.income, currency)}</span>
+                      <span className="text-emerald-600">{formatAmount(g.income, currency)}</span>
                       <span className="text-red-400">−{formatAmount(g.expense, currency)}</span>
                     </div>
                   </div>
@@ -773,7 +773,7 @@ function TransactionsTab({
               'rounded-full px-3 py-1 text-xs font-medium transition-colors',
               preset === p.key
                 ? 'bg-indigo-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+                : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-800',
             )}
           >
             {p.label}
@@ -782,7 +782,7 @@ function TransactionsTab({
         {(preset || dateFrom || dateTo) && (
           <button
             onClick={() => { setPreset(''); setDateFrom(''); setDateTo(''); setPage(1) }}
-            className="rounded p-1 text-gray-600 hover:text-gray-300 transition-colors"
+            className="rounded p-1 text-gray-600 hover:text-gray-600 transition-colors"
             title="Effacer la période"
           >
             <X className="h-3.5 w-3.5" />
@@ -793,7 +793,7 @@ function TransactionsTab({
           <select
             value={displayCurrency}
             onChange={(e) => setDisplayCurrency(e.target.value)}
-            className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1 text-xs text-gray-200 focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none"
           >
             <option value="">Devise originale</option>
             {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -808,14 +808,14 @@ function TransactionsTab({
             type="date"
             value={dateFrom}
             onChange={(e) => { setDateFrom(e.target.value); setPage(1) }}
-            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
           />
           <span className="text-xs text-gray-600">→</span>
           <input
             type="date"
             value={dateTo}
             onChange={(e) => { setDateTo(e.target.value); setPage(1) }}
-            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
           />
         </div>
       )}
@@ -831,7 +831,7 @@ function TransactionsTab({
             if (e.key === 'Escape') { setSearchInput(''); setSearch(''); setPage(1) }
           }}
           placeholder="Rechercher par email, nom, téléphone, produit, description…"
-          className="w-full rounded-lg border border-gray-700 bg-gray-800/50 py-2 pl-9 pr-10 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+          className="w-full rounded-lg border border-gray-200 bg-white py-2 pl-9 pr-10 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
         />
         <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
@@ -839,28 +839,28 @@ function TransactionsTab({
         {searchInput && (
           <button
             onClick={() => { setSearchInput(''); setSearch(''); setPage(1) }}
-            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-500 hover:text-gray-300 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-0.5 text-gray-500 hover:text-gray-600 transition-colors"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
       <div className="flex flex-wrap gap-3">
-        <select value={type} onChange={(e) => { setType(e.target.value); setPage(1) }} className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none">
+        <select value={type} onChange={(e) => { setType(e.target.value); setPage(1) }} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none">
           <option value="">Tous les types</option>
           <option value="income">Revenus</option>
           <option value="expense">Dépenses</option>
         </select>
-        <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1) }} className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none">
+        <select value={categoryId} onChange={(e) => { setCategoryId(e.target.value); setPage(1) }} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none">
           <option value="">Toutes catégories</option>
           {categories.map((c) => <option key={c._id} value={c._id}>{c.icon} {c.name}</option>)}
         </select>
-        <select value={gateway} onChange={(e) => { setGateway(e.target.value); setPage(1) }} className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none">
+        <select value={gateway} onChange={(e) => { setGateway(e.target.value); setPage(1) }} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none">
           <option value="">Tous les gateways</option>
           {allGateways.map((g) => <option key={g} value={g}>{GATEWAY_LABELS[g] ?? g}</option>)}
         </select>
         <div className="ml-auto flex items-center gap-1.5 text-xs text-gray-500">
-          {search && <span className="rounded-full bg-indigo-600/20 px-2 py-0.5 text-indigo-400">"{search}"</span>}
+          {search && <span className="rounded-full bg-indigo-600/20 px-2 py-0.5 text-indigo-600">"{search}"</span>}
           {total} transaction{total !== 1 ? 's' : ''}
         </div>
       </div>
@@ -878,7 +878,7 @@ function TransactionsTab({
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 text-left text-xs text-gray-500">
+                <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
                   <th className="pb-3 font-medium">Date</th>
                   <th className="pb-3 font-medium">Statut</th>
                   <th className="pb-3 font-medium">Type</th>
@@ -891,7 +891,7 @@ function TransactionsTab({
               </thead>
               <tbody className="divide-y divide-gray-800/60">
                 {txs.map((tx) => (
-                  <tr key={tx._id} className="hover:bg-gray-800/20 transition-colors">
+                  <tr key={tx._id} className="hover:bg-gray-50 transition-colors">
                     <td className="py-3 pr-4 text-xs text-gray-400 whitespace-nowrap">{formatDateTime(tx.date)}</td>
                     <td className="py-3 pr-4">
                       <Badge variant={
@@ -916,7 +916,7 @@ function TransactionsTab({
                         {tx.studentId && (
                           <button
                             onClick={() => navigate(`/students/${tx.studentId}`)}
-                            className="rounded-full bg-indigo-600/20 px-1.5 py-0.5 text-[10px] font-medium text-indigo-400 hover:bg-indigo-600/30 transition-colors"
+                            className="rounded-full bg-indigo-600/20 px-1.5 py-0.5 text-[10px] font-medium text-indigo-600 hover:bg-indigo-600/30 transition-colors"
                           >
                             Étudiant
                           </button>
@@ -930,16 +930,16 @@ function TransactionsTab({
                           </button>
                         )}
                         {tx.customerEmail && debtorEmails.has(tx.customerEmail.toLowerCase()) && tx.type === 'income' && (
-                          <span className="rounded-full bg-orange-600/20 px-1.5 py-0.5 text-[10px] font-medium text-orange-400">
+                          <span className="rounded-full bg-orange-600/20 px-1.5 py-0.5 text-[10px] font-medium text-orange-600">
                             ⚠ En retard
                           </span>
                         )}
                       </div>
-                      {tx.customerName && <p className="font-medium text-gray-200 truncate">{tx.customerName}</p>}
+                      {tx.customerName && <p className="font-medium text-gray-800 truncate">{tx.customerName}</p>}
                       {tx.customerEmail && <p className="text-xs text-gray-400 truncate">{tx.customerEmail}</p>}
                       {tx.customerPhone && <p className="text-xs text-gray-500">{tx.customerPhone}</p>}
                       {tx.productName
-                        ? <p className="mt-0.5 text-xs text-indigo-400 truncate">{tx.productName}</p>
+                        ? <p className="mt-0.5 text-xs text-indigo-600 truncate">{tx.productName}</p>
                         : !tx.customerName && !tx.customerEmail && (
                           <p className="text-sm text-gray-400 truncate">{tx.description}</p>
                         )
@@ -958,7 +958,7 @@ function TransactionsTab({
                     <td className="py-3 pr-4 whitespace-nowrap">
                       <Badge variant="default">{GATEWAY_LABELS[tx.gateway] ?? tx.gateway}</Badge>
                     </td>
-                    <td className={cn('py-3 pr-4 text-right tabular-nums', tx.type === 'income' ? 'text-emerald-400' : 'text-red-400')}>
+                    <td className={cn('py-3 pr-4 text-right tabular-nums', tx.type === 'income' ? 'text-emerald-600' : 'text-red-400')}>
                       {displayCurrency && displayCurrency !== tx.currency ? (
                         <div>
                           <p className="font-semibold">
@@ -975,7 +975,7 @@ function TransactionsTab({
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => setEditTx(tx)}
-                            className="rounded p-1 text-gray-600 hover:text-indigo-400 transition-colors"
+                            className="rounded p-1 text-gray-600 hover:text-indigo-600 transition-colors"
                             title="Modifier catégorie / offre"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -998,13 +998,13 @@ function TransactionsTab({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between border-t border-gray-800 pt-4">
+          <div className="mt-4 flex items-center justify-between border-t border-gray-200 pt-4">
             <p className="text-xs text-gray-500">Page {page} / {totalPages}</p>
             <div className="flex gap-2">
-              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg border border-gray-700 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-gray-800 hover:text-gray-100 transition-colors">
+              <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="rounded-lg border border-gray-200 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-gray-100 hover:text-gray-900 transition-colors">
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-lg border border-gray-700 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-gray-800 hover:text-gray-100 transition-colors">
+              <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-lg border border-gray-200 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-gray-100 hover:text-gray-900 transition-colors">
                 <ChevronRight className="h-4 w-4" />
               </button>
             </div>
@@ -1037,7 +1037,7 @@ function SyncModal({ onClose }: { onClose: () => void }) {
   const btnCls = (disabled: boolean) =>
     `rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
       disabled
-        ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+        ? 'bg-gray-100 text-gray-600 cursor-not-allowed'
         : 'bg-indigo-600 text-white hover:bg-indigo-700'
     }`
 
@@ -1068,7 +1068,7 @@ function SyncModal({ onClose }: { onClose: () => void }) {
     if (error) return <p className="mt-2 flex items-center gap-1 text-xs text-red-400"><AlertCircle className="h-3 w-3" /> Erreur — vérifier la clé API</p>
     if (!result) return null
     return (
-      <p className="mt-2 flex items-center gap-1 text-xs text-emerald-400">
+      <p className="mt-2 flex items-center gap-1 text-xs text-emerald-600">
         <CheckCircle2 className="h-3 w-3" />
         {result.imported} importées · {result.skipped} ignorées
         {result.errors !== undefined && result.errors > 0 && <span className="text-amber-400"> · {result.errors} erreurs</span>}
@@ -1078,21 +1078,21 @@ function SyncModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900 p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-gray-100">Synchronisation historique</h2>
+            <h2 className="text-sm font-semibold text-gray-900">Synchronisation historique</h2>
             <p className="mt-0.5 text-xs text-gray-500">Importe les données depuis juin 2025</p>
           </div>
-          <button onClick={onClose} className="rounded p-1 text-gray-500 hover:text-gray-300 transition-colors"><X className="h-4 w-4" /></button>
+          <button onClick={onClose} className="rounded p-1 text-gray-500 hover:text-gray-600 transition-colors"><X className="h-4 w-4" /></button>
         </div>
 
         <div className="space-y-3">
           {/* Chariow */}
-          <div className="rounded-lg border border-gray-800 bg-gray-950 p-4">
+          <div className="rounded-lg border border-gray-200 bg-[#f5f6fa] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-200">Chariow</p>
+                <p className="text-sm font-medium text-gray-800">Chariow</p>
                 <p className="text-xs text-gray-500">Ventes complètes via API</p>
               </div>
               <button
@@ -1109,10 +1109,10 @@ function SyncModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Stripe */}
-          <div className="rounded-lg border border-gray-800 bg-gray-950 p-4">
+          <div className="rounded-lg border border-gray-200 bg-[#f5f6fa] p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-200">Stripe</p>
+                <p className="text-sm font-medium text-gray-800">Stripe</p>
                 <p className="text-xs text-gray-500">Charges + virements sortants</p>
               </div>
               <button
@@ -1132,8 +1132,8 @@ function SyncModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* FedaPay CSV / XLSX */}
-          <div className="rounded-lg border border-gray-800 bg-gray-950 p-4">
-            <p className="mb-1 text-sm font-medium text-gray-200">FedaPay — Import fichier</p>
+          <div className="rounded-lg border border-gray-200 bg-[#f5f6fa] p-4">
+            <p className="mb-1 text-sm font-medium text-gray-800">FedaPay — Import fichier</p>
             <p className="mb-3 text-xs text-gray-500">Export CSV ou XLSX depuis le dashboard FedaPay (exports_transactions-…)</p>
             <div className="flex items-center gap-2">
               <input
@@ -1145,7 +1145,7 @@ function SyncModal({ onClose }: { onClose: () => void }) {
               />
               <button
                 onClick={() => fileRef.current?.click()}
-                className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:border-gray-500 hover:text-gray-200 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-dashed border-gray-200 px-3 py-1.5 text-xs text-gray-400 hover:border-gray-500 hover:text-gray-800 transition-colors"
               >
                 <Upload className="h-3.5 w-3.5" />
                 {fedaFile ? fedaFile.name : 'Choisir un fichier…'}
@@ -1166,7 +1166,7 @@ function SyncModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* PawaPay */}
-          <div className="rounded-lg border border-gray-700/40 bg-gray-950/40 p-4">
+          <div className="rounded-lg border border-gray-200/40 bg-[#f5f6fa]/40 p-4">
             <p className="mb-1 text-sm font-medium text-gray-500">PawaPay</p>
             <p className="text-xs text-gray-600">Pas d'API historique — les transactions arrivent uniquement via webhook en temps réel.</p>
           </div>
@@ -1205,14 +1205,14 @@ function MatchModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl"
+        className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <p className="mb-1 text-xs text-gray-500">Matcher le produit</p>
-            <h2 className="truncate text-base font-semibold text-gray-100">{mapping.productName}</h2>
+            <h2 className="truncate text-base font-semibold text-gray-900">{mapping.productName}</h2>
             <div className="mt-1.5 flex items-center gap-2">
               <Badge variant="default">{GATEWAY_LABELS[mapping.gateway] ?? mapping.gateway}</Badge>
               <span className="text-xs text-gray-500">{mapping.seenCount}× vu</span>
@@ -1220,7 +1220,7 @@ function MatchModal({
           </div>
           <button
             onClick={onClose}
-            className="shrink-0 rounded p-1 text-gray-500 transition-colors hover:text-gray-300"
+            className="shrink-0 rounded p-1 text-gray-500 transition-colors hover:text-gray-600"
           >
             <X className="h-4 w-4" />
           </button>
@@ -1229,7 +1229,7 @@ function MatchModal({
         {/* Groq suggestion */}
         {mapping.suggestedOfferName && (
           <div className="mb-4 rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
-            <p className="text-xs font-medium text-blue-400">Suggestion Groq AI : {mapping.suggestedOfferName}</p>
+            <p className="text-xs font-medium text-blue-600">Suggestion Groq AI : {mapping.suggestedOfferName}</p>
             {mapping.groqReasoning && (
               <p className="mt-1 text-xs text-gray-500">{mapping.groqReasoning}</p>
             )}
@@ -1237,14 +1237,14 @@ function MatchModal({
         )}
 
         {/* Mode tabs */}
-        <div className="mb-4 flex rounded-lg border border-gray-700 p-1">
+        <div className="mb-4 flex rounded-lg border border-gray-200 p-1">
           {(['existing', 'new'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setMode(tab)}
               className={cn(
                 'flex-1 rounded-md py-1.5 text-sm font-medium transition-colors',
-                mode === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-300',
+                mode === tab ? 'bg-indigo-600 text-white' : 'text-gray-500 hover:text-gray-600',
               )}
             >
               {tab === 'existing' ? 'Offre existante' : 'Créer une offre'}
@@ -1398,7 +1398,7 @@ function ProductMappingsTab() {
               'rounded-full px-3 py-1 text-xs font-medium transition-colors',
               filter === s
                 ? 'bg-indigo-600 text-white'
-                : 'bg-gray-800 text-gray-400 hover:text-gray-200',
+                : 'bg-gray-100 text-gray-400 hover:text-gray-800',
             )}
           >
             {s === 'pending' ? `En attente${pending > 0 && filter !== 'pending' ? ` (${pending})` : ''}`
@@ -1424,7 +1424,7 @@ function ProductMappingsTab() {
                 <div className="min-w-0 flex-1">
                   {/* Header row */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-gray-100 truncate">{m.productName}</p>
+                    <p className="font-medium text-gray-900 truncate">{m.productName}</p>
                     <Badge variant="default">{GATEWAY_LABELS[m.gateway] ?? m.gateway}</Badge>
                     <Badge variant={m.status === 'confirmed' ? 'success' : m.status === 'ignored' ? 'danger' : 'warning'}>
                       {m.status === 'confirmed' ? 'Confirmé' : m.status === 'ignored' ? 'Ignoré' : 'En attente'}
@@ -1434,13 +1434,13 @@ function ProductMappingsTab() {
 
                   {/* Confirmed offer */}
                   {m.status === 'confirmed' && m.offerName && (
-                    <p className="mt-1 text-sm text-emerald-400">→ {m.offerName}</p>
+                    <p className="mt-1 text-sm text-emerald-600">→ {m.offerName}</p>
                   )}
 
                   {/* Groq suggestion */}
                   {m.suggestedOfferName && m.status === 'pending' && (
                     <div className="mt-2 rounded-lg border border-blue-500/20 bg-blue-500/5 p-2.5">
-                      <p className="text-xs font-medium text-blue-400">Suggestion Groq AI : {m.suggestedOfferName}</p>
+                      <p className="text-xs font-medium text-blue-600">Suggestion Groq AI : {m.suggestedOfferName}</p>
                       {m.groqReasoning && (
                         <p className="mt-0.5 text-xs text-gray-500 line-clamp-2">{m.groqReasoning}</p>
                       )}
@@ -1454,14 +1454,14 @@ function ProductMappingsTab() {
                     <>
                       <button
                         onClick={() => setMatchingId(m._id)}
-                        className="rounded-lg bg-indigo-600/20 px-2.5 py-1.5 text-xs font-medium text-indigo-400 transition-colors hover:bg-indigo-600/30"
+                        className="rounded-lg bg-indigo-600/20 px-2.5 py-1.5 text-xs font-medium text-indigo-600 transition-colors hover:bg-indigo-600/30"
                       >
                         Matcher
                       </button>
                       <button
                         onClick={() => ignoreMut.mutate(m._id)}
                         disabled={ignoreMut.isPending}
-                        className="rounded-lg border border-gray-700 px-2.5 py-1.5 text-xs text-gray-400 transition-colors hover:text-gray-200"
+                        className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-400 transition-colors hover:text-gray-800"
                       >
                         Ignorer
                       </button>
@@ -1471,7 +1471,7 @@ function ProductMappingsTab() {
                     <button
                       onClick={() => resetMut.mutate(m._id)}
                       disabled={resetMut.isPending}
-                      className="rounded-lg border border-gray-700 px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-200 transition-colors"
+                      className="rounded-lg border border-gray-200 px-2.5 py-1.5 text-xs text-gray-400 hover:text-gray-800 transition-colors"
                     >
                       Réinitialiser
                     </button>
@@ -1543,7 +1543,7 @@ export function FinancesPage() {
       {/* Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Finances</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Finances</h1>
           <p className="mt-0.5 text-sm text-gray-500">Suivi multi-devises des revenus et dépenses</p>
         </div>
         <div className="flex items-center gap-2">
@@ -1552,7 +1552,7 @@ export function FinancesPage() {
             <select
               value={currency}
               onChange={(e) => setCurrency(e.target.value)}
-              className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
               title="Devise pour le dashboard stats"
             >
               {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -1562,7 +1562,7 @@ export function FinancesPage() {
             <>
               <button
                 onClick={() => setShowCategories(true)}
-                className="rounded-lg border border-gray-700 p-2 text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
+                className="rounded-lg border border-gray-200 p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-800 transition-colors"
                 title="Catégories"
               >
                 <Settings className="h-4 w-4" />
@@ -1581,7 +1581,7 @@ export function FinancesPage() {
       </div>
 
       {/* Tabs */}
-      <div className="mb-5 flex gap-1 border-b border-gray-800">
+      <div className="mb-5 flex gap-1 border-b border-gray-200">
         {tabs.map((t) => (
           <button
             key={t.key}
@@ -1589,8 +1589,8 @@ export function FinancesPage() {
             className={cn(
               'relative px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px',
               activeTab === t.key
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300',
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-600',
             )}
           >
             {t.label}

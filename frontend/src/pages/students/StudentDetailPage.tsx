@@ -32,12 +32,12 @@ function StudentAvatar({ name, avatarUrl, size = 'md' }: {
         src={avatarUrl}
         alt={name}
         onError={() => setErr(true)}
-        className={`${dim} shrink-0 rounded-full object-cover ring-2 ring-gray-800 shadow-sm`}
+        className={`${dim} shrink-0 rounded-full object-cover ring-2 ring-gray-200 shadow-sm`}
       />
     )
   }
   return (
-    <div className={`${dim} shrink-0 flex items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-600/20 font-bold text-indigo-600 dark:text-indigo-400 ring-2 ring-gray-800`}>
+    <div className={`${dim} shrink-0 flex items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-600/20 font-bold text-indigo-600 dark:text-indigo-600 ring-2 ring-gray-200`}>
       {initials || <User className="h-5 w-5" />}
     </div>
   )
@@ -124,12 +124,12 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
     onError: () => setError('Erreur lors du traitement.'),
   })
 
-  const sel = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+  const sel = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl border border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-100">Traiter le paiement</h2>
+      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white dark:bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-base font-semibold text-gray-900">Traiter le paiement</h2>
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="mb-1.5 block text-xs font-medium text-gray-400">Modalité</label>
@@ -170,7 +170,7 @@ function TreatModal({ payment, onClose }: { payment: Payment; onClose: () => voi
         <div className="mt-4">
           <label className="mb-1.5 block text-xs font-medium text-gray-400">Notes</label>
           <textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)}
-            className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none" />
+            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none" />
         </div>
         {error && <p className="mt-2 text-sm text-red-500 dark:text-red-400">{error}</p>}
         <div className="mt-5 flex justify-end gap-3">
@@ -191,17 +191,17 @@ function daysUntil(dateStr: string): number {
 }
 
 const SUB_STATUS_META: Record<Subscription['status'], { label: string; cls: string }> = {
-  active:    { label: 'Actif',   cls: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30' },
-  expired:   { label: 'Expiré',  cls: 'bg-gray-100 dark:bg-gray-700/60 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700' },
+  active:    { label: 'Actif',   cls: 'bg-emerald-50 dark:bg-emerald-50 text-emerald-700 dark:text-emerald-600 border border-emerald-200 dark:border-emerald-500/30' },
+  expired:   { label: 'Expiré',  cls: 'bg-gray-100 dark:bg-gray-200/60 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-200' },
   cancelled: { label: 'Annulé', cls: 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/30' },
 }
 
 const SUB_PALETTE = [
-  'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400',
+  'bg-indigo-100 dark:bg-indigo-50 text-indigo-700 dark:text-indigo-600',
   'bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400',
   'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400',
-  'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
-  'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400',
+  'bg-emerald-100 dark:bg-emerald-50 text-emerald-700 dark:text-emerald-600',
+  'bg-rose-100 dark:bg-rose-50 text-rose-700 dark:text-rose-600',
   'bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400',
   'bg-teal-100 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400',
   'bg-fuchsia-100 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400',
@@ -228,7 +228,7 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
           <Badge variant={sub.modality === 'Complet' ? 'success' : 'warning'}>{sub.modality}</Badge>
         </div>
         <div className="text-right shrink-0">
-          <p className="text-lg font-bold tabular-nums text-gray-100">
+          <p className="text-lg font-bold tabular-nums text-gray-900">
             {formatAmount(sub.paidAmount, sub.currency)}
             {sub.totalAmount > sub.paidAmount && (
               <span className="text-xs font-normal text-gray-500 ml-1">/ {formatAmount(sub.totalAmount, sub.currency)}</span>
@@ -237,7 +237,7 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
         </div>
       </div>
 
-      <p className="mt-1.5 text-sm font-medium text-gray-200">{sub.offerName}</p>
+      <p className="mt-1.5 text-sm font-medium text-gray-800">{sub.offerName}</p>
 
       <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-gray-500">
         <span className="flex items-center gap-1">
@@ -245,7 +245,7 @@ function SubscriptionCard({ sub }: { sub: Subscription }) {
           {formatDate(sub.startDate)} → {formatDate(sub.endDate)}
         </span>
         {sub.status === 'active' && (
-          <span className={`flex items-center gap-1 font-medium ${days <= 7 ? 'text-red-500 dark:text-red-400' : days <= 30 ? 'text-amber-500 dark:text-amber-400' : 'text-emerald-500 dark:text-emerald-400'}`}>
+          <span className={`flex items-center gap-1 font-medium ${days <= 7 ? 'text-red-500 dark:text-red-400' : days <= 30 ? 'text-amber-500 dark:text-amber-400' : 'text-emerald-500 dark:text-emerald-600'}`}>
             <Clock className="h-3 w-3" />
             {days > 0 ? `${days}j restants` : 'Expiré'}
           </span>
@@ -289,18 +289,18 @@ const PAYMENT_STATUS_BADGE = {
 const SOURCE_LABELS: Record<string, { label: string; cls: string }> = {
   tally:   { label: 'Tally',   cls: 'bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400' },
   chariow: { label: 'Chariow', cls: 'bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400' },
-  manual:  { label: 'Manuel',  cls: 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400' },
+  manual:  { label: 'Manuel',  cls: 'bg-gray-100 dark:bg-gray-200 text-gray-600 dark:text-gray-400' },
 }
 
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-gray-800/50 last:border-0">
-      <div className="mt-0.5 shrink-0 flex h-7 w-7 items-center justify-center rounded-lg bg-gray-900/20 dark:bg-gray-800/60 text-gray-500">
+    <div className="flex items-start gap-3 py-3 border-b border-gray-200/50 last:border-0">
+      <div className="mt-0.5 shrink-0 flex h-7 w-7 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-100 text-gray-500">
         {icon}
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-        <div className="text-sm text-gray-200">{value}</div>
+        <div className="text-sm text-gray-800">{value}</div>
       </div>
     </div>
   )
@@ -414,7 +414,7 @@ export function StudentDetailPage() {
     <div className="p-6">
       <button
         onClick={() => navigate('/students')}
-        className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-200 transition-colors cursor-pointer"
+        className="mb-4 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors cursor-pointer"
       >
         <ArrowLeft className="h-4 w-4" />
         Retour aux étudiants
@@ -431,7 +431,7 @@ export function StudentDetailPage() {
             />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="text-xl font-bold text-gray-100">{student.name}</h1>
+                <h1 className="text-xl font-bold text-gray-900">{student.name}</h1>
                 <Badge variant={
                   student.infoStatus === 'EXACTE' ? 'success'
                   : student.infoStatus === 'ERRONÉE' ? 'danger'
@@ -474,7 +474,7 @@ export function StudentDetailPage() {
               {/* Circle tags */}
               {student.circleId && (
                 <div className="flex flex-wrap items-center gap-2">
-                  <Zap className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
+                  <Zap className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-600 shrink-0" />
                   <Badge variant={student.circleIsActive ? 'success' : 'danger'}>
                     {student.circleIsActive ? 'Actif' : 'Inactif'}
                   </Badge>
@@ -486,7 +486,7 @@ export function StudentDetailPage() {
                       href={student.circleProfile}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+                      className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-600 hover:text-indigo-500 dark:hover:text-indigo-300"
                     >
                       <ExternalLink className="h-3 w-3" />
                       Circle
@@ -522,23 +522,23 @@ export function StudentDetailPage() {
       </Card>
 
       {/* ── Tabs ───────────────────────────────────────────────────────── */}
-      <div className="mb-4 flex gap-1 border-b border-gray-800">
+      <div className="mb-4 flex gap-1 border-b border-gray-200">
         {tabs.map((t) => (
           <button
             key={t.key}
             onClick={() => setActiveTab(t.key)}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px cursor-pointer ${
               activeTab === t.key
-                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-gray-500 hover:text-gray-200'
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-800'
             }`}
           >
             {t.label}
             {t.count != null && (
               <span className={`rounded-full px-1.5 py-0.5 text-xs tabular-nums ${
                 activeTab === t.key
-                  ? 'bg-indigo-100 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-400'
-                  : 'bg-gray-900/30 text-gray-500'
+                  ? 'bg-indigo-100 dark:bg-indigo-600/20 text-indigo-700 dark:text-indigo-600'
+                  : 'bg-white/30 text-gray-500'
               }`}>
                 {t.count}
               </span>
@@ -553,12 +553,12 @@ export function StudentDetailPage() {
 
           {/* Infos personnelles */}
           <Card>
-            <h3 className="mb-3 text-sm font-semibold text-gray-100">Informations personnelles</h3>
+            <h3 className="mb-3 text-sm font-semibold text-gray-900">Informations personnelles</h3>
             <div>
               <InfoRow
                 icon={<Mail className="h-4 w-4" />}
                 label="Email"
-                value={<a href={`mailto:${student.email}`} className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500">{student.email}</a>}
+                value={<a href={`mailto:${student.email}`} className="text-indigo-600 dark:text-indigo-600 hover:text-indigo-500">{student.email}</a>}
               />
               {student.whatsapp && (
                 <InfoRow
@@ -614,8 +614,8 @@ export function StudentDetailPage() {
           <Card>
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Zap className="h-4 w-4 text-emerald-500 dark:text-emerald-400" />
-                <h3 className="text-sm font-semibold text-gray-100">Accès Circle</h3>
+                <Zap className="h-4 w-4 text-emerald-500 dark:text-emerald-600" />
+                <h3 className="text-sm font-semibold text-gray-900">Accès Circle</h3>
                 {student.circleLastSync && (
                   <span className="text-xs text-gray-500">· synchro {formatDate(student.circleLastSync)}</span>
                 )}
@@ -647,27 +647,27 @@ export function StudentDetailPage() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${
                     student.circleIsActive
-                      ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10'
-                      : 'border-gray-800 bg-gray-900/20 dark:border-gray-700 dark:bg-gray-800/40'
+                      ? 'border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-50'
+                      : 'border-gray-200 bg-gray-50 dark:border-gray-200 dark:bg-gray-50'
                   }`}>
                     {student.circleIsActive
-                      ? <Unlock className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      ? <Unlock className="h-4 w-4 text-emerald-600 dark:text-emerald-600 shrink-0" />
                       : <Lock className="h-4 w-4 text-gray-400 shrink-0" />}
                     <div>
-                      <p className="text-xs font-semibold text-gray-200">Espaces généraux</p>
+                      <p className="text-xs font-semibold text-gray-800">Espaces généraux</p>
                       <p className="text-xs text-gray-500">18 espaces de formation</p>
                     </div>
                   </div>
                   <div className={`rounded-xl border px-4 py-3 flex items-center gap-3 ${
                     hasCoachingAccess(student.circleTags)
-                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-500/20 dark:bg-indigo-500/10'
-                      : 'border-gray-800 bg-gray-900/20 dark:border-gray-700 dark:bg-gray-800/40'
+                      ? 'border-indigo-200 bg-indigo-50 dark:border-indigo-500/20 dark:bg-indigo-50'
+                      : 'border-gray-200 bg-gray-50 dark:border-gray-200 dark:bg-gray-50'
                   }`}>
                     {hasCoachingAccess(student.circleTags)
-                      ? <Unlock className="h-4 w-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                      ? <Unlock className="h-4 w-4 text-indigo-600 dark:text-indigo-600 shrink-0" />
                       : <Lock className="h-4 w-4 text-gray-400 shrink-0" />}
                     <div>
-                      <p className="text-xs font-semibold text-gray-200">Espaces coaching</p>
+                      <p className="text-xs font-semibold text-gray-800">Espaces coaching</p>
                       <p className="text-xs text-gray-500">
                         {hasCoachingAccess(student.circleTags) ? '3 espaces privés' : 'Accès restreint'}
                       </p>
@@ -706,7 +706,7 @@ export function StudentDetailPage() {
                           href={student.circleProfile}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 hover:text-indigo-500"
+                          className="flex items-center gap-1 text-indigo-600 dark:text-indigo-600 hover:text-indigo-500"
                         >
                           Voir sur Circle
                           <ExternalLink className="h-3 w-3" />
@@ -724,7 +724,7 @@ export function StudentDetailPage() {
             <Card>
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-100">Statut formation</h3>
+                  <h3 className="text-sm font-semibold text-gray-900">Statut formation</h3>
                   <p className="mt-0.5 text-xs text-gray-500">
                     {data.formation?.paymentStatus ?? 'Non renseigné'}
                     {data.formation?.action ? ` · ${data.formation.action}` : ''}
@@ -735,7 +735,7 @@ export function StudentDetailPage() {
                     <button
                       disabled={formationStatusMutation.isPending || data.formation?.paymentStatus === 'EN RÈGLE'}
                       onClick={() => formationStatusMutation.mutate('EN RÈGLE')}
-                      className="rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
+                      className="rounded-lg border border-emerald-200 bg-emerald-50 dark:border-emerald-500/30 dark:bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-600 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 disabled:opacity-40 transition-colors"
                     >
                       EN RÈGLE
                     </button>
@@ -754,7 +754,7 @@ export function StudentDetailPage() {
 
           {/* Notes */}
           <Card>
-            <h3 className="mb-3 text-sm font-semibold text-gray-100">Notes</h3>
+            <h3 className="mb-3 text-sm font-semibold text-gray-900">Notes</h3>
             {isAdmin && (
               <div className="mb-4">
                 <textarea
@@ -762,7 +762,7 @@ export function StudentDetailPage() {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Ajouter une note…"
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
+                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none"
                 />
                 <div className="mt-2 flex justify-end">
                   <Button size="sm" loading={addNoteMutation.isPending} disabled={!note.trim()} onClick={() => addNoteMutation.mutate(note.trim())}>
@@ -772,7 +772,7 @@ export function StudentDetailPage() {
               </div>
             )}
             {student.notes ? (
-              <p className="whitespace-pre-wrap text-sm text-gray-300 leading-relaxed">{student.notes}</p>
+              <p className="whitespace-pre-wrap text-sm text-gray-600 leading-relaxed">{student.notes}</p>
             ) : (
               <p className="text-sm text-gray-500">Aucune note.</p>
             )}
@@ -785,15 +785,15 @@ export function StudentDetailPage() {
         <div className="space-y-4">
           {payments.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10 px-4 py-4 text-center">
-                <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{formatAmount(totalValidated, mainCurrency)}</p>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-50 px-4 py-4 text-center">
+                <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-600">{formatAmount(totalValidated, mainCurrency)}</p>
                 <p className="text-xs text-gray-500 mt-0.5">Total validé</p>
               </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/20 dark:bg-gray-800/40 px-4 py-4 text-center">
-                <p className="text-xl font-bold tabular-nums text-gray-100">{payments.length}</p>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-50 px-4 py-4 text-center">
+                <p className="text-xl font-bold tabular-nums text-gray-900">{payments.length}</p>
                 <p className="text-xs text-gray-500 mt-0.5">paiement{payments.length > 1 ? 's' : ''}</p>
               </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/20 dark:bg-gray-800/40 px-4 py-4 text-center">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-50 px-4 py-4 text-center">
                 <div className="flex items-center justify-center gap-1.5 mt-0.5">
                   {hasPartial
                     ? <Badge variant="warning">Partiel</Badge>
@@ -839,7 +839,7 @@ export function StudentDetailPage() {
                       </div>
 
                       <div className="mt-2 flex items-baseline gap-4 flex-wrap">
-                        <span className="text-2xl font-bold tabular-nums text-gray-100">
+                        <span className="text-2xl font-bold tabular-nums text-gray-900">
                           {formatAmount(p.amount, p.currency)}
                         </span>
                         <span className="text-sm font-medium text-gray-400">{p.product ?? '—'}</span>
@@ -860,11 +860,11 @@ export function StudentDetailPage() {
                             <button
                               key={i}
                               onClick={() => setLightbox({ images: p.proofImages, idx: i })}
-                              className="group relative h-16 w-16 overflow-hidden rounded-xl border border-gray-800 shadow-sm cursor-pointer"
+                              className="group relative h-16 w-16 overflow-hidden rounded-xl border border-gray-200 shadow-sm cursor-pointer"
                               aria-label={`Voir preuve ${i + 1}`}
                             >
                               {isPdf(url) ? (
-                                <div className="flex h-full w-full items-center justify-center bg-gray-900/20 text-[10px] font-medium text-gray-500">PDF</div>
+                                <div className="flex h-full w-full items-center justify-center bg-gray-50 text-[10px] font-medium text-gray-500">PDF</div>
                               ) : (
                                 <img
                                   src={url}
@@ -893,16 +893,16 @@ export function StudentDetailPage() {
         <div className="space-y-4">
           {subscriptions.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-500/10 px-4 py-4 text-center">
-                <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-400">{activeSubscriptions.length}</p>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:border-emerald-500/20 dark:bg-emerald-50 px-4 py-4 text-center">
+                <p className="text-xl font-bold tabular-nums text-emerald-700 dark:text-emerald-600">{activeSubscriptions.length}</p>
                 <p className="text-xs text-gray-500 mt-0.5">active{activeSubscriptions.length > 1 ? 's' : ''}</p>
               </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/20 dark:bg-gray-800/40 px-4 py-4 text-center">
-                <p className="text-xl font-bold tabular-nums text-gray-100">{subscriptions.length}</p>
+              <div className="rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-50 px-4 py-4 text-center">
+                <p className="text-xl font-bold tabular-nums text-gray-900">{subscriptions.length}</p>
                 <p className="text-xs text-gray-500 mt-0.5">total</p>
               </div>
-              <div className="rounded-xl border border-gray-800 bg-gray-900/20 dark:bg-gray-800/40 px-4 py-4 text-center">
-                <p className="text-xl font-bold tabular-nums text-gray-100">
+              <div className="rounded-xl border border-gray-200 bg-gray-50 dark:bg-gray-50 px-4 py-4 text-center">
+                <p className="text-xl font-bold tabular-nums text-gray-900">
                   {activeSubscriptions.filter((s) => daysUntil(s.endDate) <= 30).length}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">expir. &lt; 30j</p>
@@ -936,11 +936,11 @@ export function StudentDetailPage() {
           ) : (
             <div className="space-y-0">
               {[...student.history].reverse().map((h, i) => (
-                <div key={i} className="flex gap-3 py-3 border-b border-gray-800/50 last:border-0">
+                <div key={i} className="flex gap-3 py-3 border-b border-gray-200/50 last:border-0">
                   <div className="mt-1 h-2 w-2 rounded-full bg-indigo-500 shrink-0 mt-2" />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-medium text-gray-300">{h.event.replace(/_/g, ' ')}</span>
+                      <span className="text-xs font-medium text-gray-600">{h.event.replace(/_/g, ' ')}</span>
                       <span className="text-xs text-gray-500 tabular-nums">{formatDate(h.date)}</span>
                     </div>
                     {h.detail && <p className="text-xs text-gray-500 mt-0.5">{h.detail}</p>}
@@ -960,14 +960,14 @@ export function StudentDetailPage() {
       {/* ── Change email modal ──────────────────────────────────────────── */}
       {showEmailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
-            <h3 className="mb-4 text-base font-semibold text-gray-100">Changer l'email</h3>
+          <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-[#f5f6fa] p-6 shadow-2xl">
+            <h3 className="mb-4 text-base font-semibold text-gray-900">Changer l'email</h3>
             <input
               type="email"
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
               placeholder="nouvel@email.com"
-              className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none mb-1"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none mb-1"
             />
             <p className="text-xs text-gray-500 mb-4">Cela mettra à jour les paiements, abonnements et enverra une nouvelle invitation Circle.</p>
             {changeEmailMutation.isError && (
@@ -986,28 +986,28 @@ export function StudentDetailPage() {
       {/* ── Complement payment modal ────────────────────────────────────── */}
       {showComplementModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
-            <h3 className="mb-4 text-base font-semibold text-gray-100">Créer un paiement complément</h3>
+          <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-[#f5f6fa] p-6 shadow-2xl">
+            <h3 className="mb-4 text-base font-semibold text-gray-900">Créer un paiement complément</h3>
             <div className="space-y-3 mb-4">
               <div className="flex gap-2">
                 <div className="flex-1">
                   <label className="text-xs text-gray-500 mb-1 block">Montant</label>
-                  <input type="number" value={complement.amount} onChange={(e) => setComplement((p) => ({ ...p, amount: e.target.value }))} placeholder="0" className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none" />
+                  <input type="number" value={complement.amount} onChange={(e) => setComplement((p) => ({ ...p, amount: e.target.value }))} placeholder="0" className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none" />
                 </div>
                 <div className="w-24">
                   <label className="text-xs text-gray-500 mb-1 block">Devise</label>
-                  <select value={complement.currency} onChange={(e) => setComplement((p) => ({ ...p, currency: e.target.value }))} className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none">
+                  <select value={complement.currency} onChange={(e) => setComplement((p) => ({ ...p, currency: e.target.value }))} className="w-full rounded-lg border border-gray-200 bg-white px-2 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none">
                     {['F CFA', 'EUR', 'USD', 'MAD'].map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </div>
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Passerelle</label>
-                <input value={complement.gateway} onChange={(e) => setComplement((p) => ({ ...p, gateway: e.target.value }))} placeholder="FedaPay, Wave…" className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none" />
+                <input value={complement.gateway} onChange={(e) => setComplement((p) => ({ ...p, gateway: e.target.value }))} placeholder="FedaPay, Wave…" className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none" />
               </div>
               <div>
                 <label className="text-xs text-gray-500 mb-1 block">Notes</label>
-                <textarea value={complement.notes} onChange={(e) => setComplement((p) => ({ ...p, notes: e.target.value }))} rows={2} className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none resize-none" />
+                <textarea value={complement.notes} onChange={(e) => setComplement((p) => ({ ...p, notes: e.target.value }))} rows={2} className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none resize-none" />
               </div>
             </div>
             <div className="flex gap-2 justify-end">

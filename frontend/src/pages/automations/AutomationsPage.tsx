@@ -33,20 +33,20 @@ const runAudience = (id: string) => api.post(`/automations/${id}/run-audience`).
 // ── Metadata ──────────────────────────────────────────────────────────────────
 
 const TRIGGER_META: Record<TriggerType, { label: string; Icon: LucideIcon; color: string }> = {
-  form_submitted:   { label: 'Formulaire soumis',    Icon: ClipboardList,  color: 'text-blue-400 bg-blue-500/15' },
-  payment_created:  { label: 'Paiement créé',        Icon: CreditCard,     color: 'text-emerald-400 bg-emerald-500/15' },
-  payment_treated:  { label: 'Paiement traité',      Icon: CheckCircle2,   color: 'text-green-400 bg-green-500/15' },
-  student_created:  { label: 'Étudiant créé',        Icon: GraduationCap,  color: 'text-purple-400 bg-purple-500/15' },
+  form_submitted:   { label: 'Formulaire soumis',    Icon: ClipboardList,  color: 'text-blue-600 bg-blue-500/15' },
+  payment_created:  { label: 'Paiement créé',        Icon: CreditCard,     color: 'text-emerald-600 bg-emerald-500/15' },
+  payment_treated:  { label: 'Paiement traité',      Icon: CheckCircle2,   color: 'text-green-600 bg-green-500/15' },
+  student_created:  { label: 'Étudiant créé',        Icon: GraduationCap,  color: 'text-purple-700 bg-purple-500/15' },
   manual:           { label: 'Déclenchement manuel', Icon: Play,           color: 'text-gray-400 bg-gray-500/15' },
-  incoming_webhook: { label: 'Webhook entrant',      Icon: Link2,          color: 'text-orange-400 bg-orange-500/15' },
+  incoming_webhook: { label: 'Webhook entrant',      Icon: Link2,          color: 'text-orange-600 bg-orange-500/15' },
   reminder_due:     { label: 'Rappel dû',            Icon: AlarmClock,     color: 'text-amber-400 bg-amber-500/15' },
   debt_detected:    { label: 'Débiteur détecté',     Icon: AlertTriangle,  color: 'text-red-400 bg-red-500/15' },
   lead_created:     { label: 'Lead créé',            Icon: Crosshair,      color: 'text-teal-400 bg-teal-500/15' },
   lead_stage_changed: { label: 'Étape lead changée', Icon: TrendingUp,    color: 'text-cyan-400 bg-cyan-500/15' },
-  lead_won:         { label: 'Lead converti (Won)',  Icon: Trophy,         color: 'text-yellow-400 bg-yellow-500/15' },
-  call_completed:   { label: 'Appel terminé',        Icon: Phone,          color: 'text-indigo-400 bg-indigo-500/15' },
+  lead_won:         { label: 'Lead converti (Won)',  Icon: Trophy,         color: 'text-yellow-600 bg-yellow-500/15' },
+  call_completed:   { label: 'Appel terminé',        Icon: Phone,          color: 'text-indigo-600 bg-indigo-50' },
   cron_schedule:         { label: 'Planification',           Icon: CalendarClock,  color: 'text-violet-400 bg-violet-500/15' },
-  subscription_created:  { label: 'Souscription créée',      Icon: CheckCircle2,   color: 'text-emerald-400 bg-emerald-500/15' },
+  subscription_created:  { label: 'Souscription créée',      Icon: CheckCircle2,   color: 'text-emerald-600 bg-emerald-500/15' },
   subscription_expiring: { label: 'Souscription expirante',  Icon: AlarmClock,     color: 'text-amber-400 bg-amber-500/15' },
   partial_payment_due:   { label: 'Échéance partielle due',   Icon: AlertTriangle,  color: 'text-red-400 bg-red-500/15' },
   audience_based:        { label: 'Campagne audience',        Icon: Filter,         color: 'text-fuchsia-400 bg-fuchsia-500/15' },
@@ -559,11 +559,11 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="flex h-[680px] w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-800 bg-gray-950 shadow-2xl">
+      <div className="flex h-[680px] w-full max-w-4xl overflow-hidden rounded-2xl border border-gray-200 bg-[#f5f6fa] shadow-2xl">
 
         {/* Left — template list */}
-        <div className="flex w-72 shrink-0 flex-col border-r border-gray-800 bg-gray-900">
-          <div className="shrink-0 border-b border-gray-800 px-4 py-3">
+        <div className="flex w-72 shrink-0 flex-col border-r border-gray-200 bg-white">
+          <div className="shrink-0 border-b border-gray-200 px-4 py-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Choisir un modèle</p>
             <div className="mt-2 flex flex-wrap gap-1">
               {CATEGORIES.map((cat) => (
@@ -574,7 +574,7 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                     'rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
                     category === cat
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
+                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-800',
                   )}
                 >
                   {cat}
@@ -593,12 +593,12 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                   className={cn(
                     'group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
                     selected?.id === t.id
-                      ? 'bg-indigo-600/15 text-indigo-300'
-                      : 'text-gray-300 hover:bg-gray-800',
+                      ? 'bg-indigo-50 text-indigo-300'
+                      : 'text-gray-600 hover:bg-gray-100',
                   )}
                 >
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gray-700">
-                    <t.Icon className="h-3.5 w-3.5 text-gray-300" />
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gray-200">
+                    <t.Icon className="h-3.5 w-3.5 text-gray-600" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{t.name}</p>
@@ -611,15 +611,15 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
               )
             })}
 
-            <div className="my-2 border-t border-gray-800" />
+            <div className="my-2 border-t border-gray-200" />
 
             <button
               onClick={handleFromScratch}
               className={cn(
                 'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
                 fromScratch
-                  ? 'bg-indigo-600/15 text-indigo-300'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-gray-300',
+                  ? 'bg-indigo-50 text-indigo-300'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600',
               )}
             >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-dashed border-gray-600">
@@ -635,11 +635,11 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
 
         {/* Right — preview / form */}
         <div className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex shrink-0 items-center justify-between border-b border-gray-800 px-6 py-4">
-            <h2 className="text-base font-semibold text-gray-100">
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-200 px-6 py-4">
+            <h2 className="text-base font-semibold text-gray-900">
               {selected ? selected.name : fromScratch ? 'Nouvelle automatisation' : 'Sélectionnez un modèle'}
             </h2>
-            <button onClick={onClose} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors">
+            <button onClick={onClose} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -647,7 +647,7 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
           <div className="flex-1 overflow-y-auto p-6">
             {!selected && !fromScratch && (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-800">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
                   <Zap className="h-8 w-8 text-gray-600" />
                 </div>
                 <p className="text-base font-medium text-gray-400">Choisissez un modèle</p>
@@ -661,11 +661,11 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                 <div className="space-y-5">
                   <div>
                     <div className="mb-2 flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-800">
-                        <selected.Icon className="h-5 w-5 text-gray-200" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100">
+                        <selected.Icon className="h-5 w-5 text-gray-800" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-gray-100">{selected.name}</p>
+                        <p className="text-sm font-semibold text-gray-900">{selected.name}</p>
                         <span className={cn('mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium', trigMeta.color)}>
                           <trigMeta.Icon className="h-3 w-3" />
                           {trigMeta.label}
@@ -681,11 +681,11 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                       {selected.steps.map((step, i) => {
                         const SI = STEP_ICONS[step.type]
                         return (
-                          <div key={i} className="flex items-center gap-2.5 rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
-                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-700 text-xs text-gray-400">{i + 1}</span>
+                          <div key={i} className="flex items-center gap-2.5 rounded-lg border border-gray-200 bg-white px-3 py-2">
+                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gray-200 text-xs text-gray-400">{i + 1}</span>
                             <SI className="h-4 w-4 shrink-0 text-gray-400" />
                             <div>
-                              <p className="text-sm font-medium text-gray-200">{step.name || STEP_LABELS[step.type]}</p>
+                              <p className="text-sm font-medium text-gray-800">{step.name || STEP_LABELS[step.type]}</p>
                               <p className="text-xs text-gray-500">{STEP_LABELS[step.type]}</p>
                             </div>
                           </div>
@@ -694,13 +694,13 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                     </div>
                   </div>
 
-                  <div className="border-t border-gray-800 pt-5">
+                  <div className="border-t border-gray-200 pt-5">
                     <label className="mb-1.5 block text-xs font-medium text-gray-400">Nom de l'automatisation</label>
                     <input
                       autoFocus
                       value={templateName}
                       onChange={(e) => setTemplateName(e.target.value)}
-                      className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                      className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     />
                   </div>
 
@@ -726,7 +726,7 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                     value={scratchName}
                     onChange={(e) => setScratchName(e.target.value)}
                     placeholder="ex: Email de bienvenue après inscription"
-                    className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                 </div>
 
@@ -742,8 +742,8 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                           className={cn(
                             'flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors',
                             triggerType === t
-                              ? 'border-indigo-500 bg-indigo-600/15 text-indigo-300'
-                              : 'border-gray-700 text-gray-400 hover:border-gray-600 hover:bg-gray-800/50',
+                              ? 'border-indigo-500 bg-indigo-50 text-indigo-300'
+                              : 'border-gray-200 text-gray-400 hover:border-gray-600 hover:bg-white',
                           )}
                         >
                           <meta.Icon className="h-3.5 w-3.5 shrink-0" />
@@ -754,7 +754,7 @@ function TemplateModal({ onClose, onCreated }: { onClose: () => void; onCreated:
                   </div>
                 </div>
 
-                <div className="border-t border-gray-800 pt-2">
+                <div className="border-t border-gray-200 pt-2">
                   <button
                     onClick={handleCreateFromScratch}
                     disabled={!scratchName.trim() || createMut.isPending}
@@ -797,20 +797,20 @@ function CampaignRunModal({ automation, onClose }: { automation: Automation; onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-md rounded-xl bg-white border border-gray-200 p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-3 mb-4">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-500/10 border border-fuchsia-500/30">
             <Users className="h-4 w-4 text-fuchsia-400" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-gray-100">Lancer la campagne</h2>
+            <h2 className="text-sm font-semibold text-gray-900">Lancer la campagne</h2>
             <p className="text-xs text-gray-500">{automation.name}</p>
           </div>
         </div>
 
         {!result ? (
           <>
-            <div className="rounded-lg border border-gray-800 bg-gray-950 p-4 mb-4">
+            <div className="rounded-lg border border-gray-200 bg-[#f5f6fa] p-4 mb-4">
               {loadingPreview ? (
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <div className="h-3 w-3 animate-spin rounded-full border border-gray-500 border-t-transparent" />
@@ -848,7 +848,7 @@ function CampaignRunModal({ automation, onClose }: { automation: Automation; onC
             </p>
 
             <div className="flex justify-end gap-3">
-              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-800">
                 Annuler
               </button>
               <button
@@ -872,14 +872,14 @@ function CampaignRunModal({ automation, onClose }: { automation: Automation; onC
           </>
         ) : (
           <div className="text-center py-4">
-            <CheckCircle2 className="h-10 w-10 text-emerald-400 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-100 mb-1">Campagne lancée</p>
+            <CheckCircle2 className="h-10 w-10 text-emerald-600 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-900 mb-1">Campagne lancée</p>
             <p className="text-xs text-gray-500">
               {result.ran} {entityLabel} traité(s)
             </p>
             <button
               onClick={onClose}
-              className="mt-4 px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-200 transition-colors"
+              className="mt-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-800 transition-colors"
             >
               Fermer
             </button>
@@ -919,21 +919,21 @@ function AutomationCard({ automation }: { automation: Automation }) {
       {showCampaign && (
         <CampaignRunModal automation={automation} onClose={() => setShowCampaign(false)} />
       )}
-      <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 hover:border-gray-700 transition-colors">
+      <div className="rounded-xl border border-gray-200 bg-white p-5 hover:border-gray-200 transition-colors">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-3">
             <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', meta.color)}>
               <meta.Icon className="h-4 w-4" />
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="truncate text-sm font-semibold text-gray-100" title={automation.name}>{automation.name}</h3>
+              <h3 className="truncate text-sm font-semibold text-gray-900" title={automation.name}>{automation.name}</h3>
               <p className="truncate text-xs text-gray-500">{meta.label}</p>
             </div>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); toggleMut.mutate() }}
             disabled={toggleMut.isPending}
-            className={cn('relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors', automation.isActive ? 'bg-indigo-600' : 'bg-gray-700')}
+            className={cn('relative h-5 w-9 shrink-0 overflow-hidden rounded-full p-0 transition-colors', automation.isActive ? 'bg-indigo-600' : 'bg-gray-200')}
           >
             <span className={cn('absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', automation.isActive ? 'translate-x-4' : 'translate-x-0')} />
           </button>
@@ -965,10 +965,10 @@ function AutomationCard({ automation }: { automation: Automation }) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 border-t border-gray-800 pt-3">
+        <div className="flex items-center gap-2 border-t border-gray-200 pt-3">
           <button
             onClick={() => navigate(`/automations/${automation._id}`)}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600/10 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/20 transition-colors"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-indigo-600/10 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-600/20 transition-colors"
           >
             Configurer
             <ChevronRight className="h-3.5 w-3.5" />
@@ -987,7 +987,7 @@ function AutomationCard({ automation }: { automation: Automation }) {
               onClick={() => runMut.mutate()}
               disabled={runMut.isPending}
               title="Exécuter maintenant"
-              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-emerald-400 transition-colors"
+              className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-emerald-600 transition-colors"
             >
               <Play className="h-4 w-4" />
             </button>
@@ -1023,7 +1023,7 @@ export function AutomationsPage() {
     <div className="h-full overflow-y-auto p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-100">Automatisations</h1>
+          <h1 className="text-xl font-bold text-gray-900">Automatisations</h1>
           <p className="mt-0.5 text-sm text-gray-500">
             {automations.length} workflow{automations.length !== 1 ? 's' : ''} · {activeCount} actif{activeCount !== 1 ? 's' : ''}
           </p>
@@ -1041,10 +1041,10 @@ export function AutomationsPage() {
         <div className="py-12 text-center text-sm text-gray-500">Chargement...</div>
       ) : automations.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-800">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
             <Zap className="h-8 w-8 text-gray-600" />
           </div>
-          <h3 className="text-base font-medium text-gray-300">Aucune automatisation</h3>
+          <h3 className="text-base font-medium text-gray-600">Aucune automatisation</h3>
           <p className="mt-1 text-sm text-gray-500">Créez des workflows qui s'exécutent automatiquement</p>
           <button
             onClick={() => setShowCreate(true)}

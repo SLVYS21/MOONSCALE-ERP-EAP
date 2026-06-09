@@ -41,12 +41,12 @@ function CreatePageModal({
   })
 
   const selectCls =
-    'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+    'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-100">Nouvelle page</h2>
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-base font-semibold text-gray-900">Nouvelle page</h2>
         <div className="space-y-4">
           <Input
             id="wiki-title"
@@ -57,7 +57,7 @@ function CreatePageModal({
             autoFocus
           />
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-300">Icône</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-600">Icône</label>
             <input
               type="text"
               value={icon}
@@ -67,7 +67,7 @@ function CreatePageModal({
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-300">Parent</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-600">Parent</label>
             <select
               value={parentId}
               onChange={(e) => setParentId(e.target.value)}
@@ -138,15 +138,15 @@ function TreeNode({
         className={cn(
           'group flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition-colors cursor-pointer',
           isActive
-            ? 'bg-indigo-600/15 text-indigo-400'
-            : 'text-gray-400 hover:bg-gray-800/60 hover:text-gray-100',
+            ? 'bg-indigo-50 text-indigo-600'
+            : 'text-gray-400 hover:bg-gray-100 hover:text-gray-900',
         )}
         style={{ paddingLeft: `${8 + depth * 16}px` }}
       >
         {hasChildren ? (
           <button
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
-            className="shrink-0 text-gray-500 hover:text-gray-300"
+            className="shrink-0 text-gray-500 hover:text-gray-600"
           >
             <ChevronRight
               className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-90')}
@@ -167,7 +167,7 @@ function TreeNode({
         <div className="ml-auto flex shrink-0 gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={(e) => { e.stopPropagation(); onAddChild(page._id) }}
-            className="rounded p-0.5 hover:bg-gray-700 hover:text-gray-200 text-gray-500"
+            className="rounded p-0.5 hover:bg-gray-200 hover:text-gray-800 text-gray-500"
             title="Ajouter une sous-page"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -304,15 +304,15 @@ export function WikiPage() {
   return (
     <div className="flex h-full">
       {/* Sidebar tree */}
-      <aside className="flex w-64 shrink-0 flex-col border-r border-gray-800 bg-gray-950">
-        <div className="flex items-center justify-between border-b border-gray-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-sm font-medium text-gray-300">
-            <BookOpen className="h-4 w-4 text-indigo-400" />
+      <aside className="flex w-64 shrink-0 flex-col border-r border-gray-200 bg-[#f5f6fa]">
+        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-600">
+            <BookOpen className="h-4 w-4 text-indigo-600" />
             Wiki
           </div>
           <button
             onClick={() => { setCreateParentId(null); setShowCreate(true) }}
-            className="rounded-lg p-1 text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors"
+            className="rounded-lg p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
             title="Nouvelle page"
           >
             <Plus className="h-4 w-4" />
@@ -359,7 +359,7 @@ export function WikiPage() {
         ) : (
           <>
             {/* Toolbar */}
-            <div className="flex items-center justify-between border-b border-gray-800 px-5 py-2.5">
+            <div className="flex items-center justify-between border-b border-gray-200 px-5 py-2.5">
               <div className="flex gap-1">
                 {(['preview', 'edit'] as const).map((t) => (
                   <button
@@ -368,8 +368,8 @@ export function WikiPage() {
                     className={cn(
                       'rounded-lg px-3 py-1 text-sm transition-colors',
                       editorTab === t
-                        ? 'bg-gray-800 text-gray-100'
-                        : 'text-gray-500 hover:text-gray-300',
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-500 hover:text-gray-600',
                     )}
                   >
                     {t === 'edit' ? 'Éditer' : 'Aperçu'}
@@ -378,7 +378,7 @@ export function WikiPage() {
               </div>
               <div className="flex items-center gap-3">
                 <span className={cn('text-xs transition-opacity', saveStatus === 'idle' ? 'opacity-0' : 'opacity-100',
-                  saveStatus === 'pending' ? 'text-amber-400' : 'text-emerald-400',
+                  saveStatus === 'pending' ? 'text-amber-400' : 'text-emerald-600',
                 )}>
                   {saveStatus === 'pending' && 'Modification en cours…'}
                   {saveStatus === 'saved' && '✓ Enregistré'}
@@ -387,7 +387,7 @@ export function WikiPage() {
                   <button
                     onClick={saveNow}
                     disabled={saveMutation.isPending || saveStatus === 'idle'}
-                    className="flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-800 px-2.5 py-1 text-xs text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     title="Sauvegarder maintenant (Ctrl+S)"
                   >
                     <Save className="h-3.5 w-3.5" />
@@ -398,12 +398,12 @@ export function WikiPage() {
             </div>
 
             {/* Title */}
-            <div className="border-b border-gray-800 px-5 py-3">
+            <div className="border-b border-gray-200 px-5 py-3">
               <input
                 type="text"
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
-                className="w-full bg-transparent text-xl font-semibold text-gray-100 placeholder-gray-600 focus:outline-none"
+                className="w-full bg-transparent text-xl font-semibold text-gray-900 placeholder-gray-400 focus:outline-none"
                 placeholder="Titre de la page…"
               />
             </div>
@@ -421,7 +421,7 @@ export function WikiPage() {
                     }
                   }}
                   placeholder="Écrivez en Markdown…"
-                  className="h-full w-full resize-none bg-transparent p-5 font-mono text-sm text-gray-300 placeholder-gray-600 focus:outline-none"
+                  className="h-full w-full resize-none bg-transparent p-5 font-mono text-sm text-gray-600 placeholder-gray-400 focus:outline-none"
                 />
               ) : (
                 <div className="h-full overflow-y-auto p-5">

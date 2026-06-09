@@ -62,7 +62,7 @@ function makeField(type: FormFieldType, order: number): FormField {
 function FieldPalette({ onAdd, onClose }: { onAdd: (type: FormFieldType) => void; onClose: () => void }) {
   const groups = [...new Set(FIELD_TYPES.map((f) => f.group))]
   return (
-    <div className="absolute top-full left-0 z-20 mt-1 w-56 rounded-xl border border-gray-700 bg-gray-900 shadow-xl">
+    <div className="absolute top-full left-0 z-20 mt-1 w-56 rounded-xl border border-gray-200 bg-white shadow-xl">
       {groups.map((group) => (
         <div key={group} className="p-1.5">
           <p className="mb-1 px-2 text-xs font-medium text-gray-500">{group}</p>
@@ -70,7 +70,7 @@ function FieldPalette({ onAdd, onClose }: { onAdd: (type: FormFieldType) => void
             <button
               key={f.type}
               onClick={() => { onAdd(f.type); onClose() }}
-              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-gray-300 hover:bg-gray-800 transition-colors"
+              className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-gray-600 hover:bg-gray-100 transition-colors"
             >
               <f.Icon className="h-4 w-4 shrink-0 text-gray-400" />
               {f.label}
@@ -127,7 +127,7 @@ function FieldEditor({
   const operatorNeedsValue = field.condition &&
     !['is_empty', 'is_not_empty'].includes(field.condition.operator)
 
-  const inputCls = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+  const inputCls = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
   return (
     <div className="space-y-4">
@@ -165,11 +165,11 @@ function FieldEditor({
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800/30 px-3 py-2.5">
-            <span className="text-sm text-gray-300">Champ requis</span>
+          <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5">
+            <span className="text-sm text-gray-600">Champ requis</span>
             <button
               onClick={() => update({ required: !field.required })}
-              className={cn('relative h-5 w-9 rounded-full transition-colors', field.required ? 'bg-indigo-600' : 'bg-gray-700')}
+              className={cn('relative h-5 w-9 rounded-full transition-colors', field.required ? 'bg-indigo-600' : 'bg-gray-200')}
             >
               <span className={cn('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform', field.required ? 'translate-x-4' : 'translate-x-0.5')} />
             </button>
@@ -183,7 +183,7 @@ function FieldEditor({
             <label className="text-xs font-medium text-gray-400">Options</label>
             <button
               onClick={() => update({ options: [...(field.options ?? []), `Option ${(field.options?.length ?? 0) + 1}`] })}
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
+              className="text-xs text-indigo-600 hover:text-indigo-300 transition-colors"
             >
               + Ajouter
             </button>
@@ -198,7 +198,7 @@ function FieldEditor({
                     opts[i] = e.target.value
                     update({ options: opts })
                   }}
-                  className="flex-1 rounded-lg border border-gray-700 bg-gray-800/50 px-2.5 py-1.5 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                 />
                 <button
                   onClick={() => update({ options: (field.options ?? []).filter((_, j) => j !== i) })}
@@ -263,7 +263,7 @@ function FieldEditor({
 
       {/* Conditional logic — only for interactive fields that have previous fields */}
       {!isStatic && (
-        <div className="border-t border-gray-800 pt-4">
+        <div className="border-t border-gray-200 pt-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">
               Logique conditionnelle
@@ -280,8 +280,8 @@ function FieldEditor({
               className={cn(
                 'rounded-lg px-2.5 py-1 text-xs font-medium transition-colors',
                 field.condition
-                  ? 'bg-indigo-600/20 text-indigo-400 hover:bg-red-500/20 hover:text-red-400'
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200 disabled:opacity-40',
+                  ? 'bg-indigo-600/20 text-indigo-600 hover:bg-red-500/20 hover:text-red-400'
+                  : 'bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-800 disabled:opacity-40',
               )}
             >
               {field.condition ? '✕ Retirer' : '+ Ajouter une condition'}
@@ -300,7 +300,7 @@ function FieldEditor({
               <select
                 value={field.condition.fieldId}
                 onChange={(e) => update({ condition: { ...field.condition!, fieldId: e.target.value, value: '' } })}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
               >
                 {prevFields.map((f) => (
                   <option key={f.id} value={f.id}>{f.label}</option>
@@ -311,7 +311,7 @@ function FieldEditor({
               <select
                 value={field.condition.operator}
                 onChange={(e) => update({ condition: { ...field.condition!, operator: e.target.value as typeof field.condition.operator } })}
-                className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
               >
                 {OPERATORS.map((op) => (
                   <option key={op.value} value={op.value}>{op.label}</option>
@@ -324,7 +324,7 @@ function FieldEditor({
                   <select
                     value={field.condition.value ?? ''}
                     onChange={(e) => update({ condition: { ...field.condition!, value: e.target.value } })}
-                    className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                   >
                     <option value="">Choisir…</option>
                     {watchedField.options.map((o) => <option key={o} value={o}>{o}</option>)}
@@ -334,7 +334,7 @@ function FieldEditor({
                     value={field.condition.value ?? ''}
                     onChange={(e) => update({ condition: { ...field.condition!, value: e.target.value } })}
                     placeholder="Valeur…"
-                    className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
                   />
                 )
               )}
@@ -350,8 +350,8 @@ function FieldEditor({
 
 function FormPreview({ form }: { form: Form }) {
   return (
-    <div className="mx-auto max-w-xl rounded-xl border border-gray-700 bg-gray-900 p-8">
-      <h2 className="mb-1 text-xl font-bold text-gray-100">{form.title}</h2>
+    <div className="mx-auto max-w-xl rounded-xl border border-gray-200 bg-white p-8">
+      <h2 className="mb-1 text-xl font-bold text-gray-900">{form.title}</h2>
       {form.description && <p className="mb-6 text-sm text-gray-400">{form.description}</p>}
 
       <div className="space-y-5">
@@ -373,7 +373,7 @@ function PreviewField({ field }: { field: FormField }) {
   if (field.type === 'heading') {
     return (
       <div className="flex items-center gap-2">
-        <h3 className="text-lg font-semibold text-gray-100">{field.content || field.label}</h3>
+        <h3 className="text-lg font-semibold text-gray-900">{field.content || field.label}</h3>
         {field.condition && <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-xs text-amber-400">conditionnel</span>}
       </div>
     )
@@ -387,12 +387,12 @@ function PreviewField({ field }: { field: FormField }) {
     )
   }
 
-  const inputClass = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none'
+  const inputClass = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none'
 
   return (
     <div>
       <div className="mb-1.5 flex items-center gap-2">
-        <label className="text-sm font-medium text-gray-300">
+        <label className="text-sm font-medium text-gray-600">
           {field.label}
           {field.required && <span className="ml-1 text-red-400">*</span>}
         </label>
@@ -418,7 +418,7 @@ function PreviewField({ field }: { field: FormField }) {
           {(field.options ?? []).map((o) => (
             <label key={o} className="flex items-center gap-2 cursor-pointer">
               <input type="radio" className="accent-indigo-500" disabled />
-              <span className="text-sm text-gray-300">{o}</span>
+              <span className="text-sm text-gray-600">{o}</span>
             </label>
           ))}
         </div>
@@ -428,7 +428,7 @@ function PreviewField({ field }: { field: FormField }) {
           {(field.options ?? []).map((o) => (
             <label key={o} className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" className="accent-indigo-500" disabled />
-              <span className="text-sm text-gray-300">{o}</span>
+              <span className="text-sm text-gray-600">{o}</span>
             </label>
           ))}
         </div>
@@ -441,7 +441,7 @@ function PreviewField({ field }: { field: FormField }) {
         </div>
       )}
       {field.type === 'file' && (
-        <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-700 py-6 text-center">
+        <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-gray-200 py-6 text-center">
           <div>
             <Paperclip className="h-8 w-8 text-gray-500" />
             <p className="mt-1 text-xs text-gray-500">
@@ -481,10 +481,10 @@ function ResponsesTab({ form }: { form: Form }) {
   return (
     <div>
       <p className="mb-4 text-sm text-gray-400">{data.total} réponse{data.total !== 1 ? 's' : ''}</p>
-      <div className="overflow-x-auto rounded-xl border border-gray-800">
+      <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-800 bg-gray-900/50">
+            <tr className="border-b border-gray-200 bg-white/50">
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Date</th>
               {answerableFields.map((f) => (
                 <th key={f.id} className="px-4 py-3 text-left text-xs font-medium text-gray-400 max-w-xs truncate">
@@ -496,7 +496,7 @@ function ResponsesTab({ form }: { form: Form }) {
           </thead>
           <tbody className="divide-y divide-gray-800/50">
             {data.data.map((resp) => (
-              <tr key={resp._id} className="hover:bg-gray-800/30 transition-colors">
+              <tr key={resp._id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">
                   {new Date(resp.createdAt).toLocaleString('fr-FR')}
                 </td>
@@ -504,7 +504,7 @@ function ResponsesTab({ form }: { form: Form }) {
                   const ans = resp.answers.find((a) => a.fieldId === f.id)
                   const val = ans?.value
                   return (
-                    <td key={f.id} className="px-4 py-3 text-xs text-gray-300 max-w-xs">
+                    <td key={f.id} className="px-4 py-3 text-xs text-gray-600 max-w-xs">
                       <span className="line-clamp-2">
                         {Array.isArray(val) ? val.join(', ') : String(val ?? '—')}
                       </span>
@@ -532,7 +532,7 @@ function ResponsesTab({ form }: { form: Form }) {
           <button
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
-            className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-800 disabled:opacity-40 transition-colors"
+            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-100 disabled:opacity-40 transition-colors"
           >
             Précédent
           </button>
@@ -540,7 +540,7 @@ function ResponsesTab({ form }: { form: Form }) {
           <button
             disabled={page === data.totalPages}
             onClick={() => setPage((p) => p + 1)}
-            className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-800 disabled:opacity-40 transition-colors"
+            className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-100 disabled:opacity-40 transition-colors"
           >
             Suivant
           </button>
@@ -557,47 +557,47 @@ function SettingsTab({ form, onChange }: { form: Form; onChange: (settings: Form
   return (
     <div className="max-w-lg space-y-5">
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-gray-300">Message de confirmation</label>
+        <label className="mb-1.5 block text-sm font-medium text-gray-600">Message de confirmation</label>
         <textarea
           value={s.submitMessage}
           onChange={(e) => onChange({ ...s, submitMessage: e.target.value })}
           rows={3}
-          className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none resize-none"
+          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none resize-none"
         />
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-gray-300">URL de redirection après envoi</label>
+        <label className="mb-1.5 block text-sm font-medium text-gray-600">URL de redirection après envoi</label>
         <input
           value={s.redirectUrl ?? ''}
           onChange={(e) => onChange({ ...s, redirectUrl: e.target.value || undefined })}
           placeholder="https://..."
-          className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
         />
         <p className="mt-1 text-xs text-gray-500">Laissez vide pour afficher le message de confirmation</p>
       </div>
 
       <div>
-        <label className="mb-1.5 block text-sm font-medium text-gray-300">Email de notification</label>
+        <label className="mb-1.5 block text-sm font-medium text-gray-600">Email de notification</label>
         <input
           type="email"
           value={s.notifyEmail ?? ''}
           onChange={(e) => onChange({ ...s, notifyEmail: e.target.value || undefined })}
           placeholder="vous@exemple.com"
-          className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
         />
       </div>
 
-      <div className="flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800/30 px-4 py-3">
+      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
         <div>
-          <p className="text-sm font-medium text-gray-300">Réponses multiples</p>
+          <p className="text-sm font-medium text-gray-600">Réponses multiples</p>
           <p className="text-xs text-gray-500">Autoriser un même utilisateur à répondre plusieurs fois</p>
         </div>
         <button
           onClick={() => onChange({ ...s, allowMultipleSubmissions: !s.allowMultipleSubmissions })}
           className={cn(
             'relative h-5 w-9 rounded-full transition-colors',
-            s.allowMultipleSubmissions ? 'bg-indigo-600' : 'bg-gray-700',
+            s.allowMultipleSubmissions ? 'bg-indigo-600' : 'bg-gray-200',
           )}
         >
           <span className={cn(
@@ -716,26 +716,26 @@ export function FormBuilderPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Top bar */}
-      <div className="flex h-14 shrink-0 items-center gap-4 border-b border-gray-800 bg-gray-950 px-4">
+      <div className="flex h-14 shrink-0 items-center gap-4 border-b border-gray-200 bg-[#f5f6fa] px-4">
         <button
           onClick={() => navigate('/forms')}
-          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-800 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Formulaires
         </button>
 
-        <div className="h-4 w-px bg-gray-800" />
+        <div className="h-4 w-px bg-gray-100" />
 
         <input
           value={localForm.title}
           onChange={(e) => updateLocal({ title: e.target.value })}
-          className="flex-1 bg-transparent text-sm font-semibold text-gray-100 focus:outline-none"
+          className="flex-1 bg-transparent text-sm font-semibold text-gray-900 focus:outline-none"
         />
 
         <span className={cn(
           'text-xs transition-colors',
-          saveStatus === 'saved' ? 'text-gray-600' : saveStatus === 'saving' ? 'text-yellow-500' : 'text-orange-400',
+          saveStatus === 'saved' ? 'text-gray-600' : saveStatus === 'saving' ? 'text-yellow-500' : 'text-orange-600',
         )}>
           {saveStatus === 'saved' ? 'Enregistré' : saveStatus === 'saving' ? 'Enregistrement...' : 'Non enregistré'}
         </span>
@@ -746,7 +746,7 @@ export function FormBuilderPage() {
               href={publicUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
+              className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-800 transition-colors"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               Voir
@@ -759,7 +759,7 @@ export function FormBuilderPage() {
             className={cn(
               'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors',
               localForm.isPublished
-                ? 'border border-gray-700 text-gray-300 hover:bg-gray-800'
+                ? 'border border-gray-200 text-gray-600 hover:bg-gray-100'
                 : 'bg-indigo-600 text-white hover:bg-indigo-500',
             )}
           >
@@ -773,7 +773,7 @@ export function FormBuilderPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex shrink-0 gap-1 border-b border-gray-800 bg-gray-950 px-4">
+      <div className="flex shrink-0 gap-1 border-b border-gray-200 bg-[#f5f6fa] px-4">
         {([
           { id: 'builder', label: 'Constructeur' },
           { id: 'preview', label: 'Aperçu' },
@@ -786,8 +786,8 @@ export function FormBuilderPage() {
             className={cn(
               'flex items-center gap-1.5 border-b-2 px-3 py-2.5 text-xs font-medium transition-colors',
               tab === tid
-                ? 'border-indigo-500 text-indigo-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300',
+                ? 'border-indigo-500 text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-600',
             )}
           >
             {label}
@@ -821,12 +821,12 @@ export function FormBuilderPage() {
         {tab === 'builder' && (
           <div className="flex h-full">
             {/* Left panel — field list */}
-            <div className="flex w-72 shrink-0 flex-col border-r border-gray-800 bg-gray-950">
+            <div className="flex w-72 shrink-0 flex-col border-r border-gray-200 bg-[#f5f6fa]">
               <div className="p-3">
                 <div className="relative">
                   <button
                     onClick={() => setShowPalette((v) => !v)}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-700 py-2 text-sm text-gray-400 hover:border-indigo-500 hover:text-indigo-400 transition-colors"
+                    className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-gray-200 py-2 text-sm text-gray-400 hover:border-indigo-500 hover:text-indigo-600 transition-colors"
                   >
                     <Plus className="h-4 w-4" />
                     Ajouter un champ
@@ -855,15 +855,15 @@ export function FormBuilderPage() {
                       className={cn(
                         'group flex cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 transition-colors',
                         selectedFieldId === field.id
-                          ? 'bg-indigo-600/15 ring-1 ring-indigo-500/40'
-                          : 'hover:bg-gray-800/60',
+                          ? 'bg-indigo-50 ring-1 ring-indigo-500/40'
+                          : 'hover:bg-gray-100',
                       )}
                     >
                       <GripVertical className="h-4 w-4 shrink-0 text-gray-700" />
                       <div className="flex h-5 w-5 shrink-0 items-center justify-center">
                         {meta ? <meta.Icon className="h-3.5 w-3.5 text-gray-500" /> : <span className="text-xs text-gray-600">?</span>}
                       </div>
-                      <span className="min-w-0 flex-1 truncate text-xs text-gray-300">
+                      <span className="min-w-0 flex-1 truncate text-xs text-gray-600">
                         {field.type === 'heading' || field.type === 'paragraph'
                           ? (field.content || field.label)
                           : field.label}
@@ -872,14 +872,14 @@ export function FormBuilderPage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); moveField(field.id, 'up') }}
                           disabled={idx === 0}
-                          className="rounded p-0.5 text-gray-500 hover:text-gray-300 disabled:opacity-30"
+                          className="rounded p-0.5 text-gray-500 hover:text-gray-600 disabled:opacity-30"
                         >
                           <ChevronUp className="h-3 w-3" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); moveField(field.id, 'down') }}
                           disabled={idx === localForm.fields.length - 1}
-                          className="rounded p-0.5 text-gray-500 hover:text-gray-300 disabled:opacity-30"
+                          className="rounded p-0.5 text-gray-500 hover:text-gray-600 disabled:opacity-30"
                         >
                           <ChevronDown className="h-3 w-3" />
                         </button>
@@ -902,7 +902,7 @@ export function FormBuilderPage() {
                 <div className="max-w-md">
                   <div className="mb-4 flex items-center gap-2">
                     {(() => { const FT = FIELD_TYPES.find((f) => f.type === selectedField.type); return FT ? <FT.Icon className="h-4 w-4 text-gray-400" /> : null })()}
-                    <h3 className="text-sm font-semibold text-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-800">
                       {FIELD_TYPES.find((f) => f.type === selectedField.type)?.label}
                     </h3>
                   </div>

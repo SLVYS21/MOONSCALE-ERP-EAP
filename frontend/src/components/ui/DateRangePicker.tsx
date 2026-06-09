@@ -67,14 +67,14 @@ function MonthCalendar({
   return (
     <div className="flex-1 min-w-0">
       <div className="flex items-center justify-between mb-2.5">
-        <span className="text-[13px] font-semibold text-gray-200 capitalize">
+        <span className="text-[13px] font-semibold text-gray-800 capitalize">
           {MONTH_FR[month]} {year}
         </span>
         <div className="flex items-center gap-0.5">
-          <button onClick={onPrev} className="p-1 rounded hover:bg-gray-700/70 text-gray-500 hover:text-gray-200 transition-colors">
+          <button onClick={onPrev} className="p-1 rounded hover:bg-gray-200/70 text-gray-500 hover:text-gray-800 transition-colors">
             <ChevronLeft size={13} />
           </button>
-          <button onClick={onNext} className="p-1 rounded hover:bg-gray-700/70 text-gray-500 hover:text-gray-200 transition-colors">
+          <button onClick={onNext} className="p-1 rounded hover:bg-gray-200/70 text-gray-500 hover:text-gray-800 transition-colors">
             <ChevronRight size={13} />
           </button>
         </div>
@@ -103,7 +103,7 @@ function MonthCalendar({
                 'h-7 w-full flex items-center justify-center text-[12px] rounded-md transition-colors',
                 isSel    && 'bg-indigo-600 text-white font-semibold',
                 isRanged && !isSel && 'bg-indigo-900/40 text-indigo-300',
-                !isSel && !isRanged && 'text-gray-400 hover:bg-gray-700/70 hover:text-gray-100',
+                !isSel && !isRanged && 'text-gray-400 hover:bg-gray-200/70 hover:text-gray-900',
                 isToday && !isSel && 'ring-1 ring-inset ring-indigo-500/60',
               )}
             >
@@ -221,21 +221,21 @@ export function DateRangePicker({
         className={cn(
           'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] transition-colors select-none',
           isActive
-            ? 'border-indigo-600/50 bg-indigo-900/20 text-indigo-300 hover:border-indigo-500/70'
-            : 'border-gray-700 bg-gray-900 text-gray-300 hover:border-gray-600 hover:text-gray-100',
+            ? 'border-indigo-600/50 bg-indigo-50 text-indigo-300 hover:border-indigo-500/70'
+            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-600 hover:text-gray-900',
         )}
       >
-        <CalendarDays size={13} className={isActive ? 'text-indigo-400' : 'text-gray-500'} />
+        <CalendarDays size={13} className={isActive ? 'text-indigo-600' : 'text-gray-500'} />
         <span>{triggerLabel}</span>
         <ChevronDown size={11} className="text-gray-500 ml-0.5" />
       </button>
 
       {/* Dropdown */}
       {open && (
-        <div className={cn('absolute top-full mt-2 z-[100] flex rounded-xl border border-gray-700/80 bg-gray-900 shadow-2xl shadow-black/40 overflow-hidden', alignRight ? 'right-0' : 'left-0')} style={{ minWidth: 640 }}>
+        <div className={cn('absolute top-full mt-2 z-[100] flex rounded-xl border border-gray-200/80 bg-white shadow-2xl shadow-black/40 overflow-hidden', alignRight ? 'right-0' : 'left-0')} style={{ minWidth: 640 }}>
 
           {/* Left — quick select */}
-          <div className="w-52 shrink-0 border-r border-gray-800 p-4 flex flex-col gap-0.5">
+          <div className="w-52 shrink-0 border-r border-gray-200 p-4 flex flex-col gap-0.5">
             <p className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-gray-500">Sélection rapide</p>
             {periods.map((p) => {
               const active = period === p.value && !(p.value === '' && (customFrom || customTo))
@@ -247,11 +247,11 @@ export function DateRangePicker({
                     'flex items-center justify-between gap-2 w-full rounded-lg px-3 py-2 text-[13px] text-left transition-colors',
                     active
                       ? 'bg-[#1a2d4a] text-white font-medium'
-                      : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200',
+                      : 'text-gray-400 hover:bg-gray-100 hover:text-gray-800',
                   )}
                 >
                   <span>{p.label}</span>
-                  {active && <Check size={13} className="text-indigo-400 shrink-0" />}
+                  {active && <Check size={13} className="text-indigo-600 shrink-0" />}
                 </button>
               )
             })}
@@ -269,7 +269,7 @@ export function DateRangePicker({
                   type="date"
                   value={displayFrom}
                   onChange={e => onChange('custom', e.target.value, displayTo)}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-[13px] text-gray-200 focus:border-indigo-500 focus:outline-none [color-scheme:dark]"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-[13px] text-gray-800 focus:border-indigo-500 focus:outline-none [color-scheme:dark]"
                 />
               </div>
               <div className="flex-1">
@@ -278,7 +278,7 @@ export function DateRangePicker({
                   type="date"
                   value={displayTo}
                   onChange={e => onChange('custom', displayFrom, e.target.value)}
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-[13px] text-gray-200 focus:border-indigo-500 focus:outline-none [color-scheme:dark]"
+                  className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-[13px] text-gray-800 focus:border-indigo-500 focus:outline-none [color-scheme:dark]"
                 />
               </div>
             </div>
@@ -294,7 +294,7 @@ export function DateRangePicker({
                   onPrev={prevL} onNext={nextL}
                 />
               </div>
-              <div className="w-px bg-gray-800 self-stretch" />
+              <div className="w-px bg-gray-100 self-stretch" />
               <div className="flex-1 min-w-0">
                 <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-gray-600">À</p>
                 <MonthCalendar

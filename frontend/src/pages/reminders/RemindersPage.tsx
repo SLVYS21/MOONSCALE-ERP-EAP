@@ -26,13 +26,13 @@ function RunDetailModal({ run, onClose }: { run: ReminderCronRun; onClose: () =>
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-xl border border-gray-700 bg-gray-900 shadow-xl flex flex-col"
+        className="w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-800 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div>
-            <p className="text-sm font-semibold text-gray-100">
+            <p className="text-sm font-semibold text-gray-900">
               Exécution — {formatDate(run.runAt)}
             </p>
             <p className="mt-0.5 text-xs text-gray-500">
@@ -40,7 +40,7 @@ function RunDetailModal({ run, onClose }: { run: ReminderCronRun; onClose: () =>
             </p>
           </div>
           <div className="flex gap-3 text-xs">
-            <span className="text-emerald-400">{run.emailsSent} envoyé(s)</span>
+            <span className="text-emerald-600">{run.emailsSent} envoyé(s)</span>
             <span className="text-red-400">{run.emailsFailed} échoué(s)</span>
             <span className="text-amber-400">{run.accessRestricted} restreint(s)</span>
           </div>
@@ -59,8 +59,8 @@ function RunDetailModal({ run, onClose }: { run: ReminderCronRun; onClose: () =>
             <p className="py-12 text-center text-sm text-gray-500">Aucun rappel traité.</p>
           ) : (
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-gray-900">
-                <tr className="border-b border-gray-800 text-left text-xs text-gray-500">
+              <thead className="sticky top-0 bg-white">
+                <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
                   <th className="px-6 py-3 font-medium">Étudiant</th>
                   <th className="px-4 py-3 font-medium">Type</th>
                   <th className="px-4 py-3 font-medium">J avant paiement</th>
@@ -69,9 +69,9 @@ function RunDetailModal({ run, onClose }: { run: ReminderCronRun; onClose: () =>
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {run.entries.map((entry, i) => (
-                  <tr key={i} className="hover:bg-gray-800/40">
+                  <tr key={i} className="hover:bg-gray-50">
                     <td className="px-6 py-3">
-                      <p className="font-medium text-gray-200">{entry.studentName ?? '—'}</p>
+                      <p className="font-medium text-gray-800">{entry.studentName ?? '—'}</p>
                       <p className="text-xs text-gray-500">{entry.email}</p>
                       {entry.error && (
                         <p className="mt-0.5 text-xs text-red-400">{entry.error}</p>
@@ -89,7 +89,7 @@ function RunDetailModal({ run, onClose }: { run: ReminderCronRun; onClose: () =>
           )}
         </div>
 
-        <div className="border-t border-gray-800 px-6 py-4">
+        <div className="border-t border-gray-200 px-6 py-4">
           <Button variant="secondary" size="sm" onClick={onClose}>Fermer</Button>
         </div>
       </div>
@@ -127,7 +127,7 @@ export function RemindersPage() {
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Rappels</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Rappels</h1>
           <p className="mt-0.5 text-sm text-gray-500">
             Historique des envois automatiques — cron quotidien à 9h (Paris)
           </p>
@@ -146,17 +146,17 @@ export function RemindersPage() {
       {latest && (
         <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { label: 'Rappels traités', value: latest.totalReminders, icon: Bell, color: 'text-indigo-400' },
-            { label: 'Envoyés', value: latest.emailsSent, icon: CheckCircle2, color: 'text-emerald-400' },
+            { label: 'Rappels traités', value: latest.totalReminders, icon: Bell, color: 'text-indigo-600' },
+            { label: 'Envoyés', value: latest.emailsSent, icon: CheckCircle2, color: 'text-emerald-600' },
             { label: 'Échoués', value: latest.emailsFailed, icon: XCircle, color: 'text-red-400' },
             { label: 'Accès restreint', value: latest.accessRestricted, icon: ShieldOff, color: 'text-amber-400' },
           ].map(({ label, value, icon: Icon, color }) => (
             <Card key={label} className="flex items-center gap-4 p-4">
-              <div className={`rounded-lg bg-gray-800 p-2.5 ${color}`}>
+              <div className={`rounded-lg bg-gray-100 p-2.5 ${color}`}>
                 <Icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-semibold text-gray-100">{value}</p>
+                <p className="text-2xl font-semibold text-gray-900">{value}</p>
                 <p className="text-xs text-gray-500">{label}</p>
               </div>
             </Card>
@@ -176,7 +176,7 @@ export function RemindersPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-800 text-left text-xs text-gray-500">
+              <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
                 <th className="px-6 py-3 font-medium">Date</th>
                 <th className="px-4 py-3 font-medium">Durée</th>
                 <th className="px-4 py-3 font-medium">Rappels</th>
@@ -190,13 +190,13 @@ export function RemindersPage() {
               {data.data.map((run) => (
                 <tr
                   key={run._id}
-                  className="cursor-pointer hover:bg-gray-800/40"
+                  className="cursor-pointer hover:bg-gray-50"
                   onClick={() => setSelectedRun(run)}
                 >
-                  <td className="px-6 py-3 text-gray-200">{formatDate(run.runAt)}</td>
+                  <td className="px-6 py-3 text-gray-800">{formatDate(run.runAt)}</td>
                   <td className="px-4 py-3 text-gray-400">{run.durationMs}ms</td>
                   <td className="px-4 py-3 text-gray-400">{run.totalReminders}</td>
-                  <td className="px-4 py-3 text-emerald-400">{run.emailsSent}</td>
+                  <td className="px-4 py-3 text-emerald-600">{run.emailsSent}</td>
                   <td className="px-4 py-3 text-red-400">{run.emailsFailed}</td>
                   <td className="px-4 py-3 text-amber-400">{run.accessRestricted}</td>
                   <td className="px-4 py-3">
@@ -216,20 +216,20 @@ export function RemindersPage() {
 
         {/* Pagination */}
         {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-800 px-6 py-4">
+          <div className="flex items-center justify-between border-t border-gray-200 px-6 py-4">
             <p className="text-xs text-gray-500">
               {data.total} exécution(s) · page {data.page}/{data.totalPages}
             </p>
             <div className="flex gap-2">
               <button
-                className="rounded-lg border border-gray-700 p-1.5 text-gray-400 hover:bg-gray-800 disabled:opacity-40"
+                className="rounded-lg border border-gray-200 p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-40"
                 disabled={page === 1}
                 onClick={() => setPage((p) => p - 1)}
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
               <button
-                className="rounded-lg border border-gray-700 p-1.5 text-gray-400 hover:bg-gray-800 disabled:opacity-40"
+                className="rounded-lg border border-gray-200 p-1.5 text-gray-400 hover:bg-gray-100 disabled:opacity-40"
                 disabled={page === data.totalPages}
                 onClick={() => setPage((p) => p + 1)}
               >

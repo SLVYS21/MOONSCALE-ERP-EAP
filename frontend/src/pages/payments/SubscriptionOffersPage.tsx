@@ -11,11 +11,11 @@ import type { Offer, OfferPlan } from '@/types'
 // ── Dynamic product colors (deterministic by name) ────────────────────────────
 
 const PALETTE = [
-  { border: 'border-indigo-500/30', badge: 'bg-indigo-100 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400' },
+  { border: 'border-indigo-500/30', badge: 'bg-indigo-100 dark:bg-indigo-50 text-indigo-700 dark:text-indigo-600' },
   { border: 'border-violet-500/30', badge: 'bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400' },
   { border: 'border-amber-500/30',  badge: 'bg-amber-100  dark:bg-amber-500/10  text-amber-700  dark:text-amber-400'  },
-  { border: 'border-emerald-500/30',badge: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' },
-  { border: 'border-rose-500/30',   badge: 'bg-rose-100   dark:bg-rose-500/10   text-rose-700   dark:text-rose-400'   },
+  { border: 'border-emerald-500/30',badge: 'bg-emerald-100 dark:bg-emerald-50 text-emerald-700 dark:text-emerald-600' },
+  { border: 'border-rose-500/30',   badge: 'bg-rose-100   dark:bg-rose-50   text-rose-700   dark:text-rose-600'   },
   { border: 'border-sky-500/30',    badge: 'bg-sky-100    dark:bg-sky-500/10    text-sky-700    dark:text-sky-400'    },
   { border: 'border-teal-500/30',   badge: 'bg-teal-100   dark:bg-teal-500/10   text-teal-700   dark:text-teal-400'   },
   { border: 'border-fuchsia-500/30',badge: 'bg-fuchsia-100 dark:bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400' },
@@ -47,7 +47,7 @@ const emptyPlan = (): PlanDraft => ({
 
 // ── Shared styles ─────────────────────────────────────────────────────────────
 
-const inp = 'rounded-lg border border-gray-700 bg-gray-800/50 px-2.5 py-1.5 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+const inp = 'rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 const lbl = 'mb-1 block text-xs font-medium text-gray-400'
 
 // ── Plan row in modal ─────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ function PlanDraftRow({
   onRemove: (i: number) => void
 }) {
   return (
-    <div className="grid grid-cols-[1fr_60px_90px_80px_60px_28px] items-center gap-2 py-2 border-b border-gray-800/50 last:border-0">
+    <div className="grid grid-cols-[1fr_60px_90px_80px_60px_28px] items-center gap-2 py-2 border-b border-gray-200/50 last:border-0">
       <input
         value={plan.name}
         onChange={(e) => onChange(index, { name: e.target.value })}
@@ -184,12 +184,12 @@ function OfferModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-2xl rounded-xl border border-gray-800 bg-gray-900 shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-2xl rounded-xl border border-gray-200 bg-white shadow-2xl flex flex-col max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-800 shrink-0">
+        <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-200 shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
               {isEdit ? `Modifier — ${offer!.name}` : 'Nouvelle offre'}
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
@@ -198,7 +198,7 @@ function OfferModal({
                 : "Nommez l'offre et ajoutez vos plans de souscription"}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-200 transition-colors">
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -211,7 +211,7 @@ function OfferModal({
             <div>
               <label className={lbl}>Nom de l'offre</label>
               {isEdit ? (
-                <div className="rounded-lg border border-gray-700 bg-gray-800/30 px-3 py-2 text-sm text-gray-300">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-600">
                   {offer!.name}
                 </div>
               ) : (
@@ -225,12 +225,12 @@ function OfferModal({
                   />
                   {/* Suggestions from existing products */}
                   {suggestions.length > 0 && (
-                    <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-gray-700 bg-gray-800 shadow-xl overflow-hidden">
+                    <div className="absolute left-0 right-0 top-full z-10 mt-1 rounded-lg border border-gray-200 bg-gray-100 shadow-xl overflow-hidden">
                       {suggestions.map((s) => (
                         <button
                           key={s}
                           onClick={() => setName(s)}
-                          className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+                          className="w-full px-3 py-2 text-left text-sm text-gray-600 hover:bg-gray-200 hover:text-white transition-colors"
                         >
                           {s}
                         </button>
@@ -257,7 +257,7 @@ function OfferModal({
               <label className={`${lbl} mb-0`}>Plans de souscription</label>
               <button
                 onClick={addPlan}
-                className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
+                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-300 transition-colors font-medium"
               >
                 <Plus className="h-3.5 w-3.5" />
                 Ajouter un plan
@@ -272,7 +272,7 @@ function OfferModal({
             </div>
 
             {plans.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-gray-700 py-6 text-center">
+              <div className="rounded-lg border border-dashed border-gray-200 py-6 text-center">
                 <p className="text-xs text-gray-500">Cliquez "Ajouter un plan" pour commencer</p>
               </div>
             ) : (
@@ -296,7 +296,7 @@ function OfferModal({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-800 shrink-0">
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 shrink-0">
           <Button variant="secondary" onClick={onClose} disabled={saving}>Annuler</Button>
           <Button loading={saving} onClick={handleSubmit}>
             {isEdit
@@ -330,7 +330,7 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
   })
 
   return (
-    <div className={`rounded-xl border-2 bg-gray-900/40 p-5 ${meta.border} ${!offer.isActive ? 'opacity-60' : ''}`}>
+    <div className={`rounded-xl border-2 bg-white p-5 ${meta.border} ${!offer.isActive ? 'opacity-60' : ''}`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
@@ -344,7 +344,7 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
         <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={onEdit}
-            className="flex items-center gap-1.5 rounded-lg border border-gray-700 bg-gray-800/50 px-2.5 py-1.5 text-xs font-medium text-gray-300 hover:text-white hover:bg-gray-700 transition-colors"
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-white hover:bg-gray-200 transition-colors"
           >
             <Pencil className="h-3 w-3" />
             Modifier
@@ -353,7 +353,7 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
             onClick={() => toggleMutation.mutate()}
             disabled={toggleMutation.isPending}
             title={offer.isActive ? 'Désactiver' : 'Activer'}
-            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-200 hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-800 hover:bg-gray-100 transition-colors"
           >
             {offer.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
           </button>
@@ -370,7 +370,7 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
 
       {/* Plans grid */}
       {offer.plans?.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-700 py-4 text-center">
+        <div className="rounded-lg border border-dashed border-gray-200 py-4 text-center">
           <p className="text-xs text-gray-500">Aucun plan — cliquez "Modifier" pour en ajouter</p>
         </div>
       ) : (
@@ -380,10 +380,10 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
             return (
               <div
                 key={pWithId._id}
-                className={`rounded-lg border border-gray-800 bg-gray-800/40 px-3 py-2.5 ${!plan.isActive ? 'opacity-40' : ''}`}
+                className={`rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 ${!plan.isActive ? 'opacity-40' : ''}`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="text-sm font-semibold text-gray-100">{plan.name}</span>
+                  <span className="text-sm font-semibold text-gray-900">{plan.name}</span>
                   {!plan.isActive && (
                     <span className="text-[10px] text-gray-600 uppercase tracking-wide">inactif</span>
                   )}
@@ -394,7 +394,7 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
                     {plan.durationMonths} mois
                   </span>
                   {plan.price > 0 && (
-                    <span className="font-medium text-gray-300">{formatAmount(plan.price, plan.currency)}</span>
+                    <span className="font-medium text-gray-600">{formatAmount(plan.price, plan.currency)}</span>
                   )}
                   {plan.partialDueAfterDays !== 30 && (
                     <span className="text-gray-600">partiel {plan.partialDueAfterDays}j</span>
@@ -455,10 +455,10 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
 //   // }
 
 //   // return (
-//   //   <div className="mt-8 rounded-xl border border-gray-800 bg-gray-900/40 p-5">
+//   //   <div className="mt-8 rounded-xl border border-gray-200 bg-white p-5">
 //   //     <div className="flex items-center justify-between mb-4">
 //   //       {/* <div>
-//   //         <h2 className="text-sm font-semibold text-gray-200">Retracer les souscriptions</h2>
+//   //         <h2 className="text-sm font-semibold text-gray-800">Retracer les souscriptions</h2>
 //   //         <p className="text-xs text-gray-500 mt-0.5">Crée des souscriptions à partir des paiements traités existants</p>
 //   //       </div> */}
 //   //       {/* <Button variant="secondary" onClick={loadPreview} loading={loading && !preview}>
@@ -468,7 +468,7 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
 //   //     </div>
 
 //   //     {/* {result && (
-//   //       <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-300">
+//   //       <div className="rounded-lg bg-emerald-50 border border-emerald-500/20 px-4 py-3 text-sm text-emerald-300">
 //   //         ✓ {result.created} souscription{result.created !== 1 ? 's' : ''} créée{result.created !== 1 ? 's' : ''} · {result.skipped} ignorées · {result.errors} erreur{result.errors !== 1 ? 's' : ''}
 //   //       </div>
 //   //     )}
@@ -477,11 +477,11 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
 //   //       <div className="space-y-3">
 //   //         <div className="grid grid-cols-3 gap-3 text-center">
 //   //           {[
-//   //             { label: 'À créer', value: preview.willCreate, cls: 'text-indigo-400' },
+//   //             { label: 'À créer', value: preview.willCreate, cls: 'text-indigo-600' },
 //   //             { label: 'Déjà liées', value: preview.alreadyHaveSubscription, cls: 'text-gray-400' },
 //   //             { label: 'Sans offre', value: preview.noOfferMatch, cls: 'text-amber-400' },
 //   //           ].map((s) => (
-//   //             <div key={s.label} className="rounded-lg border border-gray-800 bg-gray-800/40 py-3">
+//   //             <div key={s.label} className="rounded-lg border border-gray-200 bg-gray-50 py-3">
 //   //               <p className={`text-xl font-bold tabular-nums ${s.cls}`}>{s.value}</p>
 //   //               <p className="text-[11px] text-gray-500 mt-0.5">{s.label}</p>
 //   //             </div>
@@ -489,11 +489,11 @@ function OfferCard({ offer, onEdit }: { offer: Offer; onEdit: () => void }) {
 //   //         </div>
 
 //   //         {preview.breakdown.length > 0 && (
-//   //           <div className="rounded-lg border border-gray-800 divide-y divide-gray-800 overflow-hidden">
+//   //           <div className="rounded-lg border border-gray-200 divide-y divide-gray-800 overflow-hidden">
 //   //             {preview.breakdown.map((b) => (
 //   //               <div key={`${b.offerName}::${b.planName}`} className="flex items-center justify-between px-3 py-2 text-xs">
-//   //                 <span className="text-gray-300 font-medium">{b.offerName} — {b.planName}</span>
-//   //                 <span className="text-gray-500">{b.durationMonths} mois · <span className="text-indigo-400 font-semibold">{b.count} paiement{b.count !== 1 ? 's' : ''}</span></span>
+//   //                 <span className="text-gray-600 font-medium">{b.offerName} — {b.planName}</span>
+//   //                 <span className="text-gray-500">{b.durationMonths} mois · <span className="text-indigo-600 font-semibold">{b.count} paiement{b.count !== 1 ? 's' : ''}</span></span>
 //   //               </div>
 //   //             ))}
 //   //           </div>
@@ -527,11 +527,11 @@ export function SubscriptionOffersPage() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Link to="/payments" className="text-gray-500 hover:text-gray-200 transition-colors">
+          <Link to="/payments" className="text-gray-500 hover:text-gray-800 transition-colors">
             <ArrowLeft className="h-4 w-4" />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Offres & Plans</h1>
+            <h1 className="text-xl font-bold text-gray-900">Offres & Plans</h1>
             <p className="text-xs text-gray-500 mt-0.5">
               {offers.length} offre{offers.length !== 1 ? 's' : ''} · {offers.reduce((s, o) => s + (o.plans ?? []).filter((p) => p.isActive).length, 0)} plans actifs
             </p>

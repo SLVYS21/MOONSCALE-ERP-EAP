@@ -24,14 +24,14 @@ const PIPELINE_COLUMNS: {
   dotColor: string
   bg: string
 }[] = [
-  { status: 'nouveau',          label: 'Nouveau',          color: 'text-gray-400',   dotColor: 'bg-gray-400',   bg: 'bg-gray-800/40' },
-  { status: 'mql',              label: 'MQL',              color: 'text-blue-400',   dotColor: 'bg-blue-400',   bg: 'bg-blue-900/20' },
-  { status: 'sql',              label: 'SQL',              color: 'text-indigo-400', dotColor: 'bg-indigo-400', bg: 'bg-indigo-900/20' },
-  { status: 'rdv_programme',    label: 'RDV Programmé',    color: 'text-yellow-400', dotColor: 'bg-yellow-400', bg: 'bg-yellow-900/20' },
-  { status: 'appel_diagnostic', label: 'Appel Diagnostic', color: 'text-orange-400', dotColor: 'bg-orange-400', bg: 'bg-orange-900/20' },
-  { status: 'won',              label: 'Won',              color: 'text-green-400',  dotColor: 'bg-green-400',  bg: 'bg-green-900/20' },
-  { status: 'lost',             label: 'Lost',             color: 'text-red-400',    dotColor: 'bg-red-400',    bg: 'bg-red-900/20' },
-  { status: 'nurturing',        label: 'Nurturing',        color: 'text-purple-400', dotColor: 'bg-purple-400', bg: 'bg-purple-900/20' },
+  { status: 'nouveau',          label: 'Nouveau',          color: 'text-gray-400',   dotColor: 'bg-gray-400',   bg: 'bg-gray-50' },
+  { status: 'mql',              label: 'MQL',              color: 'text-blue-600',   dotColor: 'bg-blue-400',   bg: 'bg-blue-50' },
+  { status: 'sql',              label: 'SQL',              color: 'text-indigo-600', dotColor: 'bg-indigo-400', bg: 'bg-indigo-50' },
+  { status: 'rdv_programme',    label: 'RDV Programmé',    color: 'text-yellow-600', dotColor: 'bg-yellow-400', bg: 'bg-yellow-50' },
+  { status: 'appel_diagnostic', label: 'Appel Diagnostic', color: 'text-orange-600', dotColor: 'bg-orange-400', bg: 'bg-orange-50' },
+  { status: 'won',              label: 'Won',              color: 'text-green-600',  dotColor: 'bg-green-400',  bg: 'bg-green-50' },
+  { status: 'lost',             label: 'Lost',             color: 'text-red-400',    dotColor: 'bg-red-400',    bg: 'bg-red-50' },
+  { status: 'nurturing',        label: 'Nurturing',        color: 'text-purple-700', dotColor: 'bg-purple-400', bg: 'bg-purple-50' },
 ]
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -137,8 +137,8 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-lg font-semibold text-gray-100 mb-5">Nouveau lead</h2>
+      <div className="w-full max-w-md rounded-xl bg-white border border-gray-200 p-6 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-lg font-semibold text-gray-900 mb-5">Nouveau lead</h2>
 
         <div className="space-y-3">
           {[
@@ -149,7 +149,7 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
             <div key={key}>
               <label className="block text-xs font-medium text-gray-400 mb-1">{label}</label>
               <input
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
                 placeholder={placeholder}
                 value={(form as Record<string, string>)[key]}
                 onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
@@ -161,7 +161,7 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">Réseau social</label>
               <select
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-200 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none"
                 value={form.reseau_source}
                 onChange={(e) => setForm((f) => ({ ...f, reseau_source: e.target.value }))}
               >
@@ -174,7 +174,7 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">Lead Magnet</label>
               <select
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-200 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:outline-none"
                 value={form.lead_magnet}
                 onChange={(e) => setForm((f) => ({ ...f, lead_magnet: e.target.value }))}
               >
@@ -189,7 +189,7 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-1">Source UTM</label>
             <input
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
               placeholder="facebook_ads, tiktok_bio..."
               value={form.utm_source}
               onChange={(e) => setForm((f) => ({ ...f, utm_source: e.target.value }))}
@@ -200,7 +200,7 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
             <label className="block text-xs font-medium text-gray-400 mb-1">Motivation</label>
             <textarea
               rows={2}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none resize-none"
+              className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none resize-none"
               placeholder="Ce que cherche le lead..."
               value={form.motivation}
               onChange={(e) => setForm((f) => ({ ...f, motivation: e.target.value }))}
@@ -215,7 +215,7 @@ function CreateLeadModal({ onClose }: { onClose: () => void }) {
         )}
 
         <div className="mt-5 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-800 transition-colors">
             Annuler
           </button>
           <button
@@ -285,22 +285,22 @@ function QuickCallModal({ lead, myBookingUrl, onClose }: {
     const iframeUrl = `${myBookingUrl}?${params.toString()}`
 
     return (
-      <div className="fixed inset-0 z-50 flex flex-col bg-gray-950">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-800 shrink-0">
+      <div className="fixed inset-0 z-50 flex flex-col bg-[#f5f6fa]">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 shrink-0">
           <div className="flex items-center gap-2.5">
-            <CalendarDays size={16} className="text-indigo-400" />
+            <CalendarDays size={16} className="text-indigo-600" />
             <div>
-              <h2 className="text-sm font-semibold text-gray-100">Programmer un appel — {lead.name}</h2>
+              <h2 className="text-sm font-semibold text-gray-900">Programmer un appel — {lead.name}</h2>
               <p className="text-xs text-gray-500">Cal.com enverra l'invitation automatiquement</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <a href={iframeUrl} target="_blank" rel="noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs text-gray-600">
               <ExternalLink size={12} /> Ouvrir dans un onglet
             </a>
             <button onClick={() => { onClose(); qc.invalidateQueries({ queryKey: ['lead-calls', lead._id] }) }}
-              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800">
+              className="p-1.5 rounded-lg text-gray-500 hover:text-gray-600 hover:bg-gray-100">
               <X size={16} />
             </button>
           </div>
@@ -314,31 +314,31 @@ function QuickCallModal({ lead, myBookingUrl, onClose }: {
   if (step === 'pre') {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 space-y-5">
+        <div className="bg-white border border-gray-200 rounded-xl w-full max-w-sm p-6 space-y-5">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <CalendarDays size={18} className="text-indigo-400 mt-0.5" />
-              <h2 className="text-base font-semibold text-gray-100">Programmer un appel</h2>
+              <CalendarDays size={18} className="text-indigo-600 mt-0.5" />
+              <h2 className="text-base font-semibold text-gray-900">Programmer un appel</h2>
             </div>
-            <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-300"><X size={16} /></button>
+            <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-600"><X size={16} /></button>
           </div>
           <p className="text-sm text-gray-400">
-            Cal.com s'ouvrira pour choisir un créneau avec <span className="text-gray-200">{lead.name}</span>.
+            Cal.com s'ouvrira pour choisir un créneau avec <span className="text-gray-800">{lead.name}</span>.
           </p>
           {lead.email && (
             <label className="flex items-center gap-3 cursor-pointer select-none">
               <div onClick={() => setSendEmail(v => !v)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${sendEmail ? 'bg-indigo-600' : 'bg-gray-700'}`}>
+                className={`relative w-10 h-5 rounded-full transition-colors ${sendEmail ? 'bg-indigo-600' : 'bg-gray-200'}`}>
                 <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${sendEmail ? 'translate-x-5' : ''}`} />
               </div>
-              <span className="text-sm text-gray-300">
-                Envoyer aussi l'email ERP à <span className="text-gray-100">{lead.email}</span>
+              <span className="text-sm text-gray-600">
+                Envoyer aussi l'email ERP à <span className="text-gray-900">{lead.email}</span>
               </span>
             </label>
           )}
           <div className="flex gap-3 pt-1">
             <button onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+              className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-400 hover:text-gray-800 transition-colors">
               Annuler
             </button>
             <button onClick={handlePreConfirm} disabled={prefLoading}
@@ -354,34 +354,34 @@ function QuickCallModal({ lead, myBookingUrl, onClose }: {
   // ── Manual form ────────────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 space-y-4">
+      <div className="bg-white border border-gray-200 rounded-xl w-full max-w-sm p-6 space-y-4">
         {emailSent ? (
           <div className="flex flex-col items-center gap-3 py-4">
-            <CheckCircle size={36} className="text-green-400" />
-            <p className="text-sm text-gray-300">Email envoyé à <span className="text-gray-100">{lead.email}</span></p>
+            <CheckCircle size={36} className="text-green-600" />
+            <p className="text-sm text-gray-600">Email envoyé à <span className="text-gray-900">{lead.email}</span></p>
           </div>
         ) : (
           <>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
-                <CalendarDays size={18} className="text-indigo-400 mt-0.5" />
-                <h2 className="text-base font-semibold text-gray-100">Nouvel appel — {lead.name}</h2>
+                <CalendarDays size={18} className="text-indigo-600 mt-0.5" />
+                <h2 className="text-base font-semibold text-gray-900">Nouvel appel — {lead.name}</h2>
               </div>
-              <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-300"><X size={16} /></button>
+              <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-600"><X size={16} /></button>
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">Date & heure</label>
               <input type="datetime-local" value={date} onChange={e => setDate(e.target.value)}
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none" />
+                className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none" />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-400 mb-1">Lien Google Meet</label>
               <div className="flex gap-2">
                 <input value={meetLink} onChange={e => setMeetLink(e.target.value)}
                   placeholder="https://meet.google.com/..."
-                  className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none" />
+                  className="flex-1 rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none" />
                 <button onClick={generateMeet}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-xs text-gray-300 shrink-0 transition-colors">
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-600 text-xs text-gray-600 shrink-0 transition-colors">
                   <Video size={12} /> Nouveau
                 </button>
               </div>
@@ -389,10 +389,10 @@ function QuickCallModal({ lead, myBookingUrl, onClose }: {
             {lead.email && (
               <label className="flex items-center gap-3 cursor-pointer select-none">
                 <div onClick={() => setManualSendEmail(v => !v)}
-                  className={`relative w-10 h-5 rounded-full transition-colors ${manualSendEmail ? 'bg-indigo-600' : 'bg-gray-700'}`}>
+                  className={`relative w-10 h-5 rounded-full transition-colors ${manualSendEmail ? 'bg-indigo-600' : 'bg-gray-200'}`}>
                   <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${manualSendEmail ? 'translate-x-5' : ''}`} />
                 </div>
-                <span className="text-sm text-gray-300">Email de confirmation à <span className="text-gray-100">{lead.email}</span></span>
+                <span className="text-sm text-gray-600">Email de confirmation à <span className="text-gray-900">{lead.email}</span></span>
               </label>
             )}
             {createMutation.isError && (
@@ -400,7 +400,7 @@ function QuickCallModal({ lead, myBookingUrl, onClose }: {
             )}
             <div className="flex gap-3 pt-1">
               <button onClick={onClose}
-                className="flex-1 py-2 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+                className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-400 hover:text-gray-800 transition-colors">
                 Annuler
               </button>
               <button onClick={() => createMutation.mutate()} disabled={!date || createMutation.isPending}
@@ -434,7 +434,7 @@ function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () =>
   return (
     <Link
       to={`/leads/${lead._id}`}
-      className="block rounded-xl bg-gray-900 border border-gray-800/80 hover:border-gray-700 hover:bg-gray-850 p-4 transition-all"
+      className="block rounded-xl bg-white border border-gray-200 hover:border-gray-200 hover:bg-gray-50 p-4 transition-all"
     >
       {/* Avatar + call button */}
       <div className="flex items-start justify-between gap-2">
@@ -448,7 +448,7 @@ function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () =>
           <button
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onScheduleCall() }}
             title="Programmer un appel"
-            className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-400 hover:bg-indigo-900/30 transition-colors shrink-0"
+            className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shrink-0"
           >
             <CalendarDays size={14} />
           </button>
@@ -457,7 +457,7 @@ function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () =>
 
       {/* NOM Prénom */}
       <p className="mt-2.5 text-[13px] leading-tight">
-        <span className="font-bold text-gray-100">{nom}</span>
+        <span className="font-bold text-gray-900">{nom}</span>
         {prenom && <span className="font-normal text-gray-400"> {prenom}</span>}
       </p>
 
@@ -473,9 +473,9 @@ function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () =>
 
       {/* Budget */}
       {budget != null && (
-        <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-emerald-700/40 bg-emerald-950/50 px-2.5 py-1.5">
+        <div className="mt-2.5 flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5">
           <Banknote size={11} className="text-emerald-500 shrink-0" />
-          <span className="text-[11px] font-semibold text-emerald-400 truncate">
+          <span className="text-[11px] font-semibold text-emerald-600 truncate">
             {formatBudget(budget, lead)}
           </span>
         </div>
@@ -551,7 +551,7 @@ function KanbanView({
               <span className="flex-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">
                 {col.label}
               </span>
-              <span className="rounded-full bg-gray-800 border border-gray-700/60 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
+              <span className="rounded-full bg-gray-100 border border-gray-200/60 px-2 py-0.5 text-[11px] font-semibold text-gray-400">
                 {colLeads.length}
               </span>
             </div>
@@ -562,7 +562,7 @@ function KanbanView({
                 'flex-1 rounded-xl border p-2 space-y-2.5 min-h-[200px] transition-colors',
                 isTarget
                   ? 'bg-indigo-900/10 border-indigo-600/40'
-                  : 'bg-gray-950/60 border-gray-800/60',
+                  : 'bg-[#f5f6fa]/60 border-gray-200/60',
               )}
               onDragOver={(e) => { e.preventDefault(); if (overCol !== col.status) setOverCol(col.status) }}
               onDragEnter={(e) => { e.preventDefault(); setOverCol(col.status) }}
@@ -592,9 +592,9 @@ function KanbanView({
               {colLeads.length === 0 && (
                 <div className={cn(
                   'flex items-center justify-center rounded-lg border-2 border-dashed min-h-[80px] transition-colors',
-                  isTarget ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-gray-800/50',
+                  isTarget ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-gray-200/50',
                 )}>
-                  <p className={cn('text-xs', isTarget ? 'text-indigo-400' : 'text-gray-700')}>
+                  <p className={cn('text-xs', isTarget ? 'text-indigo-600' : 'text-gray-700')}>
                     {isTarget ? '↓ Déposer ici' : 'Vide'}
                   </p>
                 </div>
@@ -602,7 +602,7 @@ function KanbanView({
 
               {colLeads.length > 0 && isTarget && (
                 <div className="h-12 rounded-lg border-2 border-dashed border-indigo-500/40 bg-indigo-500/5 flex items-center justify-center">
-                  <span className="text-xs text-indigo-400">↓ Déposer ici</span>
+                  <span className="text-xs text-indigo-600">↓ Déposer ici</span>
                 </div>
               )}
             </div>
@@ -621,10 +621,10 @@ function TableView({ leads, onStatusChange, onScheduleCall }: {
   onScheduleCall: (lead: Lead) => void
 }) {
   return (
-    <div className="rounded-xl border border-gray-800 overflow-hidden">
+    <div className="rounded-xl border border-gray-200 overflow-hidden">
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-gray-800 bg-gray-900">
+          <tr className="border-b border-gray-200 bg-white">
             {['Nom', 'Contact', 'Source', 'Pipeline', 'Closer', ''].map((h) => (
               <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                 {h}
@@ -637,14 +637,14 @@ function TableView({ leads, onStatusChange, onScheduleCall }: {
             const col = PIPELINE_COLUMNS.find((c) => c.status === lead.pipeline_status)
             const { nom, prenom } = splitName(lead.name)
             return (
-              <tr key={lead._id} className="border-b border-gray-800/50 hover:bg-gray-900/50 transition-colors">
+              <tr key={lead._id} className="border-b border-gray-200/50 hover:bg-white/50 transition-colors">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className={cn('w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0', avatarBg(lead.name))}>
                       {getInitials(lead.name)}
                     </div>
                     <div>
-                      <p className="text-[13px] text-gray-200">
+                      <p className="text-[13px] text-gray-800">
                         <span className="font-bold">{nom}</span>
                         {prenom && <span className="font-normal text-gray-400"> {prenom}</span>}
                       </p>
@@ -688,7 +688,7 @@ function TableView({ leads, onStatusChange, onScheduleCall }: {
                     )}
                   >
                     {PIPELINE_COLUMNS.map((c) => (
-                      <option key={c.status} value={c.status} className="bg-gray-900 text-gray-100">
+                      <option key={c.status} value={c.status} className="bg-white text-gray-900">
                         {c.label}
                       </option>
                     ))}
@@ -713,13 +713,13 @@ function TableView({ leads, onStatusChange, onScheduleCall }: {
                     <button
                       onClick={() => onScheduleCall(lead)}
                       title="Programmer un appel"
-                      className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-400 hover:bg-indigo-900/30 transition-colors"
+                      className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
                     >
                       <CalendarDays size={14} />
                     </button>
                     <Link
                       to={`/leads/${lead._id}`}
-                      className="inline-flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+                      className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-300"
                     >
                       Voir <ChevronRight size={12} />
                     </Link>
@@ -752,12 +752,12 @@ function StatsBar({ leads }: { leads: Lead[] }) {
   return (
     <div className="grid grid-cols-4 gap-3 mb-5">
       {[
-        { icon: Target,      label: 'Total leads',      value: total,        color: 'text-gray-300' },
-        { icon: TrendingUp,  label: 'En phase SQL+',     value: sql,          color: 'text-indigo-400' },
-        { icon: CheckCircle, label: 'Won',               value: won,          color: 'text-green-400' },
-        { icon: Clock,       label: 'Taux conversion',   value: `${convRate}%`, color: 'text-yellow-400' },
+        { icon: Target,      label: 'Total leads',      value: total,        color: 'text-gray-600' },
+        { icon: TrendingUp,  label: 'En phase SQL+',     value: sql,          color: 'text-indigo-600' },
+        { icon: CheckCircle, label: 'Won',               value: won,          color: 'text-green-600' },
+        { icon: Clock,       label: 'Taux conversion',   value: `${convRate}%`, color: 'text-yellow-600' },
       ].map(({ icon: Icon, label, value, color }) => (
-        <div key={label} className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+        <div key={label} className="rounded-xl bg-white border border-gray-200 p-4">
           <div className="flex items-center gap-2 mb-1">
             <Icon size={14} className={color} />
             <span className="text-xs text-gray-500">{label}</span>
@@ -870,24 +870,24 @@ function LeadsAnalytics() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-4 gap-3">
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 flex items-start justify-between">
+        <div className="rounded-xl bg-white border border-gray-200 p-4 flex items-start justify-between">
           <div>
             <p className="text-xs text-gray-500">Total Leads</p>
-            <p className="text-3xl font-bold text-gray-100 mt-1">{total}</p>
+            <p className="text-3xl font-bold text-gray-900 mt-1">{total}</p>
             <p className="text-xs text-gray-600 mt-1">sur la période</p>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
             <Target size={16} className="text-gray-400" />
           </div>
         </div>
 
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 flex items-start justify-between">
+        <div className="rounded-xl bg-white border border-gray-200 p-4 flex items-start justify-between">
           <div>
             <p className="text-xs text-gray-500">SQL</p>
-            <p className="text-3xl font-bold text-gray-100 mt-1">{sqlCount}</p>
+            <p className="text-3xl font-bold text-gray-900 mt-1">{sqlCount}</p>
             <p className="text-xs text-gray-600 mt-1">leads qualifiés vente</p>
           </div>
-          <div className="w-9 h-9 rounded-lg bg-gray-800 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center shrink-0">
             <Star size={16} className="text-gray-400" />
           </div>
         </div>
@@ -903,10 +903,10 @@ function LeadsAnalytics() {
           </div>
         </div>
 
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 flex items-start justify-between">
+        <div className="rounded-xl bg-white border border-gray-200 p-4 flex items-start justify-between">
           <div>
             <p className="text-xs text-gray-500">Won</p>
-            <p className="text-3xl font-bold text-green-400 mt-1">
+            <p className="text-3xl font-bold text-green-600 mt-1">
               {wonCount}
               <span className="text-lg font-normal text-gray-600 mx-1">·</span>
               <span className="text-lg font-semibold text-green-500">{convRate}%</span>
@@ -922,8 +922,8 @@ function LeadsAnalytics() {
       {/* Row 1 — Donut + Funnel */}
       <div className="grid grid-cols-2 gap-4">
         {/* Donut */}
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
-          <p className="text-sm font-semibold text-gray-200 mb-4">Répartition des leads par statut</p>
+        <div className="rounded-xl bg-white border border-gray-200 p-5">
+          <p className="text-sm font-semibold text-gray-800 mb-4">Répartition des leads par statut</p>
           {donutData.length > 0 ? (
             <div className="flex items-center gap-5">
               <div className="relative shrink-0" style={{ width: 180, height: 180 }}>
@@ -945,7 +945,7 @@ function LeadsAnalytics() {
                   />
                 </PieChart>
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-bold text-gray-100">{total}</span>
+                  <span className="text-2xl font-bold text-gray-900">{total}</span>
                   <span className="text-[10px] text-gray-500 mt-0.5">leads</span>
                 </div>
               </div>
@@ -959,7 +959,7 @@ function LeadsAnalytics() {
                         <span className="text-gray-400 truncate">{entry.name}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0 ml-2">
-                        <span className="font-semibold text-gray-200">{entry.value}</span>
+                        <span className="font-semibold text-gray-800">{entry.value}</span>
                         <span className="text-gray-600 w-8 text-right">{pct}%</span>
                       </div>
                     </div>
@@ -973,8 +973,8 @@ function LeadsAnalytics() {
         </div>
 
         {/* Funnel */}
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
-          <p className="text-sm font-semibold text-gray-200 mb-4">Entonnoir de conversion</p>
+        <div className="rounded-xl bg-white border border-gray-200 p-5">
+          <p className="text-sm font-semibold text-gray-800 mb-4">Entonnoir de conversion</p>
           <div className="space-y-2.5">
             {funnelStages.map((stage, i) => {
               const widthPct  = total > 0 ? Math.max((stage.count / total) * 100, stage.count > 0 ? 6 : 0) : 0
@@ -982,7 +982,7 @@ function LeadsAnalytics() {
               return (
                 <div key={stage.label} className="flex items-center gap-2">
                   <div className="w-[88px] text-[11px] text-gray-500 text-right shrink-0">{stage.label}</div>
-                  <div className="flex-1 h-7 rounded bg-gray-800/60 relative overflow-hidden">
+                  <div className="flex-1 h-7 rounded bg-gray-100 relative overflow-hidden">
                     <div
                       className="absolute inset-y-0 left-0 rounded flex items-center px-2 transition-all"
                       style={{ width: `${widthPct}%`, backgroundColor: stage.color + 'dd' }}
@@ -1005,14 +1005,14 @@ function LeadsAnalytics() {
       {/* Row 2 — Sources + Budget */}
       <div className="grid grid-cols-2 gap-4">
         {/* Sources */}
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
-          <p className="text-sm font-semibold text-gray-200 mb-4">Leads par source</p>
+        <div className="rounded-xl bg-white border border-gray-200 p-5">
+          <p className="text-sm font-semibold text-gray-800 mb-4">Leads par source</p>
           {sourcesData.length > 0 ? (
             <div className="space-y-2.5">
               {sourcesData.map(([src, count], i) => (
                 <div key={src} className="flex items-center gap-2">
                   <div className="w-20 text-[11px] text-gray-400 text-right shrink-0 truncate">{src}</div>
-                  <div className="flex-1 h-7 rounded bg-gray-800/60 relative overflow-hidden">
+                  <div className="flex-1 h-7 rounded bg-gray-100 relative overflow-hidden">
                     <div
                       className="absolute inset-y-0 left-0 rounded flex items-center justify-end px-2 transition-all"
                       style={{ width: `${Math.max((count / maxSource) * 100, 8)}%`, backgroundColor: SRC_COLORS[i % SRC_COLORS.length] + 'dd' }}
@@ -1029,11 +1029,11 @@ function LeadsAnalytics() {
         </div>
 
         {/* Budget */}
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-5">
+        <div className="rounded-xl bg-white border border-gray-200 p-5">
           <div className="flex items-start justify-between mb-1">
-            <p className="text-sm font-semibold text-gray-200">Valeur des opportunités</p>
+            <p className="text-sm font-semibold text-gray-800">Valeur des opportunités</p>
             {totalBudget > 0 && (
-              <span className="text-xs font-semibold text-green-400 shrink-0 ml-2">
+              <span className="text-xs font-semibold text-green-600 shrink-0 ml-2">
                 Total : {fmtCFA(totalBudget)}
               </span>
             )}
@@ -1047,7 +1047,7 @@ function LeadsAnalytics() {
                 return (
                   <div key={status} className="flex items-center gap-2">
                     <div className="w-[88px] text-[11px] text-gray-400 text-right shrink-0 truncate">{col?.label ?? status}</div>
-                    <div className="flex-1 h-7 rounded bg-gray-800/60 relative overflow-hidden">
+                    <div className="flex-1 h-7 rounded bg-gray-100 relative overflow-hidden">
                       <div
                         className="absolute inset-y-0 left-0 rounded flex items-center px-2 transition-all"
                         style={{ width: `${Math.max((value / maxBudget) * 100, 10)}%`, backgroundColor: color + 'dd' }}
@@ -1170,25 +1170,25 @@ export function LeadsPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-gray-100">Leads & Acquisition</h1>
+          <h1 className="text-xl font-bold text-gray-900">Leads & Acquisition</h1>
           <p className="text-sm text-gray-500 mt-0.5">{data?.total ?? 0} leads au total</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => csvRef.current?.click()}
             disabled={importCsv.isPending}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 disabled:opacity-50 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-600 disabled:opacity-50 transition-colors"
           >
             <Upload size={14} />
             {importCsv.isPending ? 'Import...' : 'Import CSV'}
           </button>
-          <Link to="/payments/offers" className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 transition-colors">
+          <Link to="/payments/offers" className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-600 transition-colors">
             Offres
           </Link>
-          <Link to="/leads/scoring" className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 transition-colors">
+          <Link to="/leads/scoring" className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-600 transition-colors">
             Scoring
           </Link>
-          <Link to="/leads/tracking" className="px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 transition-colors">
+          <Link to="/leads/tracking" className="px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-600 transition-colors">
             Liens WA
           </Link>
           <button
@@ -1202,14 +1202,14 @@ export function LeadsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-800 mb-5">
+      <div className="flex gap-1 border-b border-gray-200 mb-5">
         <button
           onClick={() => setActiveTab('pipeline')}
           className={cn(
             'flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
             activeTab === 'pipeline'
-              ? 'border-indigo-500 text-indigo-400'
-              : 'border-transparent text-gray-500 hover:text-gray-300',
+              ? 'border-indigo-500 text-indigo-600'
+              : 'border-transparent text-gray-500 hover:text-gray-600',
           )}
         >
           <Kanban size={13} />
@@ -1220,8 +1220,8 @@ export function LeadsPage() {
           className={cn(
             'flex items-center gap-1.5 px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
             activeTab === 'analytics'
-              ? 'border-indigo-500 text-indigo-400'
-              : 'border-transparent text-gray-500 hover:text-gray-300',
+              ? 'border-indigo-500 text-indigo-600'
+              : 'border-transparent text-gray-500 hover:text-gray-600',
           )}
         >
           <BarChart2 size={13} />
@@ -1242,10 +1242,10 @@ export function LeadsPage() {
         <span className="text-[11px] font-bold uppercase tracking-widest text-gray-600 mr-1 shrink-0">Filtres :</span>
 
         {/* Search pill */}
-        <div className="flex items-center gap-1.5 rounded-full border border-gray-700 bg-gray-900 pl-3 pr-3 py-1.5">
+        <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white pl-3 pr-3 py-1.5">
           <Search size={12} className="text-gray-500 shrink-0" />
           <input
-            className="bg-transparent text-[13px] text-gray-200 placeholder-gray-600 focus:outline-none w-36"
+            className="bg-transparent text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none w-36"
             placeholder="Rechercher…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -1260,10 +1260,10 @@ export function LeadsPage() {
         {/* Pipeline status pill */}
         <div className={cn(
           'relative flex items-center rounded-full border py-1.5 pl-3 pr-7 transition-colors',
-          pipeline ? 'border-indigo-600/50 bg-indigo-900/20' : 'border-gray-700 bg-gray-900',
+          pipeline ? 'border-indigo-600/50 bg-indigo-50' : 'border-gray-200 bg-white',
         )}>
           <select
-            className="bg-transparent text-[13px] text-gray-300 focus:outline-none appearance-none cursor-pointer"
+            className="bg-transparent text-[13px] text-gray-600 focus:outline-none appearance-none cursor-pointer"
             value={pipeline}
             onChange={(e) => setPipeline(e.target.value)}
           >
@@ -1278,10 +1278,10 @@ export function LeadsPage() {
         {/* Source pill */}
         <div className={cn(
           'relative flex items-center rounded-full border py-1.5 pl-3 pr-7 transition-colors',
-          source ? 'border-indigo-600/50 bg-indigo-900/20' : 'border-gray-700 bg-gray-900',
+          source ? 'border-indigo-600/50 bg-indigo-50' : 'border-gray-200 bg-white',
         )}>
           <select
-            className="bg-transparent text-[13px] text-gray-300 focus:outline-none appearance-none cursor-pointer"
+            className="bg-transparent text-[13px] text-gray-600 focus:outline-none appearance-none cursor-pointer"
             value={source}
             onChange={(e) => setSource(e.target.value)}
           >
@@ -1305,7 +1305,7 @@ export function LeadsPage() {
         {activeFilters > 0 && (
           <button
             onClick={clearFilters}
-            className="flex items-center gap-1 rounded-full border border-gray-700 bg-gray-900 px-2.5 py-1.5 text-[13px] text-gray-400 hover:text-gray-200 hover:border-gray-600 transition-colors"
+            className="flex items-center gap-1 rounded-full border border-gray-200 bg-white px-2.5 py-1.5 text-[13px] text-gray-400 hover:text-gray-800 hover:border-gray-600 transition-colors"
           >
             <Filter size={11} />
             <X size={10} />
@@ -1313,17 +1313,17 @@ export function LeadsPage() {
         )}
 
         {/* View toggle */}
-        <div className="ml-auto flex items-center gap-1 rounded-lg bg-gray-900 border border-gray-800 p-1">
+        <div className="ml-auto flex items-center gap-1 rounded-lg bg-white border border-gray-200 p-1">
           <button
             onClick={() => setView('kanban')}
-            className={cn('p-1.5 rounded-md transition-colors', view === 'kanban' ? 'bg-gray-700 text-gray-100' : 'text-gray-500 hover:text-gray-300')}
+            className={cn('p-1.5 rounded-md transition-colors', view === 'kanban' ? 'bg-gray-200 text-gray-900' : 'text-gray-500 hover:text-gray-600')}
             title="Vue kanban"
           >
             <Kanban size={16} />
           </button>
           <button
             onClick={() => setView('table')}
-            className={cn('p-1.5 rounded-md transition-colors', view === 'table' ? 'bg-gray-700 text-gray-100' : 'text-gray-500 hover:text-gray-300')}
+            className={cn('p-1.5 rounded-md transition-colors', view === 'table' ? 'bg-gray-200 text-gray-900' : 'text-gray-500 hover:text-gray-600')}
             title="Vue tableau"
           >
             <LayoutList size={16} />
@@ -1333,12 +1333,12 @@ export function LeadsPage() {
 
       {/* Import feedback */}
       {importCsv.isSuccess && (
-        <div className="mb-3 rounded-lg bg-green-900/20 border border-green-800/30 px-4 py-2 text-xs text-green-400">
+        <div className="mb-3 rounded-lg bg-green-50 border border-green-800/30 px-4 py-2 text-xs text-green-600">
           Import terminé — {(importCsv.data?.data as { created?: number })?.created ?? '?'} leads créés
         </div>
       )}
       {importCsv.isError && (
-        <div className="mb-3 rounded-lg bg-red-900/20 border border-red-800/30 px-4 py-2 text-xs text-red-400">
+        <div className="mb-3 rounded-lg bg-red-50 border border-red-800/30 px-4 py-2 text-xs text-red-400">
           Erreur lors de l'import CSV
         </div>
       )}

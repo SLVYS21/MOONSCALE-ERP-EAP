@@ -34,8 +34,8 @@ function ResultBlock({ title, result }: { title: string; result: unknown }) {
   if (!result) return null
   const r = result as Record<string, unknown>
   return (
-    <div className="mt-4 rounded-lg border border-gray-700 bg-gray-800/50 p-4 text-sm">
-      <p className="mb-2 font-medium text-gray-200">{title}</p>
+    <div className="mt-4 rounded-lg border border-gray-200 bg-white p-4 text-sm">
+      <p className="mb-2 font-medium text-gray-800">{title}</p>
       <pre className="whitespace-pre-wrap text-xs text-gray-400">
         {JSON.stringify(r, null, 2)}
       </pre>
@@ -64,11 +64,11 @@ function SyncCard({
     <Card className="p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className={`rounded-lg bg-gray-800 p-2.5 ${iconColor}`}>
+          <div className={`rounded-lg bg-gray-100 p-2.5 ${iconColor}`}>
             <Icon className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-100">{title}</h3>
+            <h3 className="font-semibold text-gray-900">{title}</h3>
             <p className="mt-0.5 text-xs text-gray-500">{description}</p>
           </div>
         </div>
@@ -103,35 +103,35 @@ function SamplesSummary({ data }: { data: SamplesWriteResult }) {
   return (
     <div className="mt-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-5">
       <div className="mb-3 flex items-center gap-2">
-        <CheckCheck className="h-4 w-4 text-emerald-400" />
+        <CheckCheck className="h-4 w-4 text-emerald-600" />
         <p className="text-sm font-semibold text-emerald-300">
-          Samples écrits dans <code className="ml-1 rounded bg-gray-800 px-1.5 py-0.5 text-xs text-gray-300">samples-result.json</code>
+          Samples écrits dans <code className="ml-1 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">samples-result.json</code>
         </p>
       </div>
       <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3">
-        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+        <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
           <p className="text-gray-500">AT Étudiants</p>
-          <p className="font-semibold text-gray-100">{summary.airtable.students} records</p>
+          <p className="font-semibold text-gray-900">{summary.airtable.students} records</p>
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+        <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
           <p className="text-gray-500">AT Paiements</p>
-          <p className="font-semibold text-gray-100">{summary.airtable.payments} records</p>
+          <p className="font-semibold text-gray-900">{summary.airtable.payments} records</p>
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+        <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
           <p className="text-gray-500">AT Formation</p>
-          <p className="font-semibold text-gray-100">{summary.airtable.formation} records</p>
+          <p className="font-semibold text-gray-900">{summary.airtable.formation} records</p>
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+        <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
           <p className="text-gray-500">AT Coaching</p>
-          <p className="font-semibold text-gray-100">{summary.airtable.coaching} records</p>
+          <p className="font-semibold text-gray-900">{summary.airtable.coaching} records</p>
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+        <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
           <p className="text-gray-500">Circle membres</p>
-          <p className="font-semibold text-gray-100">{summary.circle.members} · {summary.circle.fields} champs</p>
+          <p className="font-semibold text-gray-900">{summary.circle.members} · {summary.circle.fields} champs</p>
         </div>
-        <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2">
+        <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
           <p className="text-gray-500">Tally</p>
-          <p className="font-semibold text-gray-100">{summary.tally.submissions} soumissions · {summary.tally.questions} questions</p>
+          <p className="font-semibold text-gray-900">{summary.tally.submissions} soumissions · {summary.tally.questions} questions</p>
         </div>
       </div>
       {hasErrors && (
@@ -193,13 +193,13 @@ function PendingRespondentsPanel() {
       {/* Header */}
       <button
         onClick={() => setExpanded((e) => !e)}
-        className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-gray-800/30 transition-colors"
+        className="flex w-full items-center gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
       >
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15">
-          <Users className="h-4.5 w-4.5 text-indigo-400" />
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50">
+          <Users className="h-4.5 w-4.5 text-indigo-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-100">Nouveaux inscrits sans invitation Circle</p>
+          <p className="font-semibold text-gray-900">Nouveaux inscrits sans invitation Circle</p>
           <p className="mt-0.5 text-xs text-gray-500">
             Détecte les réponses formulaire récentes dont l'étudiant n'a pas encore été invité sur Circle
           </p>
@@ -217,13 +217,13 @@ function PendingRespondentsPanel() {
       </button>
 
       {expanded && (
-        <div className="border-t border-gray-800 px-5 pb-5 pt-4">
+        <div className="border-t border-gray-200 px-5 pb-5 pt-4">
 
           {/* Step 1 — Detect */}
           {!preview && !result && (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <div className="rounded-full bg-indigo-500/10 p-3">
-                <Users className="h-6 w-6 text-indigo-400" />
+              <div className="rounded-full bg-indigo-50 p-3">
+                <Users className="h-6 w-6 text-indigo-600" />
               </div>
               <p className="text-sm text-gray-400">
                 Lancez la détection pour voir les personnes qui ont rempli le formulaire mais n'ont pas encore reçu leur invitation Circle.
@@ -249,12 +249,12 @@ function PendingRespondentsPanel() {
             <>
               {preview.respondents.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-8 text-center">
-                  <CheckCircle2 className="h-7 w-7 text-emerald-400" />
+                  <CheckCircle2 className="h-7 w-7 text-emerald-600" />
                   <p className="text-sm font-medium text-emerald-300">Tout le monde est déjà régularisé</p>
                   <p className="text-xs text-gray-500">Aucun nouvel inscrit sans paiement trouvé.</p>
                   <button
                     onClick={() => { setPreview(null); setSelected(new Set()) }}
-                    className="mt-2 text-xs text-gray-500 hover:text-gray-300 underline"
+                    className="mt-2 text-xs text-gray-500 hover:text-gray-600 underline"
                   >
                     Relancer la détection
                   </button>
@@ -283,7 +283,7 @@ function PendingRespondentsPanel() {
                       <button
                         onClick={() => { setPreview(null); setSelected(new Set()); detectMutation.mutate() }}
                         disabled={detectMutation.isPending}
-                        className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                        className="text-xs text-gray-500 hover:text-gray-600 transition-colors"
                       >
                         Rafraîchir
                       </button>
@@ -301,10 +301,10 @@ function PendingRespondentsPanel() {
                   </div>
 
                   {/* Table */}
-                  <div className="overflow-x-auto rounded-xl border border-gray-800">
+                  <div className="overflow-x-auto rounded-xl border border-gray-200">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-800 bg-gray-900/40">
+                        <tr className="border-b border-gray-200 bg-white">
                           <th className="w-10 py-2.5 pl-4 pr-2 text-left"></th>
                           <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Personne</th>
                           <th className="py-2.5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Montant</th>
@@ -321,10 +321,10 @@ function PendingRespondentsPanel() {
                             key={r.responseId}
                             onClick={() => toggle(r.email)}
                             className={cn(
-                              'cursor-pointer border-b border-gray-800/50 transition-colors last:border-0',
+                              'cursor-pointer border-b border-gray-200/50 transition-colors last:border-0',
                               selected.has(r.email)
-                                ? 'bg-indigo-500/5 hover:bg-indigo-500/10'
-                                : 'hover:bg-gray-800/30 opacity-60',
+                                ? 'bg-indigo-500/5 hover:bg-indigo-50'
+                                : 'hover:bg-gray-50 opacity-60',
                             )}
                           >
                             <td className="py-3 pl-4 pr-2">
@@ -338,11 +338,11 @@ function PendingRespondentsPanel() {
                               </div>
                             </td>
                             <td className="py-3 pr-4">
-                              <p className="font-medium text-gray-100">{r.name}</p>
+                              <p className="font-medium text-gray-900">{r.name}</p>
                               <p className="text-xs text-gray-500">{r.email}</p>
                             </td>
                             <td className="py-3 pr-4">
-                              <p className="font-semibold tabular-nums text-gray-100">
+                              <p className="font-semibold tabular-nums text-gray-900">
                                 {r.amount > 0 ? formatAmount(r.amount, r.currency) : '—'}
                               </p>
                             </td>
@@ -356,14 +356,14 @@ function PendingRespondentsPanel() {
                             </td>
                             <td className="py-3 pr-4">
                               {r.gateway ? (
-                                <span className="rounded-full border border-gray-700 bg-gray-800/60 px-2.5 py-0.5 text-xs text-gray-300">
+                                <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600">
                                   {r.gateway}
                                 </span>
                               ) : <span className="text-gray-600">—</span>}
                             </td>
                             <td className="py-3 pr-4">
                               {r.proofCount > 0 ? (
-                                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-400">
+                                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-600">
                                   {r.proofCount} fichier{r.proofCount > 1 ? 's' : ''}
                                 </span>
                               ) : (
@@ -389,21 +389,21 @@ function PendingRespondentsPanel() {
           {result && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
-                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" />
                 <p className="text-sm font-semibold text-emerald-300">
                   {result.created} paiement{result.created > 1 ? 's' : ''} créé{result.created > 1 ? 's' : ''} avec succès
                 </p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5">
+                <div className="rounded-lg border border-gray-200 bg-white px-3 py-2.5">
                   <p className="text-gray-500">Scannés</p>
-                  <p className="mt-0.5 text-lg font-bold text-gray-100">{result.scanned}</p>
+                  <p className="mt-0.5 text-lg font-bold text-gray-900">{result.scanned}</p>
                 </div>
-                <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5">
+                <div className="rounded-lg border border-gray-200 bg-white px-3 py-2.5">
                   <p className="text-gray-500">Déjà sur Circle</p>
                   <p className="mt-0.5 text-lg font-bold text-gray-400">{result.alreadyInvited}</p>
                 </div>
-                <div className="rounded-lg border border-gray-800 bg-gray-900 px-3 py-2.5">
+                <div className="rounded-lg border border-gray-200 bg-white px-3 py-2.5">
                   <p className="text-gray-500">Déjà un paiement</p>
                   <p className="mt-0.5 text-lg font-bold text-gray-400">{result.alreadyHavePayment}</p>
                 </div>
@@ -483,7 +483,7 @@ export function SyncPage() {
     <div className="p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-100">Synchronisation</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Synchronisation</h1>
         <p className="mt-0.5 text-sm text-gray-500">
           Import Airtable, enrichissement Circle, détection des débiteurs
         </p>
@@ -498,20 +498,20 @@ export function SyncPage() {
       <Card className="mb-6 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Activity className="h-4 w-4 text-indigo-400" />
+            <Activity className="h-4 w-4 text-indigo-600" />
             <div>
-              <p className="text-sm font-medium text-gray-200">Quota Circle API</p>
+              <p className="text-sm font-medium text-gray-800">Quota Circle API</p>
               <p className="text-xs text-gray-500">Environ 4 000 req/mois disponibles</p>
             </div>
           </div>
           <div className="text-right">
-            <p className={`text-2xl font-semibold ${circleQuota > 3000 ? 'text-amber-400' : 'text-emerald-400'}`}>
+            <p className={`text-2xl font-semibold ${circleQuota > 3000 ? 'text-amber-400' : 'text-emerald-600'}`}>
               {circleQuota}
             </p>
             <p className="text-xs text-gray-500">appels cette session</p>
           </div>
         </div>
-        <div className="mt-3 h-2 rounded-full bg-gray-800">
+        <div className="mt-3 h-2 rounded-full bg-gray-100">
           <div
             className={`h-2 rounded-full transition-all ${circleQuota > 3000 ? 'bg-amber-400' : 'bg-emerald-400'}`}
             style={{ width: `${Math.min((circleQuota / 4000) * 100, 100)}%` }}
@@ -523,7 +523,7 @@ export function SyncPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <SyncCard
           icon={Database}
-          iconColor="text-indigo-400"
+          iconColor="text-indigo-600"
           title="Import Airtable"
           description="Importe ETUDIANTS, PAIEMENTS, DASHBOARD FORMATION & COACHING."
           lastRun={status?.lastAirtableSync}
@@ -535,7 +535,7 @@ export function SyncPage() {
 
         <SyncCard
           icon={Zap}
-          iconColor="text-emerald-400"
+          iconColor="text-emerald-600"
           title="Enrichissement Circle"
           description="Parcourt tous les membres Circle par pages de 100 et enrichit les profils étudiants (join date, tags, statut)."
           lastRun={status?.lastCircleSync}
@@ -583,24 +583,24 @@ export function SyncPage() {
 
         <Card className="p-5">
           <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-gray-800 p-2.5 text-violet-400">
+            <div className="rounded-lg bg-gray-100 p-2.5 text-violet-400">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-100">Sync complète</h3>
+              <h3 className="font-semibold text-gray-900">Sync complète</h3>
               <p className="mt-0.5 text-xs text-gray-500">Airtable → Circle → Débiteurs en séquence</p>
             </div>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs text-gray-500">
-            <div className={`rounded-lg p-2 ${status?.lastAirtableSync ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-800'}`}>
+            <div className={`rounded-lg p-2 ${status?.lastAirtableSync ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100'}`}>
               {status?.lastAirtableSync ? <CheckCircle2 className="mx-auto mb-1 h-3.5 w-3.5" /> : <Clock className="mx-auto mb-1 h-3.5 w-3.5" />}
               Airtable
             </div>
-            <div className={`rounded-lg p-2 ${status?.lastCircleSync ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-800'}`}>
+            <div className={`rounded-lg p-2 ${status?.lastCircleSync ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100'}`}>
               {status?.lastCircleSync ? <CheckCircle2 className="mx-auto mb-1 h-3.5 w-3.5" /> : <Clock className="mx-auto mb-1 h-3.5 w-3.5" />}
               Circle
             </div>
-            <div className={`rounded-lg p-2 ${status?.lastDebtorDetection ? 'bg-emerald-500/10 text-emerald-400' : 'bg-gray-800'}`}>
+            <div className={`rounded-lg p-2 ${status?.lastDebtorDetection ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100'}`}>
               {status?.lastDebtorDetection ? <CheckCircle2 className="mx-auto mb-1 h-3.5 w-3.5" /> : <Clock className="mx-auto mb-1 h-3.5 w-3.5" />}
               Débiteurs
             </div>
@@ -624,13 +624,13 @@ export function SyncPage() {
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-base font-semibold text-gray-100 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-gray-900 flex items-center gap-2">
               <FlaskConical className="h-4 w-4 text-violet-400" />
               Exploration des données sources
             </h2>
             <p className="mt-0.5 text-xs text-gray-500">
               Fetch 5 enregistrements depuis chaque source et les écrit dans{' '}
-              <code className="rounded bg-gray-800 px-1.5 py-0.5 text-gray-300">samples-result.json</code>.
+              <code className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600">samples-result.json</code>.
               <strong className="text-amber-400 ml-1">1 appel Circle seulement.</strong>
             </p>
           </div>
@@ -655,12 +655,12 @@ export function SyncPage() {
       </div>
 
       {/* Info box */}
-      <div className="mt-6 rounded-lg border border-gray-700 bg-gray-800/30 p-4 text-xs text-gray-500">
+      <div className="mt-6 rounded-lg border border-gray-200 bg-gray-50 p-4 text-xs text-gray-500">
         <p className="font-medium text-gray-400 mb-1">Stratégie quota Circle</p>
         <p>
-          Le sync Circle utilise <strong className="text-gray-300">GET /community_members?per_page=100</strong> pour paginer
+          Le sync Circle utilise <strong className="text-gray-600">GET /community_members?per_page=100</strong> pour paginer
           l'ensemble des membres (~20 req pour 2000 membres). La détection des débiteurs est 100% MongoDB.
-          L'exploration samples n'utilise <strong className="text-gray-300">qu'1 appel Circle</strong>.
+          L'exploration samples n'utilise <strong className="text-gray-600">qu'1 appel Circle</strong>.
         </p>
       </div>
     </div>

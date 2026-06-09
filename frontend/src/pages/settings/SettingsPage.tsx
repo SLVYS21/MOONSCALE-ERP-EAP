@@ -39,7 +39,7 @@ function StatusBadge({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span className={cn(
       'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
-      ok ? 'bg-green-900/30 text-green-400' : 'bg-gray-800 text-gray-500',
+      ok ? 'bg-green-900/30 text-green-600' : 'bg-gray-100 text-gray-500',
     )}>
       {ok ? <CheckCircle size={11} /> : <AlertCircle size={11} />}
       {label}
@@ -77,13 +77,13 @@ function StringListEditor({
     <div>
       <div className="flex items-center gap-2 mb-2">
         <Icon className="h-4 w-4 text-gray-400" />
-        <p className="text-sm font-medium text-gray-300">{label}</p>
+        <p className="text-sm font-medium text-gray-600">{label}</p>
       </div>
       <div className="flex flex-wrap gap-2 mb-2 min-h-[28px]">
         {items.map((item) => (
           <span
             key={item}
-            className="inline-flex items-center gap-1 rounded-full bg-gray-800 border border-gray-700 px-3 py-1 text-xs text-gray-300"
+            className="inline-flex items-center gap-1 rounded-full bg-gray-100 border border-gray-200 px-3 py-1 text-xs text-gray-600"
           >
             {item}
             <button
@@ -98,7 +98,7 @@ function StringListEditor({
       </div>
       <div className="flex gap-2">
         <input
-          className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+          className="flex-1 rounded-lg bg-gray-100 border border-gray-200 px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
           placeholder={placeholder}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -245,18 +245,18 @@ export function SettingsPage() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <Settings className="h-6 w-6 text-gray-400" />
-        <h1 className="text-xl font-bold text-gray-100">Paramètres</h1>
+        <h1 className="text-xl font-bold text-gray-900">Paramètres</h1>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-gray-800">
+      <div className="flex gap-1 border-b border-gray-200">
         {TABS.map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className={cn(
               'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
-              tab === t ? 'border-indigo-500 text-indigo-400' : 'border-transparent text-gray-500 hover:text-gray-300',
+              tab === t ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-600',
             )}
           >
             {t}
@@ -269,14 +269,14 @@ export function SettingsPage() {
         <div className="space-y-4">
 
           {/* YouTube */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-600/15">
                   <PlayCircle className="h-5 w-5 text-red-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-100">YouTube Analytics</p>
+                  <p className="font-semibold text-gray-900">YouTube Analytics</p>
                   <p className="text-xs text-gray-500">Vues, watch time, abonnés par vidéo</p>
                 </div>
               </div>
@@ -302,7 +302,7 @@ export function SettingsPage() {
                   href={ytAuthUrl.data.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 rounded-lg border border-gray-700 px-3 py-2 text-sm text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors"
+                  className="flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-colors"
                 >
                   <Link2 size={14} />
                   {ytConfig.data?.has_refresh_token ? 'Reconnecter YouTube' : 'Connecter YouTube'}
@@ -318,10 +318,10 @@ export function SettingsPage() {
                   Synchroniser maintenant
                 </button>
               )}
-              {pullYt.isSuccess && <span className="flex items-center gap-1 text-sm text-green-400"><CheckCircle size={14} /> Synchronisé</span>}
+              {pullYt.isSuccess && <span className="flex items-center gap-1 text-sm text-green-600"><CheckCircle size={14} /> Synchronisé</span>}
             </div>
 
-            <div className="mt-4 rounded-lg bg-gray-950 border border-gray-800 p-3 text-xs text-gray-500 space-y-1">
+            <div className="mt-4 rounded-lg bg-[#f5f6fa] border border-gray-200 p-3 text-xs text-gray-500 space-y-1">
               <p className="font-medium text-gray-400">Variables .env requises</p>
               <code className="block text-[11px] text-indigo-300">GOOGLE_CLIENT_ID=</code>
               <code className="block text-[11px] text-indigo-300">GOOGLE_CLIENT_SECRET=</code>
@@ -330,14 +330,14 @@ export function SettingsPage() {
           </div>
 
           {/* Meta Ads */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/15">
-                  <ExternalLink className="h-5 w-5 text-blue-400" />
+                  <ExternalLink className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-100">Meta Ads</p>
+                  <p className="font-semibold text-gray-900">Meta Ads</p>
                   <p className="text-xs text-gray-500">Dépenses, impressions, conversations WhatsApp</p>
                 </div>
               </div>
@@ -359,10 +359,10 @@ export function SettingsPage() {
               <RefreshCw className={cn('h-4 w-4', pullMeta.isPending && 'animate-spin')} />
               Synchroniser hier
             </button>
-            {pullMeta.isSuccess && <p className="mt-2 text-sm text-green-400 flex items-center gap-1"><CheckCircle size={14} /> Synchronisé</p>}
+            {pullMeta.isSuccess && <p className="mt-2 text-sm text-green-600 flex items-center gap-1"><CheckCircle size={14} /> Synchronisé</p>}
             {pullMeta.isError && <p className="mt-2 text-sm text-red-400">Token ou Account ID non configuré dans .env</p>}
 
-            <div className="mt-4 rounded-lg bg-gray-950 border border-gray-800 p-3 text-xs text-gray-500 space-y-1">
+            <div className="mt-4 rounded-lg bg-[#f5f6fa] border border-gray-200 p-3 text-xs text-gray-500 space-y-1">
               <p className="font-medium text-gray-400">Variables .env requises</p>
               <code className="block text-[11px] text-indigo-300">META_ACCESS_TOKEN=</code>
               <code className="block text-[11px] text-indigo-300">META_AD_ACCOUNT_ID=act_...</code>
@@ -370,14 +370,14 @@ export function SettingsPage() {
           </div>
 
           {/* Typebot */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-600/15">
                   <Bot className="h-5 w-5 text-violet-400" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-100">Typebot</p>
+                  <p className="font-semibold text-gray-900">Typebot</p>
                   <p className="text-xs text-gray-500">Les nouveaux leads arrivent automatiquement via webhook</p>
                 </div>
               </div>
@@ -397,11 +397,11 @@ export function SettingsPage() {
             {/* Webhook URL */}
             <div className="mb-4">
               <p className="text-xs font-medium text-gray-400 mb-1.5">URL webhook à configurer dans Typebot</p>
-              <div className="flex items-center gap-2 rounded-lg bg-gray-950 border border-gray-800 px-3 py-2">
+              <div className="flex items-center gap-2 rounded-lg bg-[#f5f6fa] border border-gray-200 px-3 py-2">
                 <code className="flex-1 text-[11px] text-indigo-300 truncate">{webhookUrl}</code>
                 <button
                   onClick={() => navigator.clipboard.writeText(webhookUrl)}
-                  className="shrink-0 rounded p-1 text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+                  className="shrink-0 rounded p-1 text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition-colors"
                   title="Copier l'URL"
                 >
                   <Copy size={13} />
@@ -416,16 +416,16 @@ export function SettingsPage() {
             {typebotBots.data && typebotBots.data.length > 0 ? (
               <div className="space-y-2 mb-4">
                 {typebotBots.data.map(bot => (
-                  <div key={bot.id} className="rounded-lg bg-gray-950 border border-gray-800 px-3 py-2.5">
+                  <div key={bot.id} className="rounded-lg bg-[#f5f6fa] border border-gray-200 px-3 py-2.5">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-200">{bot.name}</span>
+                        <span className="text-sm text-gray-800">{bot.name}</span>
                         {bot.webhook_registered ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-green-900/30 px-2 py-0.5 text-[10px] text-green-400">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-green-900/30 px-2 py-0.5 text-[10px] text-green-600">
                             <CheckCircle size={9} /> Webhook actif
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-2 py-0.5 text-[10px] text-gray-500">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-0.5 text-[10px] text-gray-500">
                             <AlertCircle size={9} /> Webhook à configurer
                           </span>
                         )}
@@ -443,7 +443,7 @@ export function SettingsPage() {
                       <button
                         onClick={() => backfill.mutate(bot.id)}
                         disabled={backfill.isPending}
-                        className="flex items-center gap-1.5 rounded-md border border-gray-700 px-2.5 py-1 text-xs text-gray-400 hover:text-gray-200 hover:border-gray-600 disabled:opacity-50 transition-colors"
+                        className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-400 hover:text-gray-800 hover:border-gray-600 disabled:opacity-50 transition-colors"
                       >
                         <RefreshCw className={cn('h-3 w-3', backfill.isPending && 'animate-spin')} />
                         Importer historique
@@ -460,20 +460,20 @@ export function SettingsPage() {
               <div className={cn(
                 'mb-3 rounded-lg px-3 py-2 text-xs',
                 registerWebhook.data?.registered
-                  ? 'bg-green-900/20 border border-green-800/30 text-green-400'
+                  ? 'bg-green-50 border border-green-800/30 text-green-600'
                   : 'bg-amber-900/20 border border-amber-800/30 text-amber-400',
               )}>
                 {registerWebhook.data?.message}
               </div>
             )}
             {backfill.isSuccess && (
-              <div className="mb-3 rounded-lg bg-green-900/20 border border-green-800/30 px-3 py-2 text-xs text-green-400">
+              <div className="mb-3 rounded-lg bg-green-50 border border-green-800/30 px-3 py-2 text-xs text-green-600">
                 Import terminé — {backfill.data?.created} lead(s) créé(s), {backfill.data?.skipped} ignoré(s)
                 {(backfill.data?.errors ?? 0) > 0 && <span className="text-red-400">, {backfill.data?.errors} erreur(s)</span>}
               </div>
             )}
 
-            <div className="mt-2 rounded-lg bg-gray-950 border border-gray-800 p-3 text-xs text-gray-500 space-y-1">
+            <div className="mt-2 rounded-lg bg-[#f5f6fa] border border-gray-200 p-3 text-xs text-gray-500 space-y-1">
               <p className="font-medium text-gray-400">Variables .env requises</p>
               <code className="block text-[11px] text-indigo-300">TYPEBOT_TOKEN=</code>
               <code className="block text-[11px] text-indigo-300">TYPEBOT_WORKSPACE_ID=</code>
@@ -483,13 +483,13 @@ export function SettingsPage() {
           </div>
 
           {/* TikTok */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-center gap-3 mb-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-pink-600/15">
                 <PlayCircle className="h-5 w-5 text-pink-400" />
               </div>
               <div>
-                <p className="font-semibold text-gray-100">TikTok</p>
+                <p className="font-semibold text-gray-900">TikTok</p>
                 <p className="text-xs text-gray-500">Import CSV manuel depuis Creator Studio</p>
               </div>
             </div>
@@ -506,17 +506,17 @@ export function SettingsPage() {
           </div>
 
           {/* Claude AI */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/15">
-                <Settings className="h-5 w-5 text-indigo-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
+                <Settings className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
-                <p className="font-semibold text-gray-100">Claude AI (résumé d'appels)</p>
+                <p className="font-semibold text-gray-900">Claude AI (résumé d'appels)</p>
                 <p className="text-xs text-gray-500">Génération automatique de résumés de transcription</p>
               </div>
             </div>
-            <div className="rounded-lg bg-gray-950 border border-gray-800 p-3 text-xs text-gray-500">
+            <div className="rounded-lg bg-[#f5f6fa] border border-gray-200 p-3 text-xs text-gray-500">
               <p className="font-medium text-gray-400 mb-1">Variable .env requise</p>
               <code className="text-[11px] text-indigo-300">ANTHROPIC_API_KEY=sk-ant-...</code>
             </div>
@@ -527,13 +527,13 @@ export function SettingsPage() {
       {/* ── Sources ──────────────────────────────────────────────────────── */}
       {tab === 'Sources' && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-center gap-3 mb-1">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/15">
-                <Magnet className="h-5 w-5 text-indigo-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
+                <Magnet className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
-                <p className="font-semibold text-gray-100">Leads Magnets</p>
+                <p className="font-semibold text-gray-900">Leads Magnets</p>
                 <p className="text-xs text-gray-500">Formations gratuites, ressources, webinaires, challenges...</p>
               </div>
             </div>
@@ -555,13 +555,13 @@ export function SettingsPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-center gap-3 mb-1">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-pink-600/15">
                 <Share2 className="h-5 w-5 text-pink-400" />
               </div>
               <div>
-                <p className="font-semibold text-gray-100">Réseaux Sociaux</p>
+                <p className="font-semibold text-gray-900">Réseaux Sociaux</p>
                 <p className="text-xs text-gray-500">YouTube, TikTok, Facebook, Instagram...</p>
               </div>
             </div>
@@ -587,7 +587,7 @@ export function SettingsPage() {
             <p className="text-sm text-red-400">Erreur lors de la mise à jour.</p>
           )}
           {updateSettings.isSuccess && (
-            <p className="text-sm text-green-400 flex items-center gap-1.5">
+            <p className="text-sm text-green-600 flex items-center gap-1.5">
               <CheckCircle size={14} /> Paramètres enregistrés
             </p>
           )}
@@ -599,13 +599,13 @@ export function SettingsPage() {
         <div className="space-y-4">
 
           {/* Gateways / Comptes */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-center gap-3 mb-1">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/15">
-                <CreditCard className="h-5 w-5 text-indigo-400" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50">
+                <CreditCard className="h-5 w-5 text-indigo-600" />
               </div>
               <div>
-                <p className="font-semibold text-gray-100">Comptes & Gateways</p>
+                <p className="font-semibold text-gray-900">Comptes & Gateways</p>
                 <p className="text-xs text-gray-500">Cartes de crédit, comptes bancaires, wallets à suivre</p>
               </div>
             </div>
@@ -627,21 +627,21 @@ export function SettingsPage() {
           </div>
 
           {/* Categories */}
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/15">
-                  <Tag className="h-5 w-5 text-emerald-400" />
+                  <Tag className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-100">Catégories</p>
+                  <p className="font-semibold text-gray-900">Catégories</p>
                   <p className="text-xs text-gray-500">Salaire, Loyer, Marketing, Logiciels…</p>
                 </div>
               </div>
               <button
                 onClick={() => seedCategoriesMut.mutate()}
                 disabled={seedCategoriesMut.isPending}
-                className="flex items-center gap-1.5 rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:text-gray-200 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-400 hover:text-gray-800 disabled:opacity-50 transition-colors"
               >
                 <RefreshCw className={cn('h-3.5 w-3.5', seedCategoriesMut.isPending && 'animate-spin')} />
                 Seed par défaut
@@ -649,7 +649,7 @@ export function SettingsPage() {
             </div>
 
             {seedCategoriesMut.isSuccess && (
-              <p className="mb-3 flex items-center gap-1.5 text-xs text-emerald-400">
+              <p className="mb-3 flex items-center gap-1.5 text-xs text-emerald-600">
                 <CheckCircle size={12} />
                 {seedCategoriesMut.data?.created === 0 ? 'Toutes les catégories par défaut existent déjà' : `${seedCategoriesMut.data?.created} catégorie(s) créée(s)`}
               </p>
@@ -662,20 +662,20 @@ export function SettingsPage() {
                 value={newCatIcon}
                 onChange={(e) => setNewCatIcon(e.target.value)}
                 maxLength={2}
-                className="w-11 rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1.5 text-center text-base focus:outline-none"
+                className="w-11 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-center text-base focus:outline-none"
               />
               <input
                 type="text"
                 value={newCatName}
                 onChange={(e) => setNewCatName(e.target.value)}
                 placeholder="Nom de la catégorie"
-                className="flex-1 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
                 onKeyDown={(e) => { if (e.key === 'Enter' && newCatName.trim()) createCategoryMut.mutate({ name: newCatName, type: newCatType, icon: newCatIcon }) }}
               />
               <select
                 value={newCatType}
                 onChange={(e) => setNewCatType(e.target.value)}
-                className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-1.5 text-xs text-gray-100 focus:outline-none"
+                className="rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs text-gray-900 focus:outline-none"
               >
                 <option value="income">Revenu</option>
                 <option value="expense">Dépense</option>
@@ -698,14 +698,14 @@ export function SettingsPage() {
                 <p className="py-3 text-xs text-gray-600">Aucune catégorie. Cliquez sur "Seed par défaut" pour commencer.</p>
               ) : (
                 (financeCategories.data ?? []).map((c) => (
-                  <div key={c._id} className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-800/40">
+                  <div key={c._id} className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50">
                     <span className="text-base w-6 text-center">{c.icon}</span>
-                    <span className="flex-1 text-sm text-gray-200">{c.name}</span>
+                    <span className="flex-1 text-sm text-gray-800">{c.name}</span>
                     <span className={cn(
                       'rounded-full px-2 py-0.5 text-[10px] font-medium',
-                      c.type === 'income' ? 'bg-emerald-900/30 text-emerald-400'
+                      c.type === 'income' ? 'bg-emerald-900/30 text-emerald-600'
                       : c.type === 'expense' ? 'bg-red-900/30 text-red-400'
-                      : 'bg-gray-800 text-gray-400',
+                      : 'bg-gray-100 text-gray-400',
                     )}>
                       {c.type === 'income' ? 'Revenu' : c.type === 'expense' ? 'Dépense' : 'Les deux'}
                     </span>
@@ -726,11 +726,11 @@ export function SettingsPage() {
       {/* ── Documentation ────────────────────────────────────────────────── */}
       {tab === 'Documentation' && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-gray-800 bg-gray-900 p-5">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
             <div className="flex items-center gap-3 mb-3">
-              <BookOpen className="h-5 w-5 text-indigo-400" />
+              <BookOpen className="h-5 w-5 text-indigo-600" />
               <div>
-                <p className="font-semibold text-gray-100">Documentation système</p>
+                <p className="font-semibold text-gray-900">Documentation système</p>
                 <p className="text-xs text-gray-500">Crée 4 articles Wiki expliquant le système complet</p>
               </div>
             </div>
@@ -746,7 +746,7 @@ export function SettingsPage() {
               {seedDocs.isPending ? 'Création...' : 'Créer la documentation Wiki'}
             </button>
             {seedDocs.isSuccess && (
-              <p className="mt-3 text-sm text-green-400 flex items-center gap-1.5">
+              <p className="mt-3 text-sm text-green-600 flex items-center gap-1.5">
                 <CheckCircle size={14} />
                 {seedDocs.data?.created === 0
                   ? 'Articles déjà existants'

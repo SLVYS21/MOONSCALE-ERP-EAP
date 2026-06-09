@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input'
 import { useAuthStore } from '@/store/authStore'
 import api from '@/services/api'
 import type { LoginResponse } from '@/types'
+import { LayoutGrid } from 'lucide-react'
 
 export function AcceptInvitationPage() {
   const navigate = useNavigate()
@@ -42,62 +43,74 @@ export function AcceptInvitationPage() {
 
   if (!token) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-950">
-        <p className="text-red-400">Lien d'invitation invalide.</p>
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f6fa]">
+        <div className="rounded-xl border border-red-200 bg-white p-6 text-center shadow-sm">
+          <p className="text-sm font-medium text-red-600">Lien d'invitation invalide.</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-[#f5f6fa] px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-600 text-xl font-bold text-white">
-            M
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg">
+            <LayoutGrid className="h-6 w-6 text-white" />
           </div>
-          <h1 className="text-xl font-semibold text-gray-100">Rejoindre Moonscale</h1>
+          <h1 className="text-xl font-bold text-gray-900">Rejoindre Moonscale</h1>
           <p className="mt-1 text-sm text-gray-500">Créez votre compte pour accéder à l'ERP</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 rounded-xl border border-gray-800 bg-gray-900/60 p-6">
-          <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                id="firstName"
+                label="Prénom"
+                value={form.firstName}
+                onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                required
+                autoFocus
+              />
+              <Input
+                id="lastName"
+                label="Nom"
+                value={form.lastName}
+                onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                required
+              />
+            </div>
             <Input
-              id="firstName"
-              label="Prénom"
-              value={form.firstName}
-              onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+              id="password"
+              type="password"
+              label="Mot de passe"
+              value={form.password}
+              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               required
-              autoFocus
             />
             <Input
-              id="lastName"
-              label="Nom"
-              value={form.lastName}
-              onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+              id="confirm"
+              type="password"
+              label="Confirmer le mot de passe"
+              value={form.confirm}
+              onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
               required
             />
-          </div>
-          <Input
-            id="password"
-            type="password"
-            label="Mot de passe"
-            value={form.password}
-            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-            required
-          />
-          <Input
-            id="confirm"
-            type="password"
-            label="Confirmer le mot de passe"
-            value={form.confirm}
-            onChange={(e) => setForm((f) => ({ ...f, confirm: e.target.value }))}
-            required
-          />
-          {error && <p className="text-sm text-red-400">{error}</p>}
-          <Button type="submit" className="w-full" loading={loading}>
-            Créer mon compte
-          </Button>
-        </form>
+            {error && (
+              <div className="rounded-lg bg-red-50 border border-red-100 px-3 py-2">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+            <Button type="submit" className="w-full" loading={loading}>
+              Créer mon compte
+            </Button>
+          </form>
+        </div>
+
+        <p className="mt-4 text-center text-xs text-gray-400">
+          Moonscale ERP — Invitation
+        </p>
       </div>
     </div>
   )

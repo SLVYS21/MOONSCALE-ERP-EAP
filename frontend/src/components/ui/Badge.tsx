@@ -4,11 +4,11 @@ import { cn } from '@/lib/utils'
 type BadgeVariant = 'default' | 'success' | 'warning' | 'danger' | 'info'
 
 const variants: Record<BadgeVariant, string> = {
-  default: 'bg-gray-800 text-gray-300',
-  success: 'bg-emerald-500/15 text-emerald-400',
-  warning: 'bg-amber-500/15 text-amber-400',
-  danger: 'bg-red-500/15 text-red-400',
-  info: 'bg-indigo-500/15 text-indigo-400',
+  default: 'bg-gray-100 text-gray-600',
+  success: 'bg-green-50 text-green-700',
+  warning: 'bg-amber-50 text-amber-700',
+  danger:  'bg-red-50 text-red-600',
+  info:    'bg-indigo-50 text-indigo-700',
 }
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {

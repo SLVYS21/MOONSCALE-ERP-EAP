@@ -1,20 +1,19 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell,
+  AreaChart, Area, LineChart, Line, BarChart, Bar,
+  PieChart, Pie, Cell, XAxis, YAxis, Tooltip,
+  ResponsiveContainer,
 } from 'recharts'
 import {
-  TrendingUp, Trophy, Users, ChevronRight,
-  Zap, FileText, CheckCircle, Clock,
-  Activity, ArrowDownLeft, ArrowUpRight as ArrowUpRightTx,
-  CreditCard,
+  TrendingUp, TrendingDown, DollarSign, Users, Zap, FileText,
+  CheckCircle, ArrowUpRight, ArrowDownLeft, Trophy,
+  FolderKanban, Wallet, Clock,
+  CreditCard, BarChart2, Activity,
 } from 'lucide-react'
 import api from '@/services/api'
-import { useAuthStore } from '@/store/authStore'
 import { cn } from '@/lib/utils'
-import type { AppSettings } from '@/types'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -59,7 +58,6 @@ interface Transaction {
   currency: string
   description: string
   customerName?: string | null
-  customerEmail?: string | null
   productName?: string | null
   gateway: string
   status: string
@@ -69,197 +67,162 @@ interface Transaction {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const DEFAULT_RATES: Record<string, number> = { XOF: 1, EUR: 655.957, USD: 610, MAD: 63.5, CAD: 450 }
-const DISPLAY_CURRENCIES = ['XOF', 'EUR', 'USD', 'MAD', 'CAD']
-
-function convertAmount(amount: number, from: string, to: string, rates: Record<string, number>): number {
-  if (from === to) return amount
-  const r = rates
-  return amount * (r[from] ?? 1) / (r[to] ?? 1)
+function fmt(n: number): string {
+  return new Intl.NumberFormat('fr-FR').format(Math.round(n))
 }
-
-function formatCurrency(n: number, currency: string): string {
-  return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' ' + currency
+function fmtCurrency(n: number, cur: string): string {
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M ${cur}`
+  if (n >= 1_000) return `${Math.round(n / 1_000)}k ${cur}`
+  return `${fmt(n)} ${cur}`
 }
-
-const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(Math.round(n))
-
 function relativeTime(dateStr: string | null): string {
   if (!dateStr) return '—'
   const diff = Date.now() - new Date(dateStr).getTime()
   const m = Math.floor(diff / 60000)
   if (m < 1) return 'à l\'instant'
-  if (m < 60) return `il y a ${m} min`
+  if (m < 60) return `il y a ${m}min`
   const h = Math.floor(m / 60)
   if (h < 24) return `il y a ${h}h`
   const d = Math.floor(h / 24)
   return `il y a ${d}j`
 }
 
-function todayDate(): string {
-  return new Date().toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  })
+// ── Subcomponents ─────────────────────────────────────────────────────────────
+
+// Sparkline — lightweight line/area for cards
+function Sparkline({ data, dataKey, color, type = 'line' }: {
+  data: object[]
+  dataKey: string
+  color: string
+  type?: 'line' | 'area' | 'bar'
+}) {
+  if (!data.length) return <div className="h-12" />
+  return (
+    <ResponsiveContainer width="100%" height={48}>
+      {type === 'bar' ? (
+        <BarChart data={data} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
+          <Bar dataKey={dataKey} fill={color} radius={[2, 2, 0, 0]} maxBarSize={16} />
+        </BarChart>
+      ) : type === 'area' ? (
+        <AreaChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
+          <defs>
+            <linearGradient id={`grad-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.2} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Area type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5}
+            fill={`url(#grad-${dataKey})`} dot={false} />
+        </AreaChart>
+      ) : (
+        <LineChart data={data} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
+          <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={2}
+            dot={false} activeDot={{ r: 3, strokeWidth: 0 }} />
+        </LineChart>
+      )}
+    </ResponsiveContainer>
+  )
 }
 
-// ── Period logic ──────────────────────────────────────────────────────────────
-
-type Period = 'today' | 'yesterday' | '7d' | '30d' | '3m' | '12m' | 'year'
-
-const PERIODS: { key: Period; label: string }[] = [
-  { key: 'today',     label: "Aujourd'hui" },
-  { key: 'yesterday', label: 'Hier' },
-  { key: '7d',        label: '7 jours' },
-  { key: '30d',       label: '30 jours' },
-  { key: '3m',        label: '3 mois' },
-  { key: '12m',       label: '12 mois' },
-  { key: 'year',      label: 'Cette année' },
-]
-
-function periodToDates(period: Period): { dateFrom: string; dateTo: string } {
-  const now = new Date()
-  const today = now.toISOString().slice(0, 10)
-  const shift = (days: number) => {
-    const d = new Date(now); d.setDate(now.getDate() - days)
-    return d.toISOString().slice(0, 10)
-  }
-  const shiftMonths = (months: number) => {
-    const d = new Date(now); d.setMonth(now.getMonth() - months)
-    return d.toISOString().slice(0, 10)
-  }
-  switch (period) {
-    case 'today':     return { dateFrom: today, dateTo: today }
-    case 'yesterday': { const y = shift(1); return { dateFrom: y, dateTo: y } }
-    case '7d':        return { dateFrom: shift(7), dateTo: today }
-    case '30d':       return { dateFrom: shift(30), dateTo: today }
-    case '3m':        return { dateFrom: shiftMonths(3), dateTo: today }
-    case '12m':       return { dateFrom: shiftMonths(12), dateTo: today }
-    case 'year':      return { dateFrom: `${now.getFullYear()}-01-01`, dateTo: today }
-  }
-}
-
-// ── Metric Card ───────────────────────────────────────────────────────────────
-
-function MetricCard({
-  label, value, sub, icon: Icon, accent, href, loading,
-}: {
-  label: string
-  value: string | number
-  sub?: string
+// Small stat (icon + number + label)
+function QuickStat({ icon: Icon, value, label, iconColor, iconBg, loading }: {
   icon: React.ElementType
-  accent: 'indigo' | 'emerald' | 'amber' | 'rose' | 'blue' | 'violet'
-  href?: string
+  value: string | number
+  label: string
+  iconColor: string
+  iconBg: string
   loading?: boolean
 }) {
-  const accents = {
-    indigo:  { bg: 'bg-indigo-500/10',  icon: 'text-indigo-400',  val: 'text-indigo-300',  ring: 'hover:ring-indigo-500/30' },
-    emerald: { bg: 'bg-emerald-500/10', icon: 'text-emerald-400', val: 'text-emerald-300', ring: 'hover:ring-emerald-500/30' },
-    amber:   { bg: 'bg-amber-500/10',   icon: 'text-amber-400',   val: 'text-amber-300',   ring: 'hover:ring-amber-500/30' },
-    rose:    { bg: 'bg-rose-500/10',    icon: 'text-rose-400',    val: 'text-rose-300',    ring: 'hover:ring-rose-500/30' },
-    blue:    { bg: 'bg-blue-500/10',    icon: 'text-blue-400',    val: 'text-blue-300',    ring: 'hover:ring-blue-500/30' },
-    violet:  { bg: 'bg-violet-500/10',  icon: 'text-violet-400',  val: 'text-violet-300',  ring: 'hover:ring-violet-500/30' },
-  }
-  const a = accents[accent]
-
-  const inner = (
-    <div className={cn(
-      'relative rounded-2xl border border-gray-800 bg-gray-900/80 p-5 transition-all duration-200',
-      'hover:border-gray-700 hover:bg-gray-900 ring-1 ring-transparent',
-      a.ring,
-    )}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-gray-500 tracking-wide">{label}</p>
-          <p className={cn('mt-2 text-2xl font-bold leading-none', loading ? 'text-gray-700' : a.val)}>
-            {loading ? '···' : value}
-          </p>
-          {sub && !loading && (
-            <p className="mt-1.5 text-xs text-gray-600 truncate">{sub}</p>
-          )}
-        </div>
-        <div className={cn('rounded-xl p-2.5 shrink-0', a.bg)}>
-          <Icon className={cn('h-5 w-5', a.icon)} />
-        </div>
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-3.5 shadow-sm">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: iconBg }}>
+        <Icon className="h-4.5 w-4.5" style={{ color: iconColor }} />
+      </div>
+      <div className="min-w-0">
+        <p className={cn('text-xl font-bold leading-tight text-gray-900', loading && 'text-gray-300')}>
+          {loading ? '—' : value}
+        </p>
+        <p className="text-[11px] text-gray-400 truncate">{label}</p>
       </div>
     </div>
   )
-
-  return href ? (
-    <Link to={href} className="group block">
-      {inner}
-    </Link>
-  ) : inner
 }
 
-// ── Section header ─────────────────────────────────────────────────────────────
-
-function SectionTitle({ children, href }: { children: React.ReactNode; href?: string }) {
+// Module summary card
+function ModuleCard({ mod, stat1, stat2, chartData, chartKey, chartColor, href }: {
+  mod: { label: string; Icon: React.ElementType; iconColor: string; iconBg: string; borderColor: string }
+  stat1: { value: string | number; label: string }
+  stat2: { value: string | number; label: string }
+  chartData: object[]
+  chartKey: string
+  chartColor: string
+  href: string
+}) {
   return (
-    <div className="flex items-center justify-between mb-4">
-      <h2 className="text-sm font-semibold text-gray-300">{children}</h2>
-      {href && (
-        <Link to={href} className="flex items-center gap-1 text-xs text-gray-600 hover:text-indigo-400 transition-colors">
-          Voir tout <ChevronRight className="h-3 w-3" />
-        </Link>
-      )}
+    <div className="flex flex-col rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden" style={{ borderLeftColor: mod.borderColor, borderLeftWidth: 4 }}>
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: mod.iconBg }}>
+          <mod.Icon className="h-3.5 w-3.5" style={{ color: mod.iconColor }} />
+        </div>
+        <span className="text-sm font-bold text-gray-800">{mod.label}</span>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 px-4 pb-2">
+        <div>
+          <p className="text-xl font-bold text-gray-900 leading-tight">{stat1.value}</p>
+          <p className="text-[11px] text-gray-400">{stat1.label}</p>
+        </div>
+        <div>
+          <p className="text-xl font-bold text-gray-900 leading-tight">{stat2.value}</p>
+          <p className="text-[11px] text-gray-400">{stat2.label}</p>
+        </div>
+      </div>
+
+      {/* Sparkline */}
+      <div className="flex-1 px-1">
+        <Sparkline data={chartData} dataKey={chartKey} color={chartColor} type="line" />
+      </div>
+
+      {/* Footer */}
+      <Link
+        to={href}
+        className="flex items-center justify-between border-t border-gray-50 px-4 py-2.5 text-xs font-medium text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
+      >
+        <span>Voir le dashboard</span>
+        <ArrowUpRight className="h-3.5 w-3.5" />
+      </Link>
     </div>
   )
 }
 
-// ── Pipeline stages ────────────────────────────────────────────────────────────
+// ── Pipeline stages ───────────────────────────────────────────────────────────
 
 const PIPELINE_STAGES = [
   { key: 'nouveau',           label: 'Nouveau',    color: '#6b7280' },
   { key: 'mql',              label: 'MQL',         color: '#3b82f6' },
   { key: 'sql',              label: 'SQL',         color: '#6366f1' },
   { key: 'rdv_programme',    label: 'RDV',         color: '#eab308' },
-  { key: 'appel_diagnostic', label: 'Appel diag.', color: '#f97316' },
+  { key: 'appel_diagnostic', label: 'Appel',       color: '#f97316' },
   { key: 'won',              label: 'Won',         color: '#22c55e' },
   { key: 'lost',             label: 'Lost',        color: '#ef4444' },
   { key: 'nurturing',        label: 'Nurturing',   color: '#a855f7' },
 ]
 
-const TRIGGER_LABELS: Record<string, string> = {
-  payment_treated:     'Paiement traité',
-  lead_won:            'Lead gagné',
-  reminder_due:        'Rappel dû',
-  debt_detected:       'Dette détectée',
-  form_submitted:      'Formulaire soumis',
-  subscription_created:'Souscription créée',
-  webhook:             'Webhook',
-  scheduled:           'Planifié',
-}
+// ── Module card configs ───────────────────────────────────────────────────────
 
-// ── Custom chart tooltip ───────────────────────────────────────────────────────
+const MOD_SALES      = { label: 'Sales',      Icon: TrendingUp,  iconColor: '#22c55e', iconBg: '#dcfce7', borderColor: '#22c55e' }
+const MOD_PROJECTS   = { label: 'Projects',   Icon: FolderKanban,iconColor: '#8b5cf6', iconBg: '#ede9fe', borderColor: '#8b5cf6' }
+const MOD_WORKSPACE  = { label: 'Workspace',  Icon: Zap,         iconColor: '#3b82f6', iconBg: '#dbeafe', borderColor: '#3b82f6' }
+const MOD_FINANCE    = { label: 'Finance',    Icon: Wallet,      iconColor: '#f97316', iconBg: '#ffedd5', borderColor: '#f97316' }
 
-function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; name: string; color: string }[]; label?: string }) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="rounded-xl border border-gray-700 bg-gray-900 px-3 py-2.5 text-xs shadow-xl">
-      <p className="mb-1.5 font-semibold text-gray-300">{label}</p>
-      {payload.map((p) => (
-        <div key={p.name} className="flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full" style={{ background: p.color }} />
-          <span className="text-gray-400">{p.name === 'income' ? 'Revenus' : 'Dépenses'}</span>
-          <span className="ml-auto font-medium text-gray-200">{fmt(p.value)}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-// ── Main page ─────────────────────────────────────────────────────────────────
+// ── Main Dashboard ────────────────────────────────────────────────────────────
 
 export function DashboardPage() {
-  const user = useAuthStore((s) => s.user)
-  const [period, setPeriod] = useState<Period>('today')
-  const [displayCurrency, setDisplayCurrency] = useState('XOF')
-
-  const { dateFrom, dateTo } = useMemo(() => periodToDates(period), [period])
+  const [displayCurrency] = useState('XOF')
 
   const [
-    appSettingsQ,
-    periodTransactionsQ,
     leadKpisQ,
     financeStatsQ,
     automationsQ,
@@ -268,26 +231,12 @@ export function DashboardPage() {
   ] = useQueries({
     queries: [
       {
-        queryKey: ['app-settings'],
-        queryFn: () => api.get<AppSettings>('/app-settings').then((r) => r.data),
-        staleTime: 60_000,
-      },
-      {
-        queryKey: ['period-transactions-dash', dateFrom, dateTo],
-        queryFn: () =>
-          api.get<{ data: Transaction[]; total: number }>('/finances/transactions', {
-            params: { type: 'income', dateFrom, dateTo, limit: 5000, page: 1 },
-          }).then((r) => r.data),
-      },
-      {
-        queryKey: ['lead-kpis-dash', dateFrom, dateTo],
-        queryFn: () =>
-          api.get<AcquisitionKpis>('/leads/kpis', { params: { dateFrom, dateTo } }).then((r) => r.data),
+        queryKey: ['lead-kpis-dash'],
+        queryFn: () => api.get<AcquisitionKpis>('/leads/kpis').then((r) => r.data),
       },
       {
         queryKey: ['finance-stats-dash'],
-        queryFn: () =>
-          api.get<FinanceStats>('/finances/stats', { params: { currency: 'XOF' } }).then((r) => r.data),
+        queryFn: () => api.get<FinanceStats>('/finances/stats', { params: { currency: 'XOF' } }).then((r) => r.data),
       },
       {
         queryKey: ['automations-dash'],
@@ -306,218 +255,305 @@ export function DashboardPage() {
     ],
   })
 
-  const rates = { ...DEFAULT_RATES, ...(appSettingsQ.data?.exchangeRates ?? {}) }
-  const kpis   = leadKpisQ.data
-  const fin    = financeStatsQ.data
-  const autos  = automationsQ.data ?? []
-  const forms  = formsQ.data ?? []
-  const recent = recentTransactionsQ.data ?? []
+  const kpis    = leadKpisQ.data
+  const fin     = financeStatsQ.data
+  const autos   = automationsQ.data ?? []
+  const forms   = formsQ.data ?? []
+  const recent  = recentTransactionsQ.data ?? []
 
-  // Revenue for the selected period, converted to display currency
-  const periodIncomeTxs = periodTransactionsQ.data?.data ?? []
-  const periodRevenue = periodIncomeTxs
-    .filter((tx) => tx.status !== 'failed')
-    .reduce((sum, tx) => sum + convertAmount(tx.amount, tx.currency, displayCurrency, rates), 0)
-
-  // Lead counts for the period
-  const newLeads = kpis?.period_new ?? kpis?.new_last_7d ?? 0
-  const wonLeads = kpis?.period_won ?? kpis?.won ?? 0
-
-  // Active automations
   const activeAutos = autos.filter((a) => a.isActive)
   const totalRuns   = autos.reduce((s, a) => s + (a.runCount ?? 0), 0)
+  const publishedForms = forms.filter((f) => f.isPublished)
 
-  // Funnel data
-  const funnelData = PIPELINE_STAGES
-    .map((s) => ({ label: s.label, count: kpis?.by_pipeline[s.key] ?? 0, color: s.color }))
-    .filter((s) => s.count > 0)
+  // Revenue trend (last 6 months)
+  const revTrend = (fin?.byMonth ?? []).slice(-6)
+  const expTrend = (fin?.byMonth ?? []).slice(-6)
 
-  // Chart data — last 12 months revenue
-  const chartData = fin?.byMonth ?? []
+  // Month vs prev month
+  const months = fin?.byMonth ?? []
+  const thisMonth = months[months.length - 1]?.income ?? fin?.month.income ?? 0
+  const prevMonth = months[months.length - 2]?.income ?? 0
+  const revTrendPct = prevMonth > 0 ? ((thisMonth - prevMonth) / prevMonth * 100).toFixed(1) : null
+  const revIsUp = prevMonth > 0 ? thisMonth >= prevMonth : true
 
-  // Max form responses
-  const maxResponses = Math.max(...forms.map((f) => f.responseCount), 1)
+  // Pipeline health donut
+  const wonCount  = kpis?.won ?? 0
+  const totalLeads = kpis?.total ?? 0
+  const lostCount = kpis?.by_pipeline?.lost ?? 0
+  const otherCount = Math.max(0, totalLeads - wonCount - lostCount)
+  const pipelineDonut = [
+    { name: 'Won', value: wonCount,   fill: '#22c55e' },
+    { name: 'Lost', value: lostCount,  fill: '#ef4444' },
+    { name: 'Active', value: otherCount, fill: '#e5e7eb' },
+  ]
+
+  // Leads sparkline from pipeline stages
+  const leadSparkData = PIPELINE_STAGES.map((s) => ({
+    name: s.label,
+    value: kpis?.by_pipeline[s.key] ?? 0,
+  }))
+
+  // Form responses sparkline (per form)
+  const formSparkData = forms.slice(0, 6).map((f) => ({
+    name: f.name,
+    value: f.responseCount,
+  }))
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-7xl p-6 space-y-8">
+      <div className="mx-auto max-w-7xl space-y-5 p-6">
 
-        {/* ── Header ───────────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-100">
-              Bonjour, {user?.firstName} 👋
-            </h1>
-            <p className="mt-1 text-sm text-gray-500 capitalize">{todayDate()}</p>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl border border-gray-800 bg-gray-900 px-3 py-2">
-            <Activity className="h-3.5 w-3.5 text-emerald-400" />
-            <span className="text-xs text-gray-400">
-              {activeAutos.length} automatisation{activeAutos.length !== 1 ? 's' : ''} active{activeAutos.length !== 1 ? 's' : ''}
-            </span>
-          </div>
-        </div>
+        {/* ── Row 1: Three large KPI cards ──────────────────────────────── */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
 
-        {/* ── Period + Currency selectors ───────────────────────────── */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          {/* Period pills */}
-          <div className="flex flex-wrap gap-1.5">
-            {PERIODS.map((p) => (
-              <button
-                key={p.key}
-                onClick={() => setPeriod(p.key)}
-                className={cn(
-                  'rounded-full px-3 py-1 text-xs font-medium transition-colors',
-                  period === p.key
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-200',
-                )}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Display currency */}
-          <select
-            value={displayCurrency}
-            onChange={(e) => setDisplayCurrency(e.target.value)}
-            className="rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-xs text-gray-200 focus:border-indigo-500 focus:outline-none"
-          >
-            {DISPLAY_CURRENCIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* ── KPI Cards ─────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <MetricCard
-            label="Revenus"
-            value={formatCurrency(periodRevenue, displayCurrency)}
-            sub={`${periodIncomeTxs.filter((t) => t.status !== 'failed').length} transaction${periodIncomeTxs.length !== 1 ? 's' : ''}`}
-            icon={TrendingUp}
-            accent="emerald"
-            href="/finances"
-            loading={periodTransactionsQ.isLoading}
-          />
-          <MetricCard
-            label="Nouveaux leads"
-            value={newLeads}
-            sub={`${kpis?.total ?? 0} au total`}
-            icon={Users}
-            accent="blue"
-            href="/leads"
-            loading={leadKpisQ.isLoading}
-          />
-          <MetricCard
-            label="Leads Won"
-            value={wonLeads}
-            sub={`Taux : ${kpis?.conversion_rate ?? 0}%`}
-            icon={Trophy}
-            accent="violet"
-            href="/leads"
-            loading={leadKpisQ.isLoading}
-          />
-        </div>
-
-        {/* ── Revenue chart + Activity feed ─────────────────────────── */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
-
-          {/* Revenue area chart */}
-          <div className="lg:col-span-3 rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
-            <div className="flex items-center justify-between mb-5">
+          {/* Card 1 — Total Revenue */}
+          <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between">
               <div>
-                <h2 className="text-sm font-semibold text-gray-200">Revenus — 12 derniers mois</h2>
-                <p className="mt-0.5 text-xs text-gray-500">
-                  Ce mois : <span className="text-emerald-400 font-medium">{fmt(fin?.month.income ?? 0)} XOF</span>
-                  {' · '}
-                  Année : <span className="text-blue-400 font-medium">{fmt(fin?.year.income ?? 0)} XOF</span>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Total Revenus</p>
+                <p className="mt-1.5 text-3xl font-bold text-gray-900">
+                  {financeStatsQ.isLoading ? (
+                    <span className="text-gray-200">———</span>
+                  ) : fmtCurrency(fin?.month.income ?? 0, displayCurrency)}
+                </p>
+                <p className="mt-1 text-xs text-gray-400">Ce mois · {fmtCurrency(fin?.year.income ?? 0, displayCurrency)} cette année</p>
+              </div>
+              {revTrendPct && (
+                <div className={cn(
+                  'flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold',
+                  revIsUp ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500',
+                )}>
+                  {revIsUp ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                  {revIsUp ? '+' : ''}{revTrendPct}%
+                </div>
+              )}
+            </div>
+            <div className="mt-3">
+              <Sparkline data={revTrend} dataKey="income" color="#22c55e" type="area" />
+            </div>
+          </div>
+
+          {/* Card 2 — Total Leads */}
+          <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Pipeline Leads</p>
+                <p className="mt-1.5 text-3xl font-bold text-gray-900">
+                  {leadKpisQ.isLoading ? <span className="text-gray-200">——</span> : fmt(totalLeads)}
+                </p>
+                <p className="mt-1 text-xs text-gray-400">
+                  {kpis?.new_last_7d ?? 0} nouveaux · {wonCount} won
                 </p>
               </div>
-              <Link to="/finances" className="text-xs text-gray-600 hover:text-indigo-400 transition-colors flex items-center gap-1">
-                Finances <ChevronRight className="h-3 w-3" />
-              </Link>
+              <div className="flex items-center gap-1 rounded-full bg-green-50 px-2 py-1 text-xs font-semibold text-green-600">
+                Actifs
+              </div>
             </div>
-            {chartData.length > 0 ? (
+            <div className="mt-3">
+              <Sparkline data={leadSparkData} dataKey="value" color="#8b5cf6" type="bar" />
+            </div>
+          </div>
+
+          {/* Card 3 — Pipeline Health (donut) */}
+          <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Pipeline Health</p>
+            {leadKpisQ.isLoading || totalLeads === 0 ? (
+              <div className="flex flex-col items-center justify-center h-28 text-center">
+                <p className="text-sm font-semibold text-gray-400">Aujourd'hui</p>
+                <p className="mt-0.5 text-xl font-bold text-gray-300">No data</p>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4 mt-2">
+                <ResponsiveContainer width={100} height={100}>
+                  <PieChart>
+                    <Pie data={pipelineDonut} cx="50%" cy="50%" innerRadius={28} outerRadius={44}
+                      dataKey="value" startAngle={90} endAngle={-270} paddingAngle={2}>
+                      {pipelineDonut.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} stroke="none" />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="space-y-2">
+                  {pipelineDonut.filter(d => d.value > 0).map((d) => (
+                    <div key={d.name} className="flex items-center gap-2 text-xs">
+                      <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: d.fill }} />
+                      <span className="text-gray-500">{d.name}</span>
+                      <span className="ml-auto font-semibold text-gray-700">{d.value}</span>
+                    </div>
+                  ))}
+                  <p className="text-xs text-gray-400">
+                    Taux: <span className="font-bold text-green-600">{kpis?.conversion_rate ?? 0}%</span>
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Row 2: Six quick stats ─────────────────────────────────────── */}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          <QuickStat icon={DollarSign} value={fmtCurrency(fin?.month.net ?? 0, 'XOF')}
+            label="Profit net" iconColor="#22c55e" iconBg="#dcfce7" loading={financeStatsQ.isLoading} />
+          <QuickStat icon={Trophy} value={fmt(wonCount)}
+            label="Leads won" iconColor="#8b5cf6" iconBg="#ede9fe" loading={leadKpisQ.isLoading} />
+          <QuickStat icon={Zap} value={activeAutos.length}
+            label="Automatisations" iconColor="#f97316" iconBg="#ffedd5" loading={automationsQ.isLoading} />
+          <QuickStat icon={FileText} value={publishedForms.length}
+            label="Formulaires actifs" iconColor="#3b82f6" iconBg="#dbeafe" loading={formsQ.isLoading} />
+          <QuickStat icon={Activity} value={totalRuns}
+            label="Exécutions totales" iconColor="#6366f1" iconBg="#e0e7ff" loading={automationsQ.isLoading} />
+          <QuickStat icon={BarChart2} value={`${kpis?.conversion_rate ?? 0}%`}
+            label="Taux conversion" iconColor="#ec4899" iconBg="#fce7f3" loading={leadKpisQ.isLoading} />
+        </div>
+
+        {/* ── Row 3: Four module cards ───────────────────────────────────── */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ModuleCard
+            mod={MOD_SALES}
+            stat1={{ value: fmt(kpis?.new_last_7d ?? 0), label: 'Nouveaux leads' }}
+            stat2={{ value: fmt(wonCount), label: 'Won · étudiants' }}
+            chartData={revTrend}
+            chartKey="income"
+            chartColor="#22c55e"
+            href="/leads"
+          />
+          <ModuleCard
+            mod={MOD_PROJECTS}
+            stat1={{ value: forms.length, label: 'Formulaires total' }}
+            stat2={{ value: publishedForms.length, label: 'Publiés' }}
+            chartData={formSparkData}
+            chartKey="value"
+            chartColor="#8b5cf6"
+            href="/forms"
+          />
+          <ModuleCard
+            mod={MOD_WORKSPACE}
+            stat1={{ value: autos.length, label: 'Automatisations' }}
+            stat2={{ value: activeAutos.length, label: 'Actives' }}
+            chartData={formSparkData}
+            chartKey="value"
+            chartColor="#3b82f6"
+            href="/automations"
+          />
+          <ModuleCard
+            mod={MOD_FINANCE}
+            stat1={{ value: fmtCurrency(fin?.month.income ?? 0, 'XOF'), label: 'Revenus / mois' }}
+            stat2={{ value: fmt(recent.filter(t => t.type === 'income' && t.status !== 'failed').length), label: 'Transactions' }}
+            chartData={expTrend}
+            chartKey="income"
+            chartColor="#f97316"
+            href="/finances"
+          />
+        </div>
+
+        {/* ── Row 4: Revenue chart + Recent transactions ─────────────────── */}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+
+          {/* Revenue area chart */}
+          <div className="lg:col-span-3 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-gray-800">Revenus vs Dépenses</h3>
+                <p className="text-xs text-gray-400 mt-0.5">12 derniers mois</p>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="flex items-center gap-1.5 text-gray-500">
+                  <span className="h-2 w-2 rounded-full bg-green-500" /> Revenus
+                </span>
+                <span className="flex items-center gap-1.5 text-gray-500">
+                  <span className="h-2 w-2 rounded-full bg-red-400" /> Dépenses
+                </span>
+              </div>
+            </div>
+
+            {(fin?.byMonth ?? []).length > 0 ? (
               <ResponsiveContainer width="100%" height={200}>
-                <AreaChart data={chartData} margin={{ left: -10, right: 0, top: 0, bottom: 0 }}>
+                <AreaChart data={fin?.byMonth ?? []} margin={{ left: -10, right: 0, top: 4, bottom: 0 }}>
                   <defs>
-                    <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                    <linearGradient id="gIncome" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22c55e" stopOpacity={0.15} />
+                      <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                     </linearGradient>
-                    <linearGradient id="expenseGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2} />
-                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                    <linearGradient id="gExpense" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.1} />
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                  <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false}
-                    tickFormatter={(v) => v >= 1000000 ? `${(v / 1000000).toFixed(1)}M` : v >= 1000 ? `${Math.round(v / 1000)}k` : String(v)} />
-                  <Tooltip content={<ChartTooltip />} />
-                  <Area type="monotone" dataKey="income" stroke="#6366f1" strokeWidth={2} fill="url(#incomeGrad)" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
-                  <Area type="monotone" dataKey="expense" stroke="#f43f5e" strokeWidth={1.5} fill="url(#expenseGrad)" dot={false} activeDot={{ r: 3, strokeWidth: 0 }} />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: '#9ca3af' }} tickLine={false} axisLine={false}
+                    tickFormatter={(v) => v >= 1_000_000 ? `${(v / 1_000_000).toFixed(1)}M` : v >= 1_000 ? `${Math.round(v / 1_000)}k` : String(v)} />
+                  <Tooltip
+                    contentStyle={{ background: '#fff', border: '1px solid #f3f4f6', borderRadius: 10, fontSize: 12, boxShadow: '0 4px 12px rgba(0,0,0,.08)' }}
+                    labelStyle={{ color: '#374151', fontWeight: 600 }}
+                  />
+                  <Area type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={2}
+                    fill="url(#gIncome)" dot={false} activeDot={{ r: 4, fill: '#22c55e', strokeWidth: 0 }} />
+                  <Area type="monotone" dataKey="expense" stroke="#ef4444" strokeWidth={1.5}
+                    fill="url(#gExpense)" dot={false} activeDot={{ r: 3, fill: '#ef4444', strokeWidth: 0 }} />
                 </AreaChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-[200px] items-center justify-center">
-                <p className="text-sm text-gray-600">Aucune transaction enregistrée</p>
+              <div className="flex h-[200px] items-center justify-center rounded-lg bg-gray-50">
+                <p className="text-sm text-gray-400">Aucune transaction enregistrée</p>
               </div>
             )}
           </div>
 
-          {/* Activity feed — dernières transactions toutes devises */}
-          <div className="lg:col-span-2 rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
-            <SectionTitle href="/finances">Dernières transactions</SectionTitle>
+          {/* Recent transactions */}
+          <div className="lg:col-span-2 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-bold text-gray-800">Dernières transactions</h3>
+              <Link to="/finances" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                Voir tout →
+              </Link>
+            </div>
+
             {recentTransactionsQ.isLoading ? (
-              <div className="space-y-2.5">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="flex items-center gap-3 rounded-xl bg-gray-800/40 p-3 animate-pulse">
-                    <div className="h-7 w-7 rounded-full bg-gray-700 shrink-0" />
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="flex items-center gap-3 animate-pulse">
+                    <div className="h-8 w-8 rounded-full bg-gray-100 shrink-0" />
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3 w-28 rounded bg-gray-700" />
-                      <div className="h-2.5 w-16 rounded bg-gray-800" />
+                      <div className="h-3 w-24 rounded bg-gray-100" />
+                      <div className="h-2.5 w-14 rounded bg-gray-50" />
                     </div>
-                    <div className="h-3 w-16 rounded bg-gray-800" />
+                    <div className="h-3 w-16 rounded bg-gray-100" />
                   </div>
                 ))}
               </div>
             ) : recent.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2">
-                <CreditCard className="h-8 w-8 text-gray-700" />
-                <p className="text-sm text-gray-600">Aucune transaction enregistrée</p>
+              <div className="flex flex-col items-center justify-center h-36 gap-2">
+                <CreditCard className="h-8 w-8 text-gray-200" />
+                <p className="text-sm text-gray-400">Aucune transaction</p>
               </div>
             ) : (
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 {recent.map((tx) => {
                   const isIncome = tx.type === 'income'
                   const label = tx.customerName ?? tx.description ?? tx.productName ?? '—'
                   const sub = tx.productName && tx.customerName ? tx.productName : tx.gateway
                   return (
-                    <div
-                      key={tx._id}
-                      className="flex items-center gap-3 rounded-xl bg-gray-800/20 px-3 py-2 hover:bg-gray-800/50 transition-colors"
-                    >
+                    <div key={tx._id}
+                      className="flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-gray-50">
                       <div className={cn(
-                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-full',
-                        isIncome ? 'bg-emerald-500/10' : 'bg-rose-500/10',
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                        isIncome ? 'bg-green-50' : 'bg-red-50',
                       )}>
                         {isIncome
-                          ? <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-400" />
-                          : <ArrowUpRightTx className="h-3.5 w-3.5 text-rose-400" />
+                          ? <ArrowDownLeft className="h-3.5 w-3.5 text-green-500" />
+                          : <ArrowUpRight className="h-3.5 w-3.5 text-red-500" />
                         }
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-200 truncate">{label}</p>
-                        <p className="text-xs text-gray-600 truncate">{sub}</p>
+                        <p className="text-xs font-medium text-gray-800 truncate">{label}</p>
+                        <p className="text-[10px] text-gray-400 truncate">{sub}</p>
                       </div>
                       <div className="text-right shrink-0">
-                        <p className={cn('text-xs font-semibold', isIncome ? 'text-emerald-400' : 'text-rose-400')}>
+                        <p className={cn('text-xs font-semibold', isIncome ? 'text-green-600' : 'text-red-500')}>
                           {isIncome ? '+' : '−'}{fmt(tx.amount)} {tx.currency}
                         </p>
-                        <p className="text-xs text-gray-700">{relativeTime(tx.date ?? tx.createdAt)}</p>
+                        <p className="text-[10px] text-gray-400">{relativeTime(tx.date ?? tx.createdAt)}</p>
                       </div>
                     </div>
                   )
@@ -527,151 +563,60 @@ export function DashboardPage() {
           </div>
         </div>
 
-        {/* ── Pipeline + Forms ──────────────────────────────────────── */}
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-
-          {/* Lead pipeline funnel */}
-          <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
-            <SectionTitle href="/leads">Pipeline Leads</SectionTitle>
-            <div className="mb-3 flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-gray-200">{fmt(kpis?.total ?? 0)}</span>
-              <span className="text-xs text-gray-500">leads au total</span>
-              <span className="ml-auto text-xs text-emerald-400 font-medium">
-                {kpis?.won ?? 0} Won · {kpis?.conversion_rate ?? 0}%
-              </span>
-            </div>
-            {funnelData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={funnelData} layout="vertical" margin={{ left: 0, right: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#6b7280' }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="label" tick={{ fontSize: 10, fill: '#9ca3af' }} width={68} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: 12, fontSize: 12 }}
-                    formatter={(v) => [v, 'leads']}
-                    cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-                  />
-                  <Bar dataKey="count" radius={[0, 6, 6, 0]} maxBarSize={16}>
-                    {funnelData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} fillOpacity={0.85} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="py-8 text-center text-sm text-gray-600">Aucun lead</p>
-            )}
-          </div>
-
-          {/* Forms */}
-          <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
-            <SectionTitle href="/forms">Formulaires</SectionTitle>
-            {formsQ.isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="space-y-1.5 animate-pulse">
-                    <div className="h-3 w-32 rounded bg-gray-800" />
-                    <div className="h-2 w-full rounded bg-gray-800/60" />
-                  </div>
-                ))}
-              </div>
-            ) : forms.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 gap-2">
-                <FileText className="h-8 w-8 text-gray-700" />
-                <p className="text-sm text-gray-600">Aucun formulaire créé</p>
-                <Link to="/forms" className="text-xs text-indigo-400 hover:text-indigo-300">Créer un formulaire</Link>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {forms.slice(0, 6).map((form) => {
-                  const pct = Math.round((form.responseCount / maxResponses) * 100)
-                  return (
-                    <div key={form._id}>
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className={cn(
-                            'h-1.5 w-1.5 rounded-full shrink-0',
-                            form.isPublished ? 'bg-emerald-400' : 'bg-gray-600',
-                          )} />
-                          <span className="text-xs text-gray-300 truncate">{form.name}</span>
-                        </div>
-                        <span className="ml-2 text-xs font-medium text-gray-400 shrink-0">
-                          {form.responseCount} rép.
-                        </span>
-                      </div>
-                      <div className="h-1.5 rounded-full bg-gray-800">
-                        <div
-                          className="h-1.5 rounded-full bg-indigo-500/60 transition-all duration-500"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Automations ───────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-5">
-          <div className="flex items-center justify-between mb-4">
+        {/* ── Row 5: Automations grid ────────────────────────────────────── */}
+        <div className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <SectionTitle href="/automations">Automatisations</SectionTitle>
-              <div className="flex items-center gap-1.5 -mt-4">
-                <span className={cn(
-                  'inline-flex h-5 items-center rounded-full px-2 text-xs font-medium',
-                  activeAutos.length > 0 ? 'bg-emerald-500/15 text-emerald-400' : 'bg-gray-800 text-gray-500',
-                )}>
-                  {activeAutos.length} active{activeAutos.length !== 1 ? 's' : ''}
-                </span>
-                <span className="text-xs text-gray-600">{totalRuns} exécutions totales</span>
-              </div>
+              <h3 className="text-sm font-bold text-gray-800">Automatisations</h3>
+              <span className={cn(
+                'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold',
+                activeAutos.length > 0 ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500',
+              )}>
+                {activeAutos.length} active{activeAutos.length !== 1 ? 's' : ''}
+              </span>
+              <span className="text-xs text-gray-400">{totalRuns} exécutions</span>
             </div>
+            <Link to="/automations" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+              Voir tout →
+            </Link>
           </div>
 
           {automationsQ.isLoading ? (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-20 rounded-xl bg-gray-800/40 animate-pulse" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-16 rounded-lg bg-gray-50 animate-pulse" />
               ))}
             </div>
           ) : autos.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 gap-2">
-              <Zap className="h-8 w-8 text-gray-700" />
-              <p className="text-sm text-gray-600">Aucune automatisation configurée</p>
-              <Link to="/automations" className="text-xs text-indigo-400 hover:text-indigo-300">Créer une automatisation</Link>
+              <Zap className="h-8 w-8 text-gray-200" />
+              <p className="text-sm text-gray-400">Aucune automatisation configurée</p>
+              <Link to="/automations" className="text-xs font-medium text-indigo-600 hover:text-indigo-700">
+                Créer une automatisation
+              </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {autos.slice(0, 9).map((auto) => (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {autos.slice(0, 8).map((auto) => (
                 <Link
                   key={auto._id}
                   to="/automations"
-                  className="flex items-start gap-3 rounded-xl border border-gray-800 bg-gray-800/20 px-3 py-3 hover:border-gray-700 hover:bg-gray-800/40 transition-colors"
+                  className="group flex items-start gap-3 rounded-lg border border-gray-100 bg-gray-50 p-3 transition-all hover:border-indigo-100 hover:bg-indigo-50/50"
                 >
                   <div className={cn(
                     'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg',
-                    auto.isActive ? 'bg-indigo-500/15' : 'bg-gray-800',
+                    auto.isActive ? 'bg-indigo-100' : 'bg-gray-200',
                   )}>
-                    <Zap className={cn('h-3.5 w-3.5', auto.isActive ? 'text-indigo-400' : 'text-gray-600')} />
+                    <Zap className={cn('h-3.5 w-3.5', auto.isActive ? 'text-indigo-600' : 'text-gray-400')} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-gray-200 truncate">{auto.name}</p>
-                    <p className="mt-0.5 text-xs text-gray-600 truncate">
-                      {TRIGGER_LABELS[auto.triggerType] ?? auto.triggerType}
-                    </p>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      {auto.isActive ? (
-                        <span className="flex items-center gap-1 text-xs text-emerald-400">
-                          <CheckCircle className="h-3 w-3" /> Active
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-xs text-gray-600">
-                          <Clock className="h-3 w-3" /> Inactive
-                        </span>
-                      )}
-                      <span className="text-xs text-gray-700">{auto.runCount ?? 0}×</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-gray-700 truncate group-hover:text-indigo-700">{auto.name}</p>
+                    <div className="mt-1 flex items-center gap-2">
+                      {auto.isActive
+                        ? <span className="flex items-center gap-1 text-[10px] text-green-600"><CheckCircle className="h-3 w-3" /> Active</span>
+                        : <span className="flex items-center gap-1 text-[10px] text-gray-400"><Clock className="h-3 w-3" /> Inactive</span>
+                      }
+                      <span className="text-[10px] text-gray-400">{auto.runCount ?? 0}×</span>
                     </div>
                   </div>
                 </Link>

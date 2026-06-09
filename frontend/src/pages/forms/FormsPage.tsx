@@ -33,8 +33,8 @@ function CreateFormModal({ onClose, onCreated }: { onClose: () => void; onCreate
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-100">Nouveau formulaire</h2>
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-base font-semibold text-gray-900">Nouveau formulaire</h2>
 
         <div className="space-y-4">
           <div>
@@ -45,7 +45,7 @@ function CreateFormModal({ onClose, onCreated }: { onClose: () => void; onCreate
               onChange={(e) => setTitle(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && title.trim() && mutation.mutate({ title: title.trim(), description })}
               placeholder="Mon formulaire"
-              className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
           <div>
@@ -54,13 +54,13 @@ function CreateFormModal({ onClose, onCreated }: { onClose: () => void; onCreate
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Description optionnelle"
-              className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             />
           </div>
         </div>
 
         <div className="mt-6 flex justify-end gap-3">
-          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-400 hover:text-gray-200 transition-colors">
+          <button onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-400 hover:text-gray-800 transition-colors">
             Annuler
           </button>
           <button
@@ -103,19 +103,19 @@ function FormCard({ form, onEdit }: { form: Form; onEdit: () => void }) {
   const publicUrl = `${window.location.origin}/f/${form.slug}`
 
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900 p-5 flex flex-col gap-4 hover:border-gray-700 transition-colors">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 flex flex-col gap-4 hover:border-gray-200 transition-colors">
       <div className="flex items-start gap-3">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-600/15 text-indigo-400">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
           <FileText className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold text-gray-100">{form.title}</h3>
+            <h3 className="truncate text-sm font-semibold text-gray-900">{form.title}</h3>
             <span className={cn(
               'shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
               form.isPublished
-                ? 'bg-emerald-500/15 text-emerald-400'
-                : 'bg-gray-700/50 text-gray-400',
+                ? 'bg-emerald-500/15 text-emerald-600'
+                : 'bg-gray-200/50 text-gray-400',
             )}>
               {form.isPublished ? 'Publié' : 'Brouillon'}
             </span>
@@ -135,10 +135,10 @@ function FormCard({ form, onEdit }: { form: Form; onEdit: () => void }) {
         <span>{new Date(form.createdAt).toLocaleDateString('fr-FR')}</span>
       </div>
 
-      <div className="flex items-center gap-2 border-t border-gray-800 pt-3">
+      <div className="flex items-center gap-2 border-t border-gray-200 pt-3">
         <button
           onClick={onEdit}
-          className="flex-1 rounded-lg bg-indigo-600/10 px-3 py-1.5 text-xs font-medium text-indigo-400 hover:bg-indigo-600/20 transition-colors"
+          className="flex-1 rounded-lg bg-indigo-600/10 px-3 py-1.5 text-xs font-medium text-indigo-600 hover:bg-indigo-600/20 transition-colors"
         >
           Éditer
         </button>
@@ -147,7 +147,7 @@ function FormCard({ form, onEdit }: { form: Form; onEdit: () => void }) {
           onClick={() => toggleMut.mutate()}
           disabled={toggleMut.isPending}
           title={form.isPublished ? 'Dépublier' : 'Publier'}
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
+          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-800 transition-colors"
         >
           {form.isPublished ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
         </button>
@@ -158,7 +158,7 @@ function FormCard({ form, onEdit }: { form: Form; onEdit: () => void }) {
             target="_blank"
             rel="noopener noreferrer"
             title="Voir le formulaire"
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
+            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-800 transition-colors"
           >
             <ExternalLink className="h-4 w-4" />
           </a>
@@ -168,7 +168,7 @@ function FormCard({ form, onEdit }: { form: Form; onEdit: () => void }) {
           onClick={() => dupMut.mutate()}
           disabled={dupMut.isPending}
           title="Dupliquer"
-          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
+          className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-800 transition-colors"
         >
           <Copy className="h-4 w-4" />
         </button>
@@ -205,7 +205,7 @@ export function FormsPage() {
     <div className="h-full overflow-y-auto p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-100">Formulaires</h1>
+          <h1 className="text-xl font-bold text-gray-900">Formulaires</h1>
           <p className="mt-0.5 text-sm text-gray-500">
             {forms.length} formulaire{forms.length !== 1 ? 's' : ''}
           </p>
@@ -223,10 +223,10 @@ export function FormsPage() {
         <div className="py-12 text-center text-sm text-gray-500">Chargement...</div>
       ) : forms.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-800">
+          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
             <FileText className="h-8 w-8 text-gray-600" />
           </div>
-          <h3 className="text-base font-medium text-gray-300">Aucun formulaire</h3>
+          <h3 className="text-base font-medium text-gray-600">Aucun formulaire</h3>
           <p className="mt-1 text-sm text-gray-500">Créez votre premier formulaire pour commencer</p>
           <button
             onClick={() => setShowCreate(true)}

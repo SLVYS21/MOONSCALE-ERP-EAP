@@ -99,22 +99,22 @@ const CATEGORY_CONFIG: Record<ContentCategory, {
 }> = {
   educatif: {
     label: 'Éducatif', icon: Video,
-    color: 'text-blue-400', bg: 'bg-blue-500/10', activeBorder: 'border-blue-500',
+    color: 'text-blue-600', bg: 'bg-blue-500/10', activeBorder: 'border-blue-500',
     formats: ['talking-head', 'valeur-ecommerce', 'mindset', 'etude-de-cas', 'erreurs-lecons'],
   },
   'preuve-sociale': {
     label: 'Preuve Sociale', icon: Users,
-    color: 'text-emerald-400', bg: 'bg-emerald-500/10', activeBorder: 'border-emerald-500',
+    color: 'text-emerald-600', bg: 'bg-emerald-50', activeBorder: 'border-emerald-500',
     formats: ['interview-etudiant', 'challenge'],
   },
   viral: {
     label: 'Viral & Lifestyle', icon: TrendingUp,
-    color: 'text-orange-400', bg: 'bg-orange-500/10', activeBorder: 'border-orange-500',
+    color: 'text-orange-600', bg: 'bg-orange-500/10', activeBorder: 'border-orange-500',
     formats: ['comparatif', 'vision-marche', 'coulisses', 'personnalite'],
   },
   podcast: {
     label: 'Podcast', icon: Mic,
-    color: 'text-purple-400', bg: 'bg-purple-500/10', activeBorder: 'border-purple-500',
+    color: 'text-purple-700', bg: 'bg-purple-500/10', activeBorder: 'border-purple-500',
     formats: ['podcast'],
   },
 }
@@ -166,7 +166,7 @@ function YouTubeCard({ url }: { url: string }) {
 
   if (!id) return null
   return (
-    <div className="rounded-lg overflow-hidden border border-gray-800">
+    <div className="rounded-lg overflow-hidden border border-gray-200">
       {showPlayer ? (
         <iframe src={`https://www.youtube.com/embed/${id}?autoplay=1`} className="w-full aspect-video" allow="autoplay; encrypted-media" allowFullScreen />
       ) : (
@@ -201,7 +201,7 @@ function ProjectCard({ project, onClick }: { project: VideoProject; onClick: () 
   return (
     <button
       onClick={onClick}
-      className="w-full text-left bg-gray-900 border border-gray-800 rounded-xl p-4 hover:border-gray-700 hover:bg-gray-800 transition-all duration-150 cursor-pointer group"
+      className="w-full text-left bg-white border border-gray-200 rounded-xl p-4 hover:border-gray-200 hover:bg-gray-100 transition-all duration-150 cursor-pointer group"
     >
       <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -209,14 +209,14 @@ function ProjectCard({ project, onClick }: { project: VideoProject; onClick: () 
             <CatIcon className="w-3 h-3" />
             {cat.label}
           </span>
-          <span className="text-xs px-2 py-0.5 rounded-md bg-gray-800 text-gray-400 border border-gray-700">
+          <span className="text-xs px-2 py-0.5 rounded-md bg-gray-100 text-gray-400 border border-gray-200">
             {FORMAT_LABELS[project.format] ?? project.format}
           </span>
           <span className={cn(
             'text-[10px] px-1.5 py-0.5 rounded font-bold tracking-wide uppercase',
             project.duration_type === 'court'
               ? 'bg-amber-500/15 text-amber-400'
-              : 'bg-blue-500/15 text-blue-400',
+              : 'bg-blue-500/15 text-blue-600',
           )}>
             {project.duration_type === 'court' ? 'Court' : 'Long'}
           </span>
@@ -227,19 +227,19 @@ function ProjectCard({ project, onClick }: { project: VideoProject; onClick: () 
               key={s.key}
               className={cn(
                 'w-1.5 h-1.5 rounded-full transition-all',
-                i < statusIdx ? 'bg-emerald-500' : i === statusIdx ? 'bg-blue-400' : 'bg-gray-700',
+                i < statusIdx ? 'bg-emerald-500' : i === statusIdx ? 'bg-blue-400' : 'bg-gray-200',
               )}
             />
           ))}
         </div>
       </div>
 
-      <h3 className="text-sm font-semibold text-gray-100 leading-snug mb-1.5 group-hover:text-white transition-colors">
+      <h3 className="text-sm font-semibold text-gray-900 leading-snug mb-1.5 group-hover:text-white transition-colors">
         {project.title}
       </h3>
 
       {project.format === 'podcast' && project.guest_name ? (
-        <p className="text-xs text-purple-400 mb-2">Invité · {project.guest_name}</p>
+        <p className="text-xs text-purple-700 mb-2">Invité · {project.guest_name}</p>
       ) : selectedHook ? (
         <p className="text-xs text-gray-500 mb-2 line-clamp-1 italic">"{selectedHook}"</p>
       ) : project.value_proposition ? (
@@ -248,7 +248,7 @@ function ProjectCard({ project, onClick }: { project: VideoProject; onClick: () 
 
       {total > 0 && (
         <div className="mt-3 flex items-center gap-2">
-          <div className="flex-1 h-1 bg-gray-800 rounded-full overflow-hidden">
+          <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
             <div
               className="h-full bg-emerald-500 rounded-full transition-all duration-300"
               style={{ width: `${Math.round((done / total) * 100)}%` }}
@@ -333,24 +333,24 @@ function CreateModal({ onClose, onCreate, initialData }: {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div className="relative bg-white border border-gray-200 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-800">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-200">
           <div className="flex items-center gap-2">
             {step === 'form' && brainDump.trim() && (
               <button
                 onClick={() => setStep('dump')}
-                className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+                className="text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4 rotate-180" />
               </button>
             )}
-            <h2 className="text-base font-semibold text-gray-100">
+            <h2 className="text-base font-semibold text-gray-900">
               {step === 'dump' ? 'Capture ton idée' : 'Nouvelle idée'}
             </h2>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-600 transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -367,7 +367,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
               onChange={e => setBrainDump(e.target.value)}
               placeholder="Une idée sur les erreurs que font les débutants en dropshipping... ou je veux faire une vidéo sur mon expérience de 0 à 100 ventes..."
               rows={6}
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors resize-none leading-relaxed"
+              className="w-full bg-gray-100 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors resize-none leading-relaxed"
             />
             <div className="mt-4 flex flex-col gap-2">
               <button
@@ -382,7 +382,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
               </button>
               <button
                 onClick={() => setStep('form')}
-                className="w-full py-2 text-sm text-gray-500 hover:text-gray-300 transition-colors cursor-pointer"
+                className="w-full py-2 text-sm text-gray-500 hover:text-gray-600 transition-colors cursor-pointer"
               >
                 Remplir manuellement
               </button>
@@ -395,7 +395,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
               {/* AI-structured badge */}
               {brainDump.trim() && aiNotes && (
                 <div className="flex items-start gap-2 p-3 bg-blue-500/5 border border-blue-500/15 rounded-xl">
-                  <Sparkles className="w-3.5 h-3.5 text-blue-400 flex-shrink-0 mt-0.5" />
+                  <Sparkles className="w-3.5 h-3.5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-blue-300 leading-relaxed">{aiNotes}</p>
                 </div>
               )}
@@ -408,7 +408,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
                   onChange={e => setTitle(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && title.trim()) handleCreate() }}
                   placeholder="Titre de la vidéo..."
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+                  className="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
                 />
               </div>
 
@@ -427,7 +427,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
                           'flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-150 cursor-pointer',
                           isActive
                             ? cn('border', cfg.activeBorder, cfg.bg, cfg.color)
-                            : 'border-gray-800 text-gray-500 hover:border-gray-700 hover:text-gray-400',
+                            : 'border-gray-200 text-gray-500 hover:border-gray-200 hover:text-gray-400',
                         )}
                       >
                         <Icon className="w-4 h-4 flex-shrink-0" />
@@ -444,7 +444,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
                 <select
                   value={format}
                   onChange={e => setFormat(e.target.value as ContentFormat)}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
+                  className="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
                 >
                   {CATEGORY_CONFIG[category].formats.map(f => (
                     <option key={f} value={f}>{FORMAT_LABELS[f]}</option>
@@ -464,10 +464,10 @@ function CreateModal({ onClose, onCreate, initialData }: {
                         'flex flex-col items-start px-3 py-2.5 rounded-xl border text-left transition-all duration-150 cursor-pointer',
                         duration === val
                           ? 'border-blue-500 bg-blue-500/10'
-                          : 'border-gray-800 hover:border-gray-700',
+                          : 'border-gray-200 hover:border-gray-200',
                       )}
                     >
-                      <span className={cn('text-sm font-semibold', duration === val ? 'text-blue-400' : 'text-gray-400')}>
+                      <span className={cn('text-sm font-semibold', duration === val ? 'text-blue-600' : 'text-gray-400')}>
                         {label}
                       </span>
                       <span className="text-[10px] text-gray-600 mt-0.5">{sub}</span>
@@ -484,7 +484,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
                     value={guestName}
                     onChange={e => setGuestName(e.target.value)}
                     placeholder="Prénom Nom"
-                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+                    className="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
                   />
                 </div>
               )}
@@ -504,7 +504,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
                       value={ytUrl}
                       onChange={e => setYtUrl(e.target.value)}
                       placeholder="https://youtube.com/watch?v=..."
-                      className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+                      className="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
                     />
                     {ytId && <YouTubeCard url={ytUrl} />}
                   </div>
@@ -515,7 +515,7 @@ function CreateModal({ onClose, onCreate, initialData }: {
             <div className="flex gap-3 px-5 pb-5">
               <button
                 onClick={onClose}
-                className="flex-1 py-2.5 rounded-xl border border-gray-800 text-sm text-gray-500 hover:text-gray-300 hover:border-gray-700 transition-all duration-150 cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-500 hover:text-gray-600 hover:border-gray-200 transition-all duration-150 cursor-pointer"
               >
                 Annuler
               </button>
@@ -630,28 +630,28 @@ function CaptureModal({ onClose, onSave }: {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={(!isRecording && !isTranscribing) ? onClose : undefined} />
-      <div className="relative bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div className="relative bg-white border border-gray-200 rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-800">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-gray-200">
           <div className="flex items-center gap-3">
             {isRecording ? (
               <>
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-                <span className="text-sm font-semibold text-gray-100">Enregistrement</span>
+                <span className="text-sm font-semibold text-gray-900">Enregistrement</span>
                 <span className="text-sm font-mono text-gray-500">{formatTime(recordingSeconds)}</span>
               </>
             ) : isTranscribing ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin text-blue-400 flex-shrink-0" />
-                <span className="text-sm font-semibold text-gray-100">Transcription en cours...</span>
+                <Loader2 className="w-4 h-4 animate-spin text-blue-600 flex-shrink-0" />
+                <span className="text-sm font-semibold text-gray-900">Transcription en cours...</span>
               </>
             ) : (
-              <h2 className="text-base font-semibold text-gray-100">Capture rapide</h2>
+              <h2 className="text-base font-semibold text-gray-900">Capture rapide</h2>
             )}
           </div>
           {!isRecording && !isTranscribing && (
-            <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-600 transition-colors cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           )}
@@ -670,12 +670,12 @@ function CaptureModal({ onClose, onSave }: {
             }
             rows={6}
             className={cn(
-              'w-full border rounded-xl px-4 py-3 text-sm placeholder:text-gray-500 focus:outline-none resize-none leading-relaxed transition-colors',
+              'w-full border rounded-xl px-4 py-3 text-sm placeholder:text-gray-400 focus:outline-none resize-none leading-relaxed transition-colors',
               isRecording
-                ? 'bg-red-500/5 border-red-500/30 text-gray-300 cursor-default'
+                ? 'bg-red-500/5 border-red-500/30 text-gray-600 cursor-default'
                 : isTranscribing
                 ? 'bg-blue-500/5 border-blue-500/20 text-gray-400 cursor-default'
-                : 'bg-gray-800 border-gray-700 text-gray-100 focus:border-gray-600',
+                : 'bg-gray-100 border-gray-200 text-gray-900 focus:border-gray-600',
             )}
           />
 
@@ -685,7 +685,7 @@ function CaptureModal({ onClose, onSave }: {
 
           <div className="flex items-center gap-2">
             {isTranscribing ? (
-              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-blue-500/20 text-blue-400 text-sm flex-shrink-0">
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-blue-500/20 text-blue-600 text-sm flex-shrink-0">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 Whisper...
               </div>
@@ -700,7 +700,7 @@ function CaptureModal({ onClose, onSave }: {
             ) : (
               <button
                 onClick={startRecording}
-                className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/5 text-sm transition-all duration-150 cursor-pointer flex-shrink-0"
+                className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 text-gray-400 hover:text-red-400 hover:border-red-500/40 hover:bg-red-500/5 text-sm transition-all duration-150 cursor-pointer flex-shrink-0"
               >
                 <Mic className="w-4 h-4" />
                 Voix
@@ -710,7 +710,7 @@ function CaptureModal({ onClose, onSave }: {
             <button
               disabled={!text.trim() || isRecording || isTranscribing}
               onClick={handleSave}
-              className="flex-1 py-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-sm text-gray-200 font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer flex items-center justify-center gap-2"
+              className="flex-1 py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 border border-gray-200 text-sm text-gray-800 font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer flex items-center justify-center gap-2"
             >
               <Check className="w-4 h-4" />
               Sauvegarder
@@ -778,14 +778,14 @@ function CapturesPanel({ onConvert }: {
   if (captures.length === 0) return null
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-4">
+    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-4">
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-gray-800/50 transition-colors cursor-pointer"
+        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-white transition-colors cursor-pointer"
       >
         {collapsed ? <ChevronRight className="w-4 h-4 text-gray-600" /> : <ChevronDown className="w-4 h-4 text-gray-600" />}
         <BookOpen className="w-4 h-4 text-amber-400" />
-        <span className="text-sm font-medium text-gray-300">Brouillons</span>
+        <span className="text-sm font-medium text-gray-600">Brouillons</span>
         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 font-medium">
           {captures.length}
         </span>
@@ -795,11 +795,11 @@ function CapturesPanel({ onConvert }: {
       </button>
 
       {!collapsed && (
-        <div className="border-t border-gray-800 p-3 space-y-2">
+        <div className="border-t border-gray-200 p-3 space-y-2">
           {captures.map(c => (
             <div
               key={c._id}
-              className="group flex items-start gap-3 p-3 rounded-xl bg-gray-800/40 border border-gray-800 hover:border-gray-700 transition-all duration-150"
+              className="group flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-200 hover:border-gray-200 transition-all duration-150"
             >
               {/* Source icon */}
               <div className="flex-shrink-0 mt-0.5">
@@ -817,19 +817,19 @@ function CapturesPanel({ onConvert }: {
                     value={editText}
                     onChange={e => setEditText(e.target.value)}
                     rows={3}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-gray-600 resize-none transition-colors"
+                    className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-600 resize-none transition-colors"
                   />
                   <div className="flex gap-2">
                     <button
                       onClick={() => updateMut.mutate({ id: c._id, text: editText })}
                       disabled={updateMut.isPending || !editText.trim()}
-                      className="px-3 py-1.5 rounded-lg bg-gray-700 hover:bg-gray-600 text-xs text-gray-200 disabled:opacity-40 cursor-pointer transition-all"
+                      className="px-3 py-1.5 rounded-lg bg-gray-200 hover:bg-gray-600 text-xs text-gray-800 disabled:opacity-40 cursor-pointer transition-all"
                     >
                       Enregistrer
                     </button>
                     <button
                       onClick={() => setEditingId(null)}
-                      className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition-colors"
+                      className="px-3 py-1.5 rounded-lg text-xs text-gray-500 hover:text-gray-600 cursor-pointer transition-colors"
                     >
                       Annuler
                     </button>
@@ -839,7 +839,7 @@ function CapturesPanel({ onConvert }: {
                 <>
                   <div className="flex-1 min-w-0">
                     <p
-                      className="text-sm text-gray-300 leading-relaxed line-clamp-3 cursor-text hover:text-gray-200 transition-colors"
+                      className="text-sm text-gray-600 leading-relaxed line-clamp-3 cursor-text hover:text-gray-800 transition-colors"
                       onClick={() => { setEditingId(c._id); setEditText(c.text) }}
                     >
                       {c.text}
@@ -852,7 +852,7 @@ function CapturesPanel({ onConvert }: {
                     <button
                       onClick={() => handleConvert(c)}
                       disabled={convertingId === c._id}
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-blue-400 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 disabled:opacity-50 transition-all cursor-pointer"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs text-blue-600 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 disabled:opacity-50 transition-all cursor-pointer"
                     >
                       {convertingId === c._id
                         ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -913,11 +913,11 @@ function CreatorsModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-sm shadow-2xl">
+      <div className="relative bg-white border border-gray-200 rounded-2xl w-full max-w-sm shadow-2xl">
 
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-800">
-          <h2 className="text-base font-semibold text-gray-100">Créateurs à suivre</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300 transition-colors cursor-pointer">
+        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">Créateurs à suivre</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-600 transition-colors cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -933,7 +933,7 @@ function CreatorsModal({ onClose }: { onClose: () => void }) {
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="Nom du créateur"
-              className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+              className="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
             />
             <div className="flex gap-2">
               <input
@@ -941,12 +941,12 @@ function CreatorsModal({ onClose }: { onClose: () => void }) {
                 onChange={e => setUrl(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter' && name.trim() && url.trim()) addMut.mutate() }}
                 placeholder="URL de la chaîne..."
-                className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+                className="flex-1 bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
               />
               <select
                 value={platform}
                 onChange={e => setPlatform(e.target.value as typeof platform)}
-                className="bg-gray-800 border border-gray-700 rounded-xl px-2 py-2.5 text-sm text-gray-100 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
+                className="bg-gray-100 border border-gray-200 rounded-xl px-2 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
               >
                 <option value="youtube">YouTube</option>
                 <option value="tiktok">TikTok</option>
@@ -956,7 +956,7 @@ function CreatorsModal({ onClose }: { onClose: () => void }) {
             <button
               disabled={!name.trim() || !url.trim() || addMut.isPending}
               onClick={() => addMut.mutate()}
-              className="w-full py-2.5 rounded-xl bg-gray-800 border border-gray-700 hover:bg-gray-700 text-sm text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 rounded-xl bg-gray-100 border border-gray-200 hover:bg-gray-200 text-sm text-gray-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer"
             >
               {addMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Ajouter
@@ -970,10 +970,10 @@ function CreatorsModal({ onClose }: { onClose: () => void }) {
               {creators.map(c => {
                 const PlatformIcon = PLATFORM_ICON[c.platform] ?? Play
                 return (
-                  <div key={c._id} className="flex items-center gap-3 py-2 px-3 rounded-xl bg-gray-800/50 border border-gray-800 group">
+                  <div key={c._id} className="flex items-center gap-3 py-2 px-3 rounded-xl bg-white border border-gray-200 group">
                     <PlatformIcon className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-200 font-medium truncate">{c.name}</p>
+                      <p className="text-sm text-gray-800 font-medium truncate">{c.name}</p>
                       <p className="text-[11px] text-gray-600 truncate">{c.channel_url}</p>
                     </div>
                     <button
@@ -1040,12 +1040,12 @@ function SuggestionsPanel({ onSaved }: { onSaved: (projectId: string) => void })
 
   return (
     <>
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden mb-6">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mb-6">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="flex items-center gap-2 text-sm font-medium text-gray-300 hover:text-gray-100 transition-colors cursor-pointer"
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
           >
             {collapsed ? <ChevronRight className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
             <Sparkles className="w-4 h-4 text-violet-400" />
@@ -1059,7 +1059,7 @@ function SuggestionsPanel({ onSaved }: { onSaved: (projectId: string) => void })
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowCreators(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-all duration-150 cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition-all duration-150 cursor-pointer"
             >
               <Settings className="w-3.5 h-3.5" />
               {creators.length > 0 ? `${creators.length} créateur${creators.length > 1 ? 's' : ''}` : 'Configurer'}
@@ -1084,7 +1084,7 @@ function SuggestionsPanel({ onSaved }: { onSaved: (projectId: string) => void })
             {isLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="h-24 bg-gray-800 rounded-xl animate-pulse" />
+                  <div key={i} className="h-24 bg-gray-100 rounded-xl animate-pulse" />
                 ))}
               </div>
             ) : generateMut.isPending ? (
@@ -1115,7 +1115,7 @@ function SuggestionsPanel({ onSaved }: { onSaved: (projectId: string) => void })
                   const cat = CATEGORY_CONFIG[s.category] ?? CATEGORY_CONFIG.educatif
                   const CatIcon = cat.icon
                   return (
-                    <div key={s._id} className="group bg-gray-800/50 border border-gray-800 rounded-xl p-3 flex flex-col gap-2 hover:border-gray-700 transition-all duration-150">
+                    <div key={s._id} className="group bg-white border border-gray-200 rounded-xl p-3 flex flex-col gap-2 hover:border-gray-200 transition-all duration-150">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <span className={cn('flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded font-medium', cat.bg, cat.color)}>
                           <CatIcon className="w-3 h-3" />
@@ -1130,7 +1130,7 @@ function SuggestionsPanel({ onSaved }: { onSaved: (projectId: string) => void })
                         </span>
                       </div>
 
-                      <p className="text-sm font-semibold text-gray-200 leading-snug">{s.title}</p>
+                      <p className="text-sm font-semibold text-gray-800 leading-snug">{s.title}</p>
 
                       {s.rationale && (
                         <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{s.rationale}</p>
@@ -1154,7 +1154,7 @@ function SuggestionsPanel({ onSaved }: { onSaved: (projectId: string) => void })
                         </button>
                         <button
                           onClick={() => dismissMut.mutate(s._id)}
-                          className="px-2.5 py-1.5 rounded-lg border border-gray-700 text-xs text-gray-500 hover:text-gray-300 hover:border-gray-600 transition-all duration-150 cursor-pointer"
+                          className="px-2.5 py-1.5 rounded-lg border border-gray-200 text-xs text-gray-500 hover:text-gray-600 hover:border-gray-600 transition-all duration-150 cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -1176,7 +1176,7 @@ function SuggestionsPanel({ onSaved }: { onSaved: (projectId: string) => void })
 // ── Project Drawer ─────────────────────────────────────────────────────────────
 
 function Divider() {
-  return <div className="border-t border-gray-800 my-1" />
+  return <div className="border-t border-gray-200 my-1" />
 }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -1291,10 +1291,10 @@ function ProjectDrawer({ initialProject, onClose }: {
     <div className="fixed inset-0 z-40 flex">
       <div className="flex-1 bg-black/60 cursor-pointer" onClick={onClose} />
 
-      <div className="w-[580px] bg-gray-950 border-l border-gray-800 flex flex-col h-full">
+      <div className="w-[580px] bg-[#f5f6fa] border-l border-gray-200 flex flex-col h-full">
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex-shrink-0 px-5 pt-5 pb-3 border-b border-gray-800">
+        <div className="flex-shrink-0 px-5 pt-5 pb-3 border-b border-gray-200">
           <div className="flex items-start gap-3">
             <div className="flex-1 min-w-0">
               <textarea
@@ -1302,7 +1302,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                 defaultValue={project.title}
                 onBlur={e => { if (e.target.value.trim() && e.target.value !== project.title) patchMut.mutate({ title: e.target.value.trim() }) }}
                 rows={2}
-                className="w-full bg-transparent text-gray-100 font-semibold text-base leading-snug resize-none focus:outline-none placeholder:text-gray-600"
+                className="w-full bg-transparent text-gray-900 font-semibold text-base leading-snug resize-none focus:outline-none placeholder:text-gray-400"
                 placeholder="Titre..."
               />
               <div className="flex items-center gap-2 flex-wrap mt-1">
@@ -1317,24 +1317,24 @@ function ProjectDrawer({ initialProject, onClose }: {
                     'text-[10px] px-2 py-0.5 rounded font-bold tracking-wide uppercase cursor-pointer transition-all duration-150',
                     project.duration_type === 'court'
                       ? 'bg-amber-500/15 text-amber-400 hover:bg-amber-500/25'
-                      : 'bg-blue-500/15 text-blue-400 hover:bg-blue-500/25',
+                      : 'bg-blue-500/15 text-blue-600 hover:bg-blue-500/25',
                   )}
                 >
                   {project.duration_type === 'court' ? 'Court' : 'Long'}
                 </button>
                 {isPodcast && project.guest_name && (
-                  <span className="text-[11px] text-purple-400">· {project.guest_name}</span>
+                  <span className="text-[11px] text-purple-700">· {project.guest_name}</span>
                 )}
               </div>
             </div>
-            <button onClick={onClose} className="text-gray-600 hover:text-gray-300 transition-colors flex-shrink-0 cursor-pointer mt-1">
+            <button onClick={onClose} className="text-gray-600 hover:text-gray-600 transition-colors flex-shrink-0 cursor-pointer mt-1">
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* ── Status stepper ──────────────────────────────────────────────── */}
-        <div className="flex-shrink-0 px-5 py-2.5 border-b border-gray-800 flex items-center gap-1">
+        <div className="flex-shrink-0 px-5 py-2.5 border-b border-gray-200 flex items-center gap-1">
           {STATUS_STEPS.map((step, i) => {
             const isDone = i < currentStatusIdx
             const isActive = i === currentStatusIdx
@@ -1344,8 +1344,8 @@ function ProjectDrawer({ initialProject, onClose }: {
                   onClick={() => patchMut.mutate({ status: step.key })}
                   className={cn(
                     'flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer',
-                    isActive ? 'bg-blue-500/15 text-blue-400' :
-                    isDone ? 'text-emerald-400 hover:bg-emerald-500/10' :
+                    isActive ? 'bg-blue-500/15 text-blue-600' :
+                    isDone ? 'text-emerald-600 hover:bg-emerald-50' :
                     'text-gray-600 hover:text-gray-400',
                   )}
                 >
@@ -1353,7 +1353,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   {step.label}
                 </button>
                 {i < STATUS_STEPS.length - 1 && (
-                  <div className={cn('w-4 h-px', i < currentStatusIdx ? 'bg-emerald-700' : 'bg-gray-800')} />
+                  <div className={cn('w-4 h-px', i < currentStatusIdx ? 'bg-emerald-700' : 'bg-gray-100')} />
                 )}
               </div>
             )
@@ -1379,7 +1379,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                 {hasAnalysis && !isAnalyzing && (
                   <button
                     onClick={() => analyzeMut.mutate()}
-                    className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors flex items-center gap-1 cursor-pointer"
+                    className="text-[10px] text-gray-500 hover:text-gray-600 transition-colors flex items-center gap-1 cursor-pointer"
                   >
                     <Sparkles className="w-3 h-3" /> Relancer
                   </button>
@@ -1389,11 +1389,11 @@ function ProjectDrawer({ initialProject, onClose }: {
               {isAnalyzing && (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3 text-sm text-gray-400 mb-4">
-                    <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
                     <span>L'IA analyse votre idée...</span>
                   </div>
                   {[40, 60, 50, 70, 45].map((w, i) => (
-                    <div key={i} className="h-10 bg-gray-800 rounded-xl animate-pulse" style={{ width: `${w + 15}%` } as React.CSSProperties} />
+                    <div key={i} className="h-10 bg-gray-100 rounded-xl animate-pulse" style={{ width: `${w + 15}%` } as React.CSSProperties} />
                   ))}
                 </div>
               )}
@@ -1401,13 +1401,13 @@ function ProjectDrawer({ initialProject, onClose }: {
               {!hasAnalysis && !isAnalyzing && (
                 <button
                   onClick={() => analyzeMut.mutate()}
-                  className="w-full group rounded-xl border-2 border-dashed border-gray-700 hover:border-blue-500/50 hover:bg-blue-500/5 p-6 flex flex-col items-center gap-3 transition-all duration-200 cursor-pointer"
+                  className="w-full group rounded-xl border-2 border-dashed border-gray-200 hover:border-blue-500/50 hover:bg-blue-500/5 p-6 flex flex-col items-center gap-3 transition-all duration-200 cursor-pointer"
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                    <Sparkles className="w-5 h-5 text-blue-400" />
+                    <Sparkles className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-semibold text-gray-200">Analyser avec l'IA</p>
+                    <p className="text-sm font-semibold text-gray-800">Analyser avec l'IA</p>
                     <p className="text-xs text-gray-500 mt-1">Génère accroches, valeur, points clés, plan et idées de miniatures</p>
                   </div>
                 </button>
@@ -1420,16 +1420,16 @@ function ProjectDrawer({ initialProject, onClose }: {
                   {project.value_proposition && (
                     <div className="p-3.5 bg-emerald-500/5 border border-emerald-500/15 rounded-xl">
                       <div className="flex items-center gap-2 mb-1.5">
-                        <Target className="w-3.5 h-3.5 text-emerald-400" />
-                        <p className="text-[10px] text-emerald-400 uppercase tracking-widest font-medium">Valeur apportée</p>
+                        <Target className="w-3.5 h-3.5 text-emerald-600" />
+                        <p className="text-[10px] text-emerald-600 uppercase tracking-widest font-medium">Valeur apportée</p>
                       </div>
-                      <p className="text-sm text-gray-300 leading-relaxed">{project.value_proposition}</p>
+                      <p className="text-sm text-gray-600 leading-relaxed">{project.value_proposition}</p>
                     </div>
                   )}
 
                   {/* Key points */}
                   {project.key_points.length > 0 && (
-                    <div className="border border-gray-800 rounded-xl p-3.5">
+                    <div className="border border-gray-200 rounded-xl p-3.5">
                       <div className="flex items-center gap-2 mb-2.5">
                         <List className="w-3.5 h-3.5 text-gray-500" />
                         <p className="text-[10px] text-gray-500 uppercase tracking-widest">Points clés à couvrir</p>
@@ -1458,14 +1458,14 @@ function ProjectDrawer({ initialProject, onClose }: {
                           className={cn(
                             'w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all duration-150 cursor-pointer',
                             hook.selected
-                              ? 'border-blue-500/50 bg-blue-500/10 text-gray-100'
-                              : 'border-gray-800 bg-gray-900 text-gray-400 hover:border-gray-700 hover:text-gray-300',
+                              ? 'border-blue-500/50 bg-blue-500/10 text-gray-900'
+                              : 'border-gray-200 bg-white text-gray-400 hover:border-gray-200 hover:text-gray-600',
                           )}
                         >
                           <div className="flex items-start gap-2.5">
                             <div className={cn(
                               'w-4 h-4 rounded-full border flex-shrink-0 mt-0.5 flex items-center justify-center transition-all',
-                              hook.selected ? 'border-blue-400 bg-blue-500' : 'border-gray-700',
+                              hook.selected ? 'border-blue-400 bg-blue-500' : 'border-gray-200',
                             )}>
                               {hook.selected && <Check className="w-2.5 h-2.5 text-white" />}
                             </div>
@@ -1480,7 +1480,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   {isPodcast && project.suggested_questions.length > 0 && (
                     <div>
                       <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">Questions suggérées</p>
-                      <div className="space-y-1.5 bg-gray-900 border border-gray-800 rounded-xl p-3">
+                      <div className="space-y-1.5 bg-white border border-gray-200 rounded-xl p-3">
                         {project.suggested_questions.map((q, i) => (
                           <div key={i} className="flex items-start gap-2 text-sm text-gray-400">
                             <span className="text-gray-600 font-mono text-xs mt-0.5 flex-shrink-0">{i + 1}.</span>
@@ -1493,16 +1493,16 @@ function ProjectDrawer({ initialProject, onClose }: {
 
                   {/* Analysis text (collapsible) */}
                   {project.analysis && (
-                    <div className="border border-gray-800 rounded-xl overflow-hidden">
+                    <div className="border border-gray-200 rounded-xl overflow-hidden">
                       <button
                         onClick={() => setAnalysisOpen(!analysisOpen)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 text-[11px] text-gray-500 hover:text-gray-400 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                        className="w-full flex items-center justify-between px-3 py-2.5 text-[11px] text-gray-500 hover:text-gray-400 hover:bg-white transition-colors cursor-pointer"
                       >
                         <span className="uppercase tracking-widest">Analyse détaillée</span>
                         {analysisOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                       </button>
                       {analysisOpen && (
-                        <div className="px-4 pb-4 border-t border-gray-800">
+                        <div className="px-4 pb-4 border-t border-gray-200">
                           <div className="prose prose-invert prose-sm max-w-none text-gray-400 pt-3">
                             <ReactMarkdown>{project.analysis}</ReactMarkdown>
                           </div>
@@ -1521,16 +1521,16 @@ function ProjectDrawer({ initialProject, onClose }: {
               <SectionTitle>Script</SectionTitle>
 
               {project.script_outline && (
-                <div className="border border-gray-800 rounded-xl overflow-hidden mb-4">
+                <div className="border border-gray-200 rounded-xl overflow-hidden mb-4">
                   <button
                     onClick={() => setOutlineOpen(!outlineOpen)}
-                    className="w-full flex items-center justify-between px-3 py-2.5 text-[11px] text-gray-500 hover:text-gray-400 hover:bg-gray-800/50 transition-colors cursor-pointer"
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-[11px] text-gray-500 hover:text-gray-400 hover:bg-white transition-colors cursor-pointer"
                   >
                     <span className="uppercase tracking-widest">Plan du script</span>
                     {outlineOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                   </button>
                   {outlineOpen && (
-                    <div className="px-4 pb-4 border-t border-gray-800">
+                    <div className="px-4 pb-4 border-t border-gray-200">
                       <div className="prose prose-invert prose-sm max-w-none text-gray-400 pt-3">
                         <ReactMarkdown>{project.script_outline}</ReactMarkdown>
                       </div>
@@ -1542,7 +1542,7 @@ function ProjectDrawer({ initialProject, onClose }: {
               <button
                 onClick={() => scriptMut.mutate()}
                 disabled={scriptMut.isPending}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-gray-800 hover:border-violet-500/50 hover:bg-violet-500/5 text-sm text-gray-400 hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer mb-4"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-gray-200 hover:border-violet-500/50 hover:bg-violet-500/5 text-sm text-gray-400 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150 cursor-pointer mb-4"
               >
                 {scriptMut.isPending
                   ? <><Loader2 className="w-4 h-4 animate-spin" /> Génération en cours...</>
@@ -1557,7 +1557,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   onBlur={e => { if (e.target.value !== project.full_script) patchMut.mutate({ full_script: e.target.value }) }}
                   rows={14}
                   placeholder="Le script apparaîtra ici..."
-                  className="w-full bg-gray-900 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-300 placeholder:text-gray-600 focus:outline-none focus:border-gray-700 resize-none font-mono leading-relaxed transition-colors"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-600 placeholder:text-gray-400 focus:outline-none focus:border-gray-200 resize-none font-mono leading-relaxed transition-colors"
                 />
               )}
             </section>
@@ -1573,7 +1573,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   <select
                     value={project.category}
                     onChange={e => handleCategoryChange(e.target.value)}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
+                    className="w-full bg-gray-100 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
                   >
                     {Object.entries(CATEGORY_CONFIG).map(([k, v]) => (
                       <option key={k} value={k}>{v.label}</option>
@@ -1585,7 +1585,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   <select
                     value={project.format}
                     onChange={e => patchMut.mutate({ format: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
+                    className="w-full bg-gray-100 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
                   >
                     {(CATEGORY_CONFIG[project.category]?.formats ?? []).map(f => (
                       <option key={f} value={f}>{FORMAT_LABELS[f as ContentFormat]}</option>
@@ -1597,7 +1597,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   <select
                     value={project.duration_type}
                     onChange={e => patchMut.mutate({ duration_type: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-gray-100 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
+                    className="w-full bg-gray-100 border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-900 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
                   >
                     <option value="long">Long</option>
                     <option value="court">Court</option>
@@ -1614,7 +1614,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                       defaultValue={project.guest_name ?? ''}
                       onBlur={e => { if (e.target.value !== (project.guest_name ?? '')) patchMut.mutate({ guest_name: e.target.value || null }) }}
                       placeholder="Prénom Nom"
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-purple-500/40 transition-colors"
+                      className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-purple-500/40 transition-colors"
                     />
                   </div>
                   <div>
@@ -1625,7 +1625,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                       onBlur={e => { if (e.target.value !== project.guest_value) patchMut.mutate({ guest_value: e.target.value }) }}
                       rows={2}
                       placeholder="Ce que l'audience va apprendre ou ressentir..."
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-purple-500/40 transition-colors resize-none"
+                      className="w-full bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-purple-500/40 transition-colors resize-none"
                     />
                   </div>
                 </div>
@@ -1641,7 +1641,7 @@ function ProjectDrawer({ initialProject, onClose }: {
               <div className="space-y-3">
                 {/* Brain dump display */}
                 {project.brain_dump && (
-                  <div className="p-3 bg-gray-800/40 border border-gray-800 rounded-xl">
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
                     <p className="text-[10px] text-gray-600 uppercase tracking-widest mb-1.5">Idée originale</p>
                     <p className="text-xs text-gray-500 leading-relaxed italic">"{project.brain_dump}"</p>
                   </div>
@@ -1657,7 +1657,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                       if (val !== project.youtube_ref_url) patchMut.mutate({ youtube_ref_url: val })
                     }}
                     placeholder="https://youtube.com/watch?v=..."
-                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+                    className="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
                   />
                   {project.youtube_ref_url && extractYTId(project.youtube_ref_url) && (
                     <div className="mt-2">
@@ -1674,7 +1674,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                     onBlur={e => { if (e.target.value !== project.notes) patchMut.mutate({ notes: e.target.value }) }}
                     rows={2}
                     placeholder="Remarques, idées supplémentaires..."
-                    className="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors resize-none"
+                    className="w-full bg-gray-100 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors resize-none"
                   />
                 </div>
               </div>
@@ -1692,7 +1692,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   type="date"
                   defaultValue={project.target_date ? project.target_date.substring(0, 10) : ''}
                   onBlur={e => patchMut.mutate({ target_date: e.target.value || null })}
-                  className="bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
+                  className="bg-gray-100 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:border-gray-600 transition-colors cursor-pointer"
                 />
               </div>
 
@@ -1705,7 +1705,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                   )}
                 </div>
                 {checkTotal > 0 && (
-                  <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden mb-3">
+                  <div className="w-full h-1 bg-gray-100 rounded-full overflow-hidden mb-3">
                     <div
                       className="h-full bg-emerald-500 rounded-full transition-all duration-300"
                       style={{ width: `${Math.round((checkDone / checkTotal) * 100)}%` }}
@@ -1719,12 +1719,12 @@ function ProjectDrawer({ initialProject, onClose }: {
                         onClick={() => toggleMut.mutate(item.id)}
                         className={cn(
                           'w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center transition-all duration-150 cursor-pointer',
-                          item.done ? 'border-emerald-500 bg-emerald-500' : 'border-gray-700 hover:border-gray-500',
+                          item.done ? 'border-emerald-500 bg-emerald-500' : 'border-gray-200 hover:border-gray-500',
                         )}
                       >
                         {item.done && <Check className="w-2.5 h-2.5 text-white" />}
                       </button>
-                      <span className={cn('flex-1 text-sm transition-colors', item.done ? 'text-gray-600 line-through' : 'text-gray-300')}>
+                      <span className={cn('flex-1 text-sm transition-colors', item.done ? 'text-gray-600 line-through' : 'text-gray-600')}>
                         {item.label}
                       </span>
                       <button
@@ -1747,7 +1747,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                         }
                       }}
                       placeholder="Ajouter une étape..."
-                      className="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-1.5 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+                      className="flex-1 bg-gray-100 border border-gray-200 rounded-lg px-3 py-1.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
                     />
                     <button
                       onClick={() => {
@@ -1755,7 +1755,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                         addCheckMut.mutate(newCheckItem.trim())
                         setNewCheckItem('')
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-gray-800 border border-gray-700 hover:bg-gray-700 text-gray-400 hover:text-gray-200 transition-all duration-150 cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-gray-100 border border-gray-200 hover:bg-gray-200 text-gray-400 hover:text-gray-800 transition-all duration-150 cursor-pointer"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -1774,7 +1774,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                         : undefined
                       const imgSrc = localImages[idx] ?? stored
                       return (
-                        <div key={idx} className="border border-gray-800 rounded-xl p-3 bg-gray-900">
+                        <div key={idx} className="border border-gray-200 rounded-xl p-3 bg-white">
                           <p className="text-xs text-gray-500 mb-2 leading-relaxed">{desc}</p>
                           {imgSrc ? (
                             <div className="relative group rounded-lg overflow-hidden">
@@ -1796,7 +1796,7 @@ function ProjectDrawer({ initialProject, onClose }: {
                             <button
                               onClick={() => handleGenerateThumbnail(desc, idx)}
                               disabled={generatingImages[idx]}
-                              className="w-full py-3 rounded-lg border border-dashed border-gray-700 text-xs text-gray-500 hover:text-gray-400 hover:border-gray-600 flex items-center justify-center gap-2 transition-all duration-150 disabled:opacity-50 cursor-pointer"
+                              className="w-full py-3 rounded-lg border border-dashed border-gray-200 text-xs text-gray-500 hover:text-gray-400 hover:border-gray-600 flex items-center justify-center gap-2 transition-all duration-150 disabled:opacity-50 cursor-pointer"
                             >
                               {generatingImages[idx]
                                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Génération...</>
@@ -1821,14 +1821,14 @@ function ProjectDrawer({ initialProject, onClose }: {
                       defaultValue={project.published_url ?? ''}
                       onBlur={e => patchMut.mutate({ published_url: e.target.value || null })}
                       placeholder="https://youtube.com/watch?v=..."
-                      className="flex-1 bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none focus:border-gray-600 transition-colors"
+                      className="flex-1 bg-gray-100 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
                     />
                     {project.published_url && (
                       <a
                         href={project.published_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-2 rounded-xl border border-gray-700 text-gray-500 hover:text-gray-200 hover:border-gray-600 transition-all cursor-pointer"
+                        className="px-3 py-2 rounded-xl border border-gray-200 text-gray-500 hover:text-gray-800 hover:border-gray-600 transition-all cursor-pointer"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
@@ -1839,7 +1839,7 @@ function ProjectDrawer({ initialProject, onClose }: {
             </section>
 
             {/* Delete */}
-            <div className="border-t border-gray-800 pt-4">
+            <div className="border-t border-gray-200 pt-4">
               <button
                 onClick={() => { if (confirm('Supprimer ce projet définitivement ?')) deleteMut.mutate() }}
                 className="w-full py-2.5 rounded-xl border border-red-900/50 text-red-500 hover:bg-red-500/10 hover:border-red-500/40 text-sm transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer"
@@ -1934,11 +1934,11 @@ export function ContentPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-semibold text-gray-100">Création de contenu</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Création de contenu</h1>
             <p className="text-sm text-gray-500 mt-0.5">
               {projects.length} projet{projects.length !== 1 ? 's' : ''}
               {filterPeriod !== 'all' && (
-                <span className="ml-1.5 text-blue-400">
+                <span className="ml-1.5 text-blue-600">
                   · {{ '7d': '7 derniers jours', '30d': '30 derniers jours', '90d': '3 derniers mois' }[filterPeriod]}
                 </span>
               )}
@@ -1948,14 +1948,14 @@ export function ContentPage() {
             <button
               onClick={() => setSortOrder(o => o === 'newest' ? 'oldest' : 'newest')}
               title={sortOrder === 'newest' ? 'Afficher les plus anciens en premier' : 'Afficher les plus récents en premier'}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-800 hover:border-gray-700 text-gray-500 hover:text-gray-300 text-xs transition-all duration-150 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-gray-200 hover:border-gray-200 text-gray-500 hover:text-gray-600 text-xs transition-all duration-150 cursor-pointer"
             >
               <ArrowUpDown className="w-3.5 h-3.5" />
               {sortOrder === 'newest' ? 'Plus récents' : 'Plus anciens'}
             </button>
             <button
               onClick={() => setShowCapture(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-800 hover:border-gray-700 text-gray-400 hover:text-gray-200 text-sm transition-all duration-150 cursor-pointer"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 hover:border-gray-200 text-gray-400 hover:text-gray-800 text-sm transition-all duration-150 cursor-pointer"
             >
               <Mic className="w-4 h-4" />
               Capturer
@@ -1984,7 +1984,7 @@ export function ContentPage() {
               onClick={() => setFilterCategory('all')}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer',
-                filterCategory === 'all' ? 'bg-gray-800 text-gray-100' : 'text-gray-500 hover:text-gray-300',
+                filterCategory === 'all' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-600',
               )}
             >
               Tout
@@ -1998,7 +1998,7 @@ export function ContentPage() {
                   onClick={() => setFilterCategory(key)}
                   className={cn(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 cursor-pointer',
-                    isActive ? cn(cfg.bg, cfg.color) : 'text-gray-500 hover:text-gray-300',
+                    isActive ? cn(cfg.bg, cfg.color) : 'text-gray-500 hover:text-gray-600',
                   )}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -2015,7 +2015,7 @@ export function ContentPage() {
                 onClick={() => setFilterStatus('all')}
                 className={cn(
                   'px-2.5 py-1 rounded-lg text-xs transition-all duration-150 cursor-pointer',
-                  filterStatus === 'all' ? 'bg-gray-800 text-gray-200' : 'text-gray-600 hover:text-gray-400',
+                  filterStatus === 'all' ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-400',
                 )}
               >
                 Tous statuts
@@ -2026,7 +2026,7 @@ export function ContentPage() {
                   onClick={() => setFilterStatus(key)}
                   className={cn(
                     'px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer',
-                    filterStatus === key ? 'bg-gray-800 text-gray-200' : 'text-gray-600 hover:text-gray-400',
+                    filterStatus === key ? 'bg-gray-100 text-gray-800' : 'text-gray-600 hover:text-gray-400',
                   )}
                 >
                   {label}
@@ -2049,7 +2049,7 @@ export function ContentPage() {
                   className={cn(
                     'px-2.5 py-1 rounded-lg text-xs font-medium transition-all duration-150 cursor-pointer',
                     filterPeriod === val
-                      ? 'bg-blue-500/15 text-blue-400 border border-blue-500/30'
+                      ? 'bg-blue-500/15 text-blue-600 border border-blue-500/30'
                       : 'text-gray-600 hover:text-gray-400 border border-transparent',
                   )}
                 >
@@ -2064,26 +2064,26 @@ export function ContentPage() {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-gray-900 border border-gray-800 rounded-xl p-4 animate-pulse">
+              <div key={i} className="bg-white border border-gray-200 rounded-xl p-4 animate-pulse">
                 <div className="flex gap-2 mb-3">
-                  <div className="h-5 w-20 bg-gray-800 rounded-md" />
-                  <div className="h-5 w-24 bg-gray-800 rounded-md" />
+                  <div className="h-5 w-20 bg-gray-100 rounded-md" />
+                  <div className="h-5 w-24 bg-gray-100 rounded-md" />
                 </div>
-                <div className="h-4 w-3/4 bg-gray-800 rounded mb-2" />
-                <div className="h-3 w-1/2 bg-gray-800 rounded" />
+                <div className="h-4 w-3/4 bg-gray-100 rounded mb-2" />
+                <div className="h-3 w-1/2 bg-gray-100 rounded" />
               </div>
             ))}
           </div>
         ) : projects.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center mb-4">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-4">
               <Sparkles className="w-6 h-6 text-gray-600" />
             </div>
             <p className="text-gray-500 text-sm mb-1">Aucun projet pour le moment</p>
             <p className="text-gray-600 text-xs mb-5">Créez votre première idée de contenu</p>
             <button
               onClick={() => setShowCreate(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm font-medium transition-all duration-150 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm font-medium transition-all duration-150 cursor-pointer"
             >
               <Plus className="w-4 h-4" /> Nouvelle idée
             </button>

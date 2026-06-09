@@ -53,7 +53,7 @@ const MODALITY_OPTIONS: { value: PaymentModality; label: string; badge: ReactNod
 
 const planLabel = (plan: string | null | undefined) => plan ?? '—'
 
-const inputCls = 'w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
+const inputCls = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500'
 
 // ── KPI card ──────────────────────────────────────────────────────────────────
 
@@ -66,13 +66,13 @@ function StatCard({ icon: Icon, label, value, sub, iconBgCls, iconCls }: {
   iconCls: string
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-gray-800 bg-white dark:bg-gray-900/60 shadow-sm px-4 py-4">
+    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white dark:bg-white shadow-sm px-4 py-4">
       <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBgCls}`}>
         <Icon className={`h-5 w-5 ${iconCls}`} />
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-xs font-medium text-gray-500">{label}</p>
-        <p className="mt-0.5 text-xl font-bold text-gray-100 tabular-nums truncate">{value}</p>
+        <p className="mt-0.5 text-xl font-bold text-gray-900 tabular-nums truncate">{value}</p>
         {sub && <p className="mt-0.5 text-[11px] text-gray-500">{sub}</p>}
       </div>
     </div>
@@ -108,28 +108,28 @@ function InlineDropdown<T extends string>({
         disabled={pending}
         className={cn(
           'group flex items-center gap-1 rounded-lg px-1.5 py-0.5 transition-colors',
-          pending ? 'cursor-wait opacity-60' : 'hover:bg-gray-800/70 cursor-pointer',
+          pending ? 'cursor-wait opacity-60' : 'hover:bg-gray-100/70 cursor-pointer',
         )}
       >
         {children}
         <ChevronDown className={cn(
           'h-3 w-3 shrink-0 transition-all',
-          pending ? 'text-gray-500 animate-pulse' : 'text-gray-600 group-hover:text-gray-300',
-          open && 'rotate-180 text-gray-300',
+          pending ? 'text-gray-500 animate-pulse' : 'text-gray-600 group-hover:text-gray-600',
+          open && 'rotate-180 text-gray-600',
         )} />
       </button>
 
       {open && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full z-30 mt-1 min-w-[180px] rounded-xl border border-gray-700 bg-gray-900 p-1 shadow-2xl">
+          <div className="absolute left-0 top-full z-30 mt-1 min-w-[180px] rounded-xl border border-gray-200 bg-white p-1 shadow-2xl">
             {options.map((opt) => (
               <button
                 key={opt.value}
                 onClick={(e) => { e.stopPropagation(); onSelect(opt.value); setOpen(false) }}
-                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-800"
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gray-100"
               >
-                <span className="flex-1">{opt.badge ?? <span className="text-gray-200">{opt.label}</span>}</span>
+                <span className="flex-1">{opt.badge ?? <span className="text-gray-800">{opt.label}</span>}</span>
               </button>
             ))}
           </div>
@@ -234,8 +234,8 @@ function TreatModal({ payment, offers, onClose }: { payment: Payment; offers: Of
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl border border-gray-800 bg-white dark:bg-gray-900 p-6 shadow-xl">
-        <h2 className="mb-0.5 text-base font-semibold text-gray-100">Traiter le paiement</h2>
+      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white dark:bg-white p-6 shadow-xl">
+        <h2 className="mb-0.5 text-base font-semibold text-gray-900">Traiter le paiement</h2>
         <p className="mb-5 text-sm text-gray-500">{payment.studentName} — {payment.studentEmail}</p>
 
         <div className="grid grid-cols-2 gap-4">
@@ -282,7 +282,7 @@ function TreatModal({ payment, offers, onClose }: { payment: Payment; offers: Of
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            className="w-full resize-none rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 placeholder:text-gray-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
           />
         </div>
 
@@ -398,12 +398,12 @@ export function PaymentsPage() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Paiements</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Paiements</h1>
           <p className="mt-0.5 text-sm text-gray-500">{total} paiement{total !== 1 ? 's' : ''} affichés</p>
         </div>
         <Link
           to="/payments/offers"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-sm text-gray-300 hover:text-gray-100 transition-colors border border-gray-700"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-600 hover:text-gray-900 transition-colors border border-gray-200"
         >
           <Package size={14} />
           Offres & Souscriptions
@@ -424,7 +424,7 @@ export function PaymentsPage() {
           label="Traités (total)"
           value={stats?.traite ?? '—'}
           iconBgCls="bg-emerald-50 dark:bg-emerald-600/20"
-          iconCls="text-emerald-600 dark:text-emerald-400"
+          iconCls="text-emerald-600 dark:text-emerald-600"
         />
         <StatCard
           icon={XCircle}
@@ -438,14 +438,14 @@ export function PaymentsPage() {
           label="Reçus aujourd'hui"
           value={formatAmountList(stats?.todayByAmount ?? [])}
           iconBgCls="bg-blue-50 dark:bg-blue-600/20"
-          iconCls="text-blue-600 dark:text-blue-400"
+          iconCls="text-blue-600 dark:text-blue-600"
         />
         <StatCard
           icon={Banknote}
           label="Reçus ce mois"
           value={formatAmountList(stats?.monthByAmount ?? [])}
           iconBgCls="bg-purple-50 dark:bg-purple-600/20"
-          iconCls="text-purple-600 dark:text-purple-400"
+          iconCls="text-purple-600 dark:text-purple-700"
         />
       </div>
 
@@ -456,17 +456,17 @@ export function PaymentsPage() {
         {/* Search pill */}
         <div className={cn(
           'flex items-center gap-1.5 rounded-full border py-1.5 pl-3 pr-3',
-          search ? 'border-indigo-600/50 bg-indigo-900/20' : 'border-gray-700 bg-gray-900',
+          search ? 'border-indigo-600/50 bg-indigo-50' : 'border-gray-200 bg-white',
         )}>
-          <Search size={12} className={search ? 'text-indigo-400 shrink-0' : 'text-gray-500 shrink-0'} />
+          <Search size={12} className={search ? 'text-indigo-600 shrink-0' : 'text-gray-500 shrink-0'} />
           <input
-            className="bg-transparent text-[13px] text-gray-200 placeholder-gray-600 focus:outline-none w-40"
+            className="bg-transparent text-[13px] text-gray-800 placeholder-gray-400 focus:outline-none w-40"
             placeholder="Rechercher…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
           {search && (
-            <button onClick={() => setSearch('')} className="text-gray-500 hover:text-gray-300">
+            <button onClick={() => setSearch('')} className="text-gray-500 hover:text-gray-600">
               <X size={11} />
             </button>
           )}
@@ -486,7 +486,7 @@ export function PaymentsPage() {
         {(search || period || customFrom || customTo) && (
           <button
             onClick={() => { setSearch(''); setPeriod(''); setCustomFrom(''); setCustomTo('') }}
-            className="flex items-center gap-1 rounded-full border border-gray-700 px-2.5 py-1.5 text-[12px] text-gray-500 hover:text-gray-300 hover:border-gray-600 transition-colors"
+            className="flex items-center gap-1 rounded-full border border-gray-200 px-2.5 py-1.5 text-[12px] text-gray-500 hover:text-gray-600 hover:border-gray-600 transition-colors"
           >
             <Filter size={11} /><X size={10} />
           </button>
@@ -494,15 +494,15 @@ export function PaymentsPage() {
       </div>
 
       {/* Status tabs */}
-      <div className="mb-4 flex gap-1 border-b border-gray-800">
+      <div className="mb-4 flex gap-1 border-b border-gray-200">
         {STATUS_TABS.map((t) => (
           <button
             key={t.status}
             onClick={() => { setActiveStatus(t.status); setPage(1) }}
             className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
               activeStatus === t.status
-                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-gray-500 hover:text-gray-200'
+                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-600'
+                : 'border-transparent text-gray-500 hover:text-gray-800'
             }`}
           >
             {t.label}
@@ -527,7 +527,7 @@ export function PaymentsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-800 bg-gray-900/20">
+                <tr className="border-b border-gray-200 bg-gray-50">
                   <th className="py-3 pl-5 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Étudiant</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Montant</th>
                   <th className="py-3 pr-4 text-left text-[11px] font-semibold uppercase tracking-wider text-gray-500">Statut</th>
@@ -544,7 +544,7 @@ export function PaymentsPage() {
               </thead>
               <tbody>
                 {payments.map((p) => (
-                  <tr key={p._id} className="border-b border-gray-800/50 transition-colors hover:bg-indigo-50/40 dark:hover:bg-gray-800/30 last:border-0">
+                  <tr key={p._id} className="border-b border-gray-200/50 transition-colors hover:bg-indigo-50/40 dark:hover:bg-gray-50 last:border-0">
 
                     {/* Étudiant */}
                     <td className="py-3 pl-5 pr-4">
@@ -552,14 +552,14 @@ export function PaymentsPage() {
                         onClick={() => p.studentId && navigate(`/students/${p.studentId}`)}
                         className={`text-left ${p.studentId ? 'hover:underline cursor-pointer' : 'cursor-default'}`}
                       >
-                        <p className="font-medium text-gray-100">{p.studentName}</p>
+                        <p className="font-medium text-gray-900">{p.studentName}</p>
                         <p className="text-xs text-gray-500">{p.studentEmail}</p>
                       </button>
                     </td>
 
                     {/* Montant */}
                     <td className="py-3 pr-4">
-                      <p className="font-semibold tabular-nums text-gray-100">
+                      <p className="font-semibold tabular-nums text-gray-900">
                         {p.amount != null ? formatAmount(p.amount, p.currency) : '—'}
                       </p>
                     </td>
@@ -617,7 +617,7 @@ export function PaymentsPage() {
                           }}
                           pending={isPendingCell(p._id, 'product')}
                         >
-                          <span className="text-xs font-medium text-gray-300">{p.product ?? '—'}</span>
+                          <span className="text-xs font-medium text-gray-600">{p.product ?? '—'}</span>
                         </InlineDropdown>
                       ) : (
                         <span className="text-xs text-gray-400">{p.product ?? '—'}</span>
@@ -634,7 +634,7 @@ export function PaymentsPage() {
                           onSelect={(v) => updateField(p._id, 'plan', v)}
                           pending={isPendingCell(p._id, 'plan')}
                         >
-                          <span className="text-xs font-medium text-gray-300">
+                          <span className="text-xs font-medium text-gray-600">
                             {planLabel(p.plan)}
                           </span>
                         </InlineDropdown>
@@ -648,7 +648,7 @@ export function PaymentsPage() {
                     {/* Plateforme (gateway) */}
                     <td className="py-3 pr-4">
                       {p.gateway ? (
-                        <span className="rounded-full border border-gray-700 bg-gray-800/60 px-2.5 py-0.5 text-xs text-gray-300">
+                        <span className="rounded-full border border-gray-200 bg-gray-100 px-2.5 py-0.5 text-xs text-gray-600">
                           {p.gateway}
                         </span>
                       ) : (
@@ -664,7 +664,7 @@ export function PaymentsPage() {
                             <button
                               key={i}
                               onClick={(e) => { e.stopPropagation(); setLightbox({ images: p.proofImages, idx: i }) }}
-                              className="group relative h-10 w-10 overflow-hidden rounded-lg border border-gray-800 shadow-sm cursor-pointer"
+                              className="group relative h-10 w-10 overflow-hidden rounded-lg border border-gray-200 shadow-sm cursor-pointer"
                               aria-label={`Voir preuve ${i + 1}`}
                             >
                               <img src={url} alt="" className="h-full w-full object-cover" />
@@ -674,7 +674,7 @@ export function PaymentsPage() {
                             </button>
                           ))}
                           {p.proofImages.length > 3 && (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-800 bg-gray-900/30 text-xs text-gray-500">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white/30 text-xs text-gray-500">
                               +{p.proofImages.length - 3}
                             </div>
                           )}
@@ -720,7 +720,7 @@ export function PaymentsPage() {
         )}
 
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-gray-800 px-5 py-3">
+          <div className="flex items-center justify-between border-t border-gray-200 px-5 py-3">
             <p className="text-xs text-gray-500">
               Page {page} / {totalPages} — {total} paiement{total > 1 ? 's' : ''}
             </p>
@@ -729,7 +729,7 @@ export function PaymentsPage() {
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
                 aria-label="Page précédente"
-                className="rounded-lg border border-gray-800 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-gray-900/30 hover:text-gray-100 transition-colors cursor-pointer"
+                className="rounded-lg border border-gray-200 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-white/30 hover:text-gray-900 transition-colors cursor-pointer"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -737,7 +737,7 @@ export function PaymentsPage() {
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => p + 1)}
                 aria-label="Page suivante"
-                className="rounded-lg border border-gray-800 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-gray-900/30 hover:text-gray-100 transition-colors cursor-pointer"
+                className="rounded-lg border border-gray-200 p-1.5 text-gray-400 disabled:opacity-40 hover:bg-white/30 hover:text-gray-900 transition-colors cursor-pointer"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

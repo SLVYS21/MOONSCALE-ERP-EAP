@@ -17,18 +17,18 @@ import { cn } from '@/lib/utils'
 
 const PIPELINE_OPTIONS: { value: PipelineStatus; label: string; color: string }[] = [
   { value: 'nouveau',          label: 'Nouveau',          color: 'text-gray-400' },
-  { value: 'mql',              label: 'MQL',              color: 'text-blue-400' },
-  { value: 'sql',              label: 'SQL',              color: 'text-indigo-400' },
-  { value: 'rdv_programme',    label: 'RDV Programmé',    color: 'text-yellow-400' },
-  { value: 'appel_diagnostic', label: 'Appel Diagnostic', color: 'text-orange-400' },
-  { value: 'won',              label: 'Won',              color: 'text-green-400' },
+  { value: 'mql',              label: 'MQL',              color: 'text-blue-600' },
+  { value: 'sql',              label: 'SQL',              color: 'text-indigo-600' },
+  { value: 'rdv_programme',    label: 'RDV Programmé',    color: 'text-yellow-600' },
+  { value: 'appel_diagnostic', label: 'Appel Diagnostic', color: 'text-orange-600' },
+  { value: 'won',              label: 'Won',              color: 'text-green-600' },
   { value: 'lost',             label: 'Lost',             color: 'text-red-400' },
-  { value: 'nurturing',        label: 'Nurturing',        color: 'text-purple-400' },
+  { value: 'nurturing',        label: 'Nurturing',        color: 'text-purple-700' },
 ]
 
 const CALL_STATUS: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  planned:   { label: 'Planifié',  icon: Clock,         color: 'text-yellow-400' },
-  completed: { label: 'Réalisé',   icon: CheckCircle,   color: 'text-green-400' },
+  planned:   { label: 'Planifié',  icon: Clock,         color: 'text-yellow-600' },
+  completed: { label: 'Réalisé',   icon: CheckCircle,   color: 'text-green-600' },
   cancelled: { label: 'Annulé',    icon: XCircle,       color: 'text-red-400' },
 }
 
@@ -38,7 +38,7 @@ const TX_STATUS_LABEL: Record<string, string> = {
   pending: 'En attente', completed: 'Complété', failed: 'Échoué', refunded: 'Remboursé',
 }
 const TX_STATUS_COLOR: Record<string, string> = {
-  pending: 'text-yellow-400', completed: 'text-green-400', failed: 'text-red-400', refunded: 'text-orange-400',
+  pending: 'text-yellow-600', completed: 'text-green-600', failed: 'text-red-400', refunded: 'text-orange-600',
 }
 const GATEWAY_LABELS: Record<string, string> = {
   stripe: 'Stripe', chariow: 'Chariow', pawapay: 'PawaPay', fedapay: 'FedaPay',
@@ -58,9 +58,9 @@ function DynamicField({ slug, value }: { slug: string; value: string }) {
   const isLong = value.length > 120
 
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-950 p-3">
+    <div className="rounded-lg border border-gray-200 bg-[#f5f6fa] p-3">
       <div className="flex items-start justify-between gap-2 mb-1">
-        <span className="text-xs font-medium text-gray-300">{label}</span>
+        <span className="text-xs font-medium text-gray-600">{label}</span>
         <span className="text-[10px] text-gray-600 font-mono shrink-0">{slug}</span>
       </div>
       <p className={cn('text-xs text-gray-400 whitespace-pre-wrap', !expanded && isLong && 'line-clamp-3')}>
@@ -69,7 +69,7 @@ function DynamicField({ slug, value }: { slug: string; value: string }) {
       {isLong && (
         <button
           onClick={() => setExpanded(e => !e)}
-          className="mt-1.5 flex items-center gap-1 text-[10px] text-indigo-400 hover:text-indigo-300"
+          className="mt-1.5 flex items-center gap-1 text-[10px] text-indigo-600 hover:text-indigo-300"
         >
           {expanded ? <><ChevronUp size={10} /> Réduire</> : <><ChevronDown size={10} /> Voir tout ({value.length} car.)</>}
         </button>
@@ -83,29 +83,29 @@ function DynamicField({ slug, value }: { slug: string; value: string }) {
 type LeadEventEntry = { type: string; message: string; date: string; actor_id?: string | null }
 
 const EVENT_ICON: Record<string, { icon: React.ElementType; color: string }> = {
-  created:                { icon: User,       color: 'text-indigo-400' },
-  pipeline_changed:       { icon: GitBranch,  color: 'text-blue-400'   },
-  qualification_changed:  { icon: Star,       color: 'text-yellow-400' },
+  created:                { icon: User,       color: 'text-indigo-600' },
+  pipeline_changed:       { icon: GitBranch,  color: 'text-blue-600'   },
+  qualification_changed:  { icon: Star,       color: 'text-yellow-600' },
   call_planned:           { icon: PhoneCall,  color: 'text-cyan-400'   },
-  call_completed:         { icon: PhoneOff,   color: 'text-green-400'  },
-  converted:              { icon: UserCheck,  color: 'text-emerald-400'},
+  call_completed:         { icon: PhoneOff,   color: 'text-green-600'  },
+  converted:              { icon: UserCheck,  color: 'text-emerald-600'},
 }
 
 function LeadTimeline({ events }: { events: LeadEventEntry[] }) {
   return (
     <div className="relative">
-      <div className="absolute left-[13px] top-0 bottom-0 w-px bg-gray-800" />
+      <div className="absolute left-[13px] top-0 bottom-0 w-px bg-gray-100" />
       <div className="space-y-3">
         {events.map((ev, i) => {
           const meta = EVENT_ICON[ev.type] ?? { icon: Clock, color: 'text-gray-500' }
           const Icon = meta.icon
           return (
             <div key={i} className="flex gap-3 items-start">
-              <div className={cn('relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-900 border border-gray-800', meta.color)}>
+              <div className={cn('relative z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white border border-gray-200', meta.color)}>
                 <Icon size={13} />
               </div>
               <div className="pt-0.5 min-w-0">
-                <p className="text-sm text-gray-300 leading-snug">{ev.message}</p>
+                <p className="text-sm text-gray-600 leading-snug">{ev.message}</p>
                 <p className="text-[11px] text-gray-600 mt-0.5">
                   {new Date(ev.date).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </p>
@@ -127,7 +127,7 @@ function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label:
       <Icon size={14} className="text-gray-500 mt-0.5 shrink-0" />
       <div>
         <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm text-gray-200">{value}</p>
+        <p className="text-sm text-gray-800">{value}</p>
       </div>
     </div>
   )
@@ -167,7 +167,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
   })
 
   return (
-    <div className="rounded-xl bg-gray-900 border border-gray-800">
+    <div className="rounded-xl bg-white border border-gray-200">
       <div
         className="flex items-center justify-between p-4 cursor-pointer"
         onClick={() => setExpanded((v) => !v)}
@@ -175,7 +175,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
         <div className="flex items-center gap-3">
           <StatusIcon size={16} className={statusInfo.color} />
           <div>
-            <p className="text-sm font-medium text-gray-200">{formatDate(call.date)}</p>
+            <p className="text-sm font-medium text-gray-800">{formatDate(call.date)}</p>
             <p className="text-xs text-gray-500">
               {call.duration ? `${call.duration} min` : 'Durée inconnue'}
               {call.closer_id ? ` • ${call.closer_id.firstName} ${call.closer_id.lastName}` : ''}
@@ -189,13 +189,13 @@ function CallCard({ leadId, call, offers, onUpdate }: {
       </div>
 
       {expanded && (
-        <div className="border-t border-gray-800 p-4 space-y-4">
+        <div className="border-t border-gray-200 p-4 space-y-4">
           {/* Status / LeadOffer row */}
           <div className="flex flex-wrap gap-3">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Statut</label>
               <select
-                className="rounded-lg bg-gray-800 border border-gray-700 px-2 py-1.5 text-xs text-gray-200 focus:outline-none"
+                className="rounded-lg bg-gray-100 border border-gray-200 px-2 py-1.5 text-xs text-gray-800 focus:outline-none"
                 value={call.status}
                 onChange={(e) => updateMutation.mutate({ status: e.target.value as LeadCall['status'] })}
               >
@@ -207,7 +207,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
             <div>
               <label className="block text-xs text-gray-500 mb-1">Offre proposée</label>
               <select
-                className="rounded-lg bg-gray-800 border border-gray-700 px-2 py-1.5 text-xs text-gray-200 focus:outline-none"
+                className="rounded-lg bg-gray-100 border border-gray-200 px-2 py-1.5 text-xs text-gray-800 focus:outline-none"
                 value={(call.offer_proposed_id as SubscriptionOffer | null)?._id ?? ''}
                 onChange={(e) => updateMutation.mutate({ offer_proposed_id: e.target.value || undefined })}
               >
@@ -225,7 +225,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
               href={call.google_meet_link}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300"
+              className="inline-flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-300"
             >
               <ExternalLink size={12} /> Ouvrir le Google Meet
             </a>
@@ -236,7 +236,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
             <label className="block text-xs text-gray-500 mb-1">Transcription</label>
             <textarea
               rows={4}
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-xs text-gray-200 placeholder-gray-500 focus:border-indigo-500 focus:outline-none resize-y"
+              className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:border-indigo-500 focus:outline-none resize-y"
               placeholder="Coller la transcription ici (depuis Plaud AI ou autre)..."
               defaultValue={call.transcript}
               onBlur={(e) => {
@@ -254,14 +254,14 @@ function CallCard({ leadId, call, offers, onUpdate }: {
               <button
                 disabled={!call.transcript || summarizeMutation.isPending}
                 onClick={() => summarizeMutation.mutate()}
-                className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-40"
+                className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-300 disabled:opacity-40"
               >
                 <Sparkles size={12} />
                 {summarizeMutation.isPending ? 'Génération...' : 'Générer via Claude'}
               </button>
             </div>
             {call.ai_summary ? (
-              <div className="rounded-lg bg-indigo-950/30 border border-indigo-900/30 p-3 text-xs text-gray-300 whitespace-pre-wrap">
+              <div className="rounded-lg bg-indigo-950/30 border border-indigo-900/30 p-3 text-xs text-gray-600 whitespace-pre-wrap">
                 {call.ai_summary}
               </div>
             ) : (
@@ -274,7 +274,7 @@ function CallCard({ leadId, call, offers, onUpdate }: {
             <div className="flex items-center justify-between mb-1">
               <label className="text-xs text-gray-500">Notes du closer</label>
               {!editNotes && (
-                <button onClick={() => setEditNotes(true)} className="text-xs text-gray-500 hover:text-gray-300">
+                <button onClick={() => setEditNotes(true)} className="text-xs text-gray-500 hover:text-gray-600">
                   <Pencil size={12} />
                 </button>
               )}
@@ -283,12 +283,12 @@ function CallCard({ leadId, call, offers, onUpdate }: {
               <div className="space-y-2">
                 <textarea
                   rows={3}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-xs text-gray-200 focus:border-indigo-500 focus:outline-none resize-none"
+                  className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-xs text-gray-800 focus:border-indigo-500 focus:outline-none resize-none"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
                 <div className="flex gap-2 justify-end">
-                  <button onClick={() => setEditNotes(false)} className="px-2 py-1 text-xs text-gray-500 hover:text-gray-300">Annuler</button>
+                  <button onClick={() => setEditNotes(false)} className="px-2 py-1 text-xs text-gray-500 hover:text-gray-600">Annuler</button>
                   <button
                     onClick={() => updateMutation.mutate({ manual_notes: notes })}
                     className="px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-700 text-xs text-white"
@@ -340,13 +340,13 @@ function AddCallModal({ leadId, leadEmail, onClose }: { leadId: string; leadEmai
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6">
-        <h2 className="text-lg font-semibold text-gray-100 mb-5">Nouvel appel</h2>
+      <div className="w-full max-w-md rounded-xl bg-white border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-5">Nouvel appel</h2>
 
         {emailSent ? (
           <div className="flex flex-col items-center gap-3 py-6">
-            <CheckCircle size={40} className="text-green-400" />
-            <p className="text-sm text-gray-300 text-center">
+            <CheckCircle size={40} className="text-green-600" />
+            <p className="text-sm text-gray-600 text-center">
               Email de confirmation envoyé à{' '}
               <span className="text-white font-medium">{leadEmail}</span>
             </p>
@@ -358,7 +358,7 @@ function AddCallModal({ leadId, leadEmail, onClose }: { leadId: string; leadEmai
                 <label className="block text-xs text-gray-400 mb-1">Date & heure</label>
                 <input
                   type="datetime-local"
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                   value={form.date}
                   onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                 />
@@ -367,7 +367,7 @@ function AddCallModal({ leadId, leadEmail, onClose }: { leadId: string; leadEmai
                 <label className="block text-xs text-gray-400 mb-1">Lien Google Meet</label>
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                    className="flex-1 rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
                     placeholder="https://meet.google.com/..."
                     value={form.google_meet_link}
                     onChange={(e) => setForm((f) => ({ ...f, google_meet_link: e.target.value }))}
@@ -376,7 +376,7 @@ function AddCallModal({ leadId, leadEmail, onClose }: { leadId: string; leadEmai
                     href="https://meet.new"
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-700 hover:bg-gray-600 text-xs text-gray-300 whitespace-nowrap transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-600 text-xs text-gray-600 whitespace-nowrap transition-colors"
                   >
                     <Video size={13} />
                     Nouveau Meet
@@ -389,10 +389,10 @@ function AddCallModal({ leadId, leadEmail, onClose }: { leadId: string; leadEmai
                   onClick={() => setSendEmail((v) => !v)}
                   className="flex items-center gap-3 w-full text-left"
                 >
-                  <div className={cn('w-9 h-5 rounded-full flex items-center px-0.5 transition-colors', sendEmail ? 'bg-indigo-600' : 'bg-gray-700')}>
+                  <div className={cn('w-9 h-5 rounded-full flex items-center px-0.5 transition-colors', sendEmail ? 'bg-indigo-600' : 'bg-gray-200')}>
                     <div className={cn('w-4 h-4 rounded-full bg-white transition-transform', sendEmail ? 'translate-x-4' : 'translate-x-0')} />
                   </div>
-                  <span className="text-sm text-gray-300">
+                  <span className="text-sm text-gray-600">
                     Envoyer email de confirmation à{' '}
                     <span className="text-white">{leadEmail}</span>
                   </span>
@@ -405,7 +405,7 @@ function AddCallModal({ leadId, leadEmail, onClose }: { leadId: string; leadEmai
               )}
             </div>
             <div className="mt-5 flex justify-end gap-3">
-              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+              <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-800">
                 Annuler
               </button>
               <button
@@ -445,13 +445,13 @@ function PreBookingModal({ leadId, leadEmail, onConfirm, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-xl w-full max-w-sm p-6 space-y-5">
+      <div className="bg-white border border-gray-200 rounded-xl w-full max-w-sm p-6 space-y-5">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <CalendarDays size={18} className="text-indigo-400 mt-0.5" />
-            <h2 className="text-base font-semibold text-gray-100">Programmer un appel</h2>
+            <CalendarDays size={18} className="text-indigo-600 mt-0.5" />
+            <h2 className="text-base font-semibold text-gray-900">Programmer un appel</h2>
           </div>
-          <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-300">
+          <button onClick={onClose} className="p-1 text-gray-500 hover:text-gray-600">
             <X size={16} />
           </button>
         </div>
@@ -462,19 +462,19 @@ function PreBookingModal({ leadId, leadEmail, onConfirm, onClose }: {
           <label className="flex items-center gap-3 cursor-pointer select-none">
             <div
               onClick={() => setSendEmail(v => !v)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${sendEmail ? 'bg-indigo-600' : 'bg-gray-700'}`}
+              className={`relative w-10 h-5 rounded-full transition-colors ${sendEmail ? 'bg-indigo-600' : 'bg-gray-200'}`}
             >
               <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${sendEmail ? 'translate-x-5' : ''}`} />
             </div>
-            <span className="text-sm text-gray-300">
-              Envoyer aussi l'email ERP à <span className="text-gray-100">{leadEmail}</span>
+            <span className="text-sm text-gray-600">
+              Envoyer aussi l'email ERP à <span className="text-gray-900">{leadEmail}</span>
             </span>
           </label>
         )}
         <div className="flex gap-3 pt-1">
           <button
             onClick={onClose}
-            className="flex-1 py-2 rounded-lg border border-gray-700 text-sm text-gray-400 hover:text-gray-200 hover:border-gray-500 transition-colors"
+            className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-400 hover:text-gray-800 hover:border-gray-500 transition-colors"
           >
             Annuler
           </button>
@@ -505,13 +505,13 @@ function CalComBookingModal({ leadName, leadEmail, bookingUrl, onClose }: {
   const iframeUrl = bookingUrl ? `${bookingUrl}?${params.toString()}` : null
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-gray-950">
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#f5f6fa]">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-800 shrink-0">
+      <div className="flex items-center justify-between px-5 py-3.5 border-b border-gray-200 shrink-0">
         <div className="flex items-center gap-2.5">
-          <CalendarDays size={16} className="text-indigo-400" />
+          <CalendarDays size={16} className="text-indigo-600" />
           <div>
-            <h2 className="text-sm font-semibold text-gray-100">
+            <h2 className="text-sm font-semibold text-gray-900">
               Programmer un appel — {leadName}
             </h2>
             <p className="text-xs text-gray-500">
@@ -525,7 +525,7 @@ function CalComBookingModal({ leadName, leadEmail, bookingUrl, onClose }: {
               href={iframeUrl}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-800 hover:bg-gray-700 text-xs text-gray-300 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-xs text-gray-600 transition-colors"
             >
               <ExternalLink size={12} />
               Ouvrir dans un onglet
@@ -533,7 +533,7 @@ function CalComBookingModal({ leadName, leadEmail, bookingUrl, onClose }: {
           )}
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-300 hover:bg-gray-800 transition-colors"
+            className="p-1.5 rounded-lg text-gray-500 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           >
             <X size={16} />
           </button>
@@ -545,10 +545,10 @@ function CalComBookingModal({ leadName, leadEmail, bookingUrl, onClose }: {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center max-w-sm">
             <AlertCircle size={40} className="text-yellow-500 mx-auto mb-3" />
-            <p className="text-gray-200 font-semibold mb-1">URL Cal.com non configurée</p>
+            <p className="text-gray-800 font-semibold mb-1">URL Cal.com non configurée</p>
             <p className="text-sm text-gray-500">
               Ajoutez le lien de réservation Cal.com dans{' '}
-              <span className="text-indigo-400">Paramètres → Booking URL</span>
+              <span className="text-indigo-600">Paramètres → Booking URL</span>
             </p>
           </div>
         </div>
@@ -588,13 +588,13 @@ function LinkTransactionModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-lg rounded-xl bg-gray-900 border border-gray-800 p-5 shadow-xl" onClick={e => e.stopPropagation()}>
+      <div className="w-full max-w-lg rounded-xl bg-white border border-gray-200 p-5 shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-100 flex items-center gap-2">
-            <Link2 size={14} className="text-indigo-400" />
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <Link2 size={14} className="text-indigo-600" />
             Lier une transaction à {leadName}
           </h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-300"><X size={16} /></button>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-600"><X size={16} /></button>
         </div>
 
         <input
@@ -602,7 +602,7 @@ function LinkTransactionModal({
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Rechercher par description, email, montant…"
-          className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-200 placeholder-gray-600 focus:border-indigo-500 focus:outline-none mb-3"
+          className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:border-indigo-500 focus:outline-none mb-3"
           autoFocus
         />
 
@@ -616,17 +616,17 @@ function LinkTransactionModal({
               key={tx._id}
               onClick={() => linkMutation.mutate(tx._id)}
               disabled={linkMutation.isPending}
-              className="flex w-full items-center gap-3 rounded-lg bg-gray-800/60 px-3 py-2.5 text-left hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="flex w-full items-center gap-3 rounded-lg bg-gray-100 px-3 py-2.5 text-left hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 truncate">{tx.description}</p>
+                <p className="text-sm text-gray-800 truncate">{tx.description}</p>
                 <div className="flex gap-2 mt-0.5 text-[11px] text-gray-500">
                   <span>{new Date(tx.date).toLocaleDateString('fr-FR')}</span>
                   <span>{GATEWAY_LABELS[tx.gateway] ?? tx.gateway}</span>
                   {tx.leadName && <span className="text-yellow-500">→ {tx.leadName}</span>}
                 </div>
               </div>
-              <p className="text-sm font-semibold text-green-400 shrink-0">
+              <p className="text-sm font-semibold text-green-600 shrink-0">
                 {tx.amount.toLocaleString('fr-FR')} {tx.currency}
               </p>
             </button>
@@ -786,13 +786,13 @@ export function LeadDetailPage() {
       {/* Send call link modal */}
       {showCallLink && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6 shadow-xl">
+          <div className="w-full max-w-md rounded-xl bg-white border border-gray-200 p-6 shadow-xl">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
-                <CalendarClock className="h-4 w-4 text-indigo-400" />
-                <h2 className="text-base font-semibold text-gray-100">Envoyer un lien de RDV</h2>
+                <CalendarClock className="h-4 w-4 text-indigo-600" />
+                <h2 className="text-base font-semibold text-gray-900">Envoyer un lien de RDV</h2>
               </div>
-              <button onClick={() => setShowCallLink(false)} className="text-gray-500 hover:text-gray-300">
+              <button onClick={() => setShowCallLink(false)} className="text-gray-500 hover:text-gray-600">
                 <X size={16} />
               </button>
             </div>
@@ -800,7 +800,7 @@ export function LeadDetailPage() {
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-gray-500 mb-1">Destinataire</p>
-                <p className="text-sm text-gray-300 rounded-lg bg-gray-800 px-3 py-2">
+                <p className="text-sm text-gray-600 rounded-lg bg-gray-100 px-3 py-2">
                   {lead.email ?? <span className="text-red-400">Ce lead n'a pas d'email</span>}
                 </p>
               </div>
@@ -809,7 +809,7 @@ export function LeadDetailPage() {
                 <label className="block text-xs text-gray-500 mb-1">Lien de réservation *</label>
                 <input
                   type="url"
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
                   placeholder="https://calendly.com/votre-lien"
                   value={callLinkUrl}
                   onChange={(e) => setCallLinkUrl(e.target.value)}
@@ -818,7 +818,7 @@ export function LeadDetailPage() {
                 {myBookingUrl && !callLinkUrl && (
                   <button
                     onClick={() => setCallLinkUrl(myBookingUrl)}
-                    className="mt-1 text-xs text-indigo-400 hover:text-indigo-300"
+                    className="mt-1 text-xs text-indigo-600 hover:text-indigo-300"
                   >
                     Utiliser le lien par défaut
                   </button>
@@ -829,7 +829,7 @@ export function LeadDetailPage() {
                 <label className="block text-xs text-gray-500 mb-1">Message personnalisé</label>
                 <textarea
                   rows={3}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none resize-none"
+                  className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none resize-none"
                   placeholder="Bonjour, suite à notre échange, je vous invite à réserver votre appel diagnostic..."
                   value={callLinkMsg}
                   onChange={(e) => setCallLinkMsg(e.target.value)}
@@ -842,12 +842,12 @@ export function LeadDetailPage() {
                 </p>
               )}
               {sendCallLinkMutation.isSuccess && (
-                <p className="text-xs text-emerald-400">Email envoyé avec succès ✓</p>
+                <p className="text-xs text-emerald-600">Email envoyé avec succès ✓</p>
               )}
             </div>
 
             <div className="mt-5 flex justify-end gap-3">
-              <button onClick={() => setShowCallLink(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+              <button onClick={() => setShowCallLink(false)} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-800">
                 Annuler
               </button>
               <button
@@ -866,18 +866,18 @@ export function LeadDetailPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-start gap-3">
-          <button onClick={() => navigate('/leads')} className="mt-1 text-gray-500 hover:text-gray-300 transition-colors">
+          <button onClick={() => navigate('/leads')} className="mt-1 text-gray-500 hover:text-gray-600 transition-colors">
             <ArrowLeft size={18} />
           </button>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">{lead.name}</h1>
+            <h1 className="text-xl font-bold text-gray-900">{lead.name}</h1>
             <p className="text-sm text-gray-500 mt-0.5">Entré le {formatDate(lead.createdAt)}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => myBookingUrl ? setShowPreBooking(true) : setShowAddCall(true)}
-            className="flex items-center gap-2 rounded-lg border border-indigo-700/50 bg-indigo-900/30 px-3 py-1.5 text-xs text-indigo-300 hover:border-indigo-500 hover:bg-indigo-900/60 transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-indigo-700/50 bg-indigo-50 px-3 py-1.5 text-xs text-indigo-300 hover:border-indigo-500 hover:bg-indigo-900/60 transition-colors"
             title={myBookingUrl ? 'Programmer un appel via Cal.com' : 'Programmer un appel manuellement'}
           >
             <CalendarDays size={14} />
@@ -890,7 +890,7 @@ export function LeadDetailPage() {
               sendCallLinkMutation.reset()
               setShowCallLink(true)
             }}
-            className="flex items-center gap-2 rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 text-xs text-gray-300 hover:border-indigo-500 hover:text-indigo-400 transition-colors"
+            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-100 px-3 py-1.5 text-xs text-gray-600 hover:border-indigo-500 hover:text-indigo-600 transition-colors"
             title={!lead.email ? 'Ce lead n\'a pas d\'email' : 'Envoyer un lien de réservation'}
           >
             <CalendarClock size={14} />
@@ -909,7 +909,7 @@ export function LeadDetailPage() {
         {/* Left column: info + status */}
         <div className="col-span-1 space-y-4">
           {/* Contact info */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 space-y-3">
+          <div className="rounded-xl bg-white border border-gray-200 p-4 space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Contact</h3>
             <InfoRow icon={User}  label="Nom"       value={lead.name} />
             <InfoRow icon={Mail}  label="Email"     value={lead.email ?? undefined} />
@@ -918,25 +918,25 @@ export function LeadDetailPage() {
           </div>
 
           {/* Source */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 space-y-3">
+          <div className="rounded-xl bg-white border border-gray-200 p-4 space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Source</h3>
             <InfoRow icon={Globe} label="UTM Source"    value={lead.utm_source ?? undefined} />
             <InfoRow icon={Globe} label="Réseau déclaré" value={lead.reseau_source ?? undefined} />
             {lead.motivation && (
               <div>
                 <p className="text-xs text-gray-500 mb-1">Motivation</p>
-                <p className="text-sm text-gray-300 italic">"{lead.motivation}"</p>
+                <p className="text-sm text-gray-600 italic">"{lead.motivation}"</p>
               </div>
             )}
           </div>
 
           {/* Pipeline */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 space-y-3">
+          <div className="rounded-xl bg-white border border-gray-200 p-4 space-y-3">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Pipeline</h3>
             <div>
               <label className="text-xs text-gray-500 mb-1 block">Statut pipeline</label>
               <select
-                className={cn('w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm font-medium focus:border-indigo-500 focus:outline-none', pipelineOpt?.color ?? 'text-gray-300')}
+                className={cn('w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm font-medium focus:border-indigo-500 focus:outline-none', pipelineOpt?.color ?? 'text-gray-600')}
                 value={lead.pipeline_status}
                 onChange={(e) => pipelineMutation.mutate(e.target.value as PipelineStatus)}
               >
@@ -956,7 +956,7 @@ export function LeadDetailPage() {
                     value={budgetInput}
                     onChange={e => setBudgetInput(e.target.value)}
                     placeholder="0"
-                    className="flex-1 rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                    className="flex-1 rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     autoFocus
                     onKeyDown={e => {
                       if (e.key === 'Enter') budgetMutation.mutate(budgetInput ? Number(budgetInput) : null)
@@ -970,16 +970,16 @@ export function LeadDetailPage() {
                   >
                     {budgetMutation.isPending ? '…' : 'OK'}
                   </button>
-                  <button onClick={() => setEditBudget(false)} className="px-2 text-gray-500 hover:text-gray-300">
+                  <button onClick={() => setEditBudget(false)} className="px-2 text-gray-500 hover:text-gray-600">
                     <X size={14} />
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={() => { setBudgetInput(String(lead.opportunity_amount ?? '')); setEditBudget(true) }}
-                  className="flex items-center gap-2 w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-left hover:border-indigo-600/50 transition-colors group"
+                  className="flex items-center gap-2 w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-left hover:border-indigo-600/50 transition-colors group"
                 >
-                  <span className={lead.opportunity_amount ? 'text-emerald-400 font-semibold' : 'text-gray-600'}>
+                  <span className={lead.opportunity_amount ? 'text-emerald-600 font-semibold' : 'text-gray-600'}>
                     {lead.opportunity_amount
                       ? `${lead.opportunity_amount.toLocaleString('fr-FR')} F CFA`
                       : 'Non renseigné'}
@@ -995,13 +995,13 @@ export function LeadDetailPage() {
             <div className="rounded-xl border border-green-800/50 bg-green-950/20 p-4">
               {lead.student_id ? (
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-green-400">
+                  <div className="flex items-center gap-2 text-sm text-green-600">
                     <CheckCircle size={15} />
                     Converti en étudiant
                   </div>
                   <button
                     onClick={() => navigate(`/students/${lead.student_id}`)}
-                    className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300"
+                    className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-300"
                   >
                     <ExternalLink size={12} /> Voir la fiche
                   </button>
@@ -1028,12 +1028,12 @@ export function LeadDetailPage() {
           )}
 
           {/* Offres liées */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+          <div className="rounded-xl bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Offres liées</h3>
               <button
                 onClick={() => setShowAddOffer(v => !v)}
-                className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300"
+                className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-300"
               >
                 <Plus size={12} /> Ajouter
               </button>
@@ -1043,7 +1043,7 @@ export function LeadDetailPage() {
             {showAddOffer && (
               <div className="mb-3">
                 <select
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-200 focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-800 focus:border-indigo-500 focus:outline-none"
                   defaultValue=""
                   onChange={(e) => {
                     if (!e.target.value) return
@@ -1068,8 +1068,8 @@ export function LeadDetailPage() {
                 {lead.offer_ids.map((offer) => {
                   const plan = offer.plans?.find((p) => p.isActive) ?? offer.plans?.[0]
                   return (
-                    <div key={offer._id} className="flex items-center justify-between rounded-lg bg-gray-800 px-3 py-2">
-                      <span className="text-sm text-gray-200">{offer.name}</span>
+                    <div key={offer._id} className="flex items-center justify-between rounded-lg bg-gray-100 px-3 py-2">
+                      <span className="text-sm text-gray-800">{offer.name}</span>
                       <div className="flex items-center gap-2">
                         {plan && (
                           <span className="text-xs text-gray-400">
@@ -1099,7 +1099,7 @@ export function LeadDetailPage() {
 
           {/* Dynamic fields */}
           {lead.dynamic_fields && Object.keys(lead.dynamic_fields).length > 0 && (
-            <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+            <div className="rounded-xl bg-white border border-gray-200 p-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">Réponses Typebot</h3>
               <div className="space-y-3">
                 {Object.entries(lead.dynamic_fields).map(([k, v]) => (
@@ -1113,11 +1113,11 @@ export function LeadDetailPage() {
         {/* Right column: notes + calls */}
         <div className="col-span-2 space-y-5">
           {/* Notes */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+          <div className="rounded-xl bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Notes</h3>
               {!editNotes && (
-                <button onClick={() => { setNotes(lead.notes); setEditNotes(true) }} className="text-xs text-gray-500 hover:text-gray-300 flex items-center gap-1">
+                <button onClick={() => { setNotes(lead.notes); setEditNotes(true) }} className="text-xs text-gray-500 hover:text-gray-600 flex items-center gap-1">
                   <Pencil size={12} /> Modifier
                 </button>
               )}
@@ -1126,19 +1126,19 @@ export function LeadDetailPage() {
               <div className="space-y-2">
                 <textarea
                   rows={4}
-                  className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none resize-none"
+                  className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none resize-none"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
                 <div className="flex gap-2 justify-end">
-                  <button onClick={() => setEditNotes(false)} className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-200">Annuler</button>
+                  <button onClick={() => setEditNotes(false)} className="px-3 py-1.5 text-xs text-gray-400 hover:text-gray-800">Annuler</button>
                   <button onClick={() => notesMutation.mutate(notes)} className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-xs text-white">
                     {notesMutation.isPending ? 'Sauvegarde...' : 'Sauvegarder'}
                   </button>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-300 whitespace-pre-wrap">
+              <p className="text-sm text-gray-600 whitespace-pre-wrap">
                 {lead.notes || <span className="text-gray-600">Aucune note.</span>}
               </p>
             )}
@@ -1146,14 +1146,14 @@ export function LeadDetailPage() {
 
           {/* Timeline */}
           {lead.events && lead.events.length > 0 && (
-            <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+            <div className="rounded-xl bg-white border border-gray-200 p-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-4">Historique</h3>
               <LeadTimeline events={[...lead.events].reverse()} />
             </div>
           )}
 
           {/* Paiements liés */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+          <div className="rounded-xl bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500 flex items-center gap-1.5">
                 <CreditCard size={12} />
@@ -1161,7 +1161,7 @@ export function LeadDetailPage() {
               </h3>
               <button
                 onClick={() => setShowLinkTxModal(true)}
-                className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300"
+                className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-300"
               >
                 <Link2 size={12} /> Lier une transaction
               </button>
@@ -1169,10 +1169,10 @@ export function LeadDetailPage() {
             {linkedTransactions.length > 0 ? (
               <div className="space-y-2">
                 {linkedTransactions.map((tx) => (
-                  <div key={tx._id} className="flex items-center gap-3 rounded-lg bg-gray-800/60 px-3 py-2">
+                  <div key={tx._id} className="flex items-center gap-3 rounded-lg bg-gray-100 px-3 py-2">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-200 truncate">{tx.description}</span>
+                        <span className="text-sm text-gray-800 truncate">{tx.description}</span>
                         <span className={cn('text-[11px] font-medium shrink-0', TX_STATUS_COLOR[tx.status] ?? 'text-gray-400')}>
                           {TX_STATUS_LABEL[tx.status] ?? tx.status}
                         </span>
@@ -1180,11 +1180,11 @@ export function LeadDetailPage() {
                       <div className="flex items-center gap-3 mt-0.5 text-[11px] text-gray-500">
                         <span>{new Date(tx.date).toLocaleDateString('fr-FR')}</span>
                         <span>{GATEWAY_LABELS[tx.gateway] ?? tx.gateway}</span>
-                        {tx.offerName && <span className="text-indigo-400">{tx.offerName}</span>}
+                        {tx.offerName && <span className="text-indigo-600">{tx.offerName}</span>}
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className={cn('text-sm font-semibold', tx.type === 'income' ? 'text-green-400' : 'text-red-400')}>
+                      <p className={cn('text-sm font-semibold', tx.type === 'income' ? 'text-green-600' : 'text-red-400')}>
                         {tx.type === 'expense' ? '−' : '+'}{tx.amount.toLocaleString('fr-FR')} {tx.currency}
                       </p>
                     </div>
@@ -1217,14 +1217,14 @@ export function LeadDetailPage() {
           )}
 
           {/* Calls */}
-          <div className="rounded-xl bg-gray-900 border border-gray-800 p-4">
+          <div className="rounded-xl bg-white border border-gray-200 p-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">
                 Appels ({calls.length})
               </h3>
               <button
                 onClick={() => setShowAddCall(true)}
-                className="flex items-center gap-1.5 text-xs text-indigo-400 hover:text-indigo-300"
+                className="flex items-center gap-1.5 text-xs text-indigo-600 hover:text-indigo-300"
               >
                 <Plus size={12} /> Nouvel appel
               </button>

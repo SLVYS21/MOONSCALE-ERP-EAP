@@ -15,11 +15,11 @@ import type { Task, TaskStatus, TaskPriority, ProjectWithColumns, User as UserTy
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const COLUMNS: { key: TaskStatus; label: string; color: string; bg: string }[] = [
-  { key: 'backlog',     label: 'Backlog',    color: 'text-gray-400',   bg: 'bg-gray-800/40' },
-  { key: 'todo',       label: 'À faire',    color: 'text-indigo-400',  bg: 'bg-indigo-500/10' },
+  { key: 'backlog',     label: 'Backlog',    color: 'text-gray-400',   bg: 'bg-gray-50' },
+  { key: 'todo',       label: 'À faire',    color: 'text-indigo-600',  bg: 'bg-indigo-50' },
   { key: 'in_progress',label: 'En cours',   color: 'text-amber-400',   bg: 'bg-amber-500/10' },
   { key: 'review',     label: 'Révision',   color: 'text-violet-400',  bg: 'bg-violet-500/10' },
-  { key: 'done',       label: 'Terminé',    color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+  { key: 'done',       label: 'Terminé',    color: 'text-emerald-600', bg: 'bg-emerald-50' },
 ]
 
 const PRIORITY_CONFIG: Record<TaskPriority, { label: string; variant: 'default' | 'info' | 'warning' | 'danger'; dot: string }> = {
@@ -81,7 +81,7 @@ function TaskModal({
     onSuccess: () => { invalidate(); onClose() },
   })
 
-  const selectCls = 'rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none'
+  const selectCls = 'rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none'
 
   const doneChecklist = task.checklist.filter((i) => i.done).length
   const totalChecklist = task.checklist.length
@@ -91,11 +91,11 @@ function TaskModal({
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-end bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
-        className="relative flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-gray-800 bg-gray-950 shadow-2xl"
+        className="relative flex h-full w-full max-w-xl flex-col overflow-y-auto border-l border-gray-200 bg-[#f5f6fa] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-800 px-5 py-3">
+        <div className="flex items-center justify-between border-b border-gray-200 px-5 py-3">
           <Badge variant={PRIORITY_CONFIG[priority].variant}>{PRIORITY_CONFIG[priority].label}</Badge>
           <div className="flex items-center gap-2">
             {(isCreator || currentUser?.role !== 'member') && (
@@ -106,7 +106,7 @@ function TaskModal({
                 Supprimer
               </button>
             )}
-            <button onClick={onClose} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors">
+            <button onClick={onClose} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors">
               <X className="h-4 w-4" />
             </button>
           </div>
@@ -118,7 +118,7 @@ function TaskModal({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             onBlur={() => title !== task.title && updateMutation.mutate({ title })}
-            className="w-full resize-none bg-transparent text-lg font-semibold text-gray-100 placeholder-gray-600 focus:outline-none"
+            className="w-full resize-none bg-transparent text-lg font-semibold text-gray-900 placeholder-gray-400 focus:outline-none"
             rows={2}
           />
 
@@ -176,7 +176,7 @@ function TaskModal({
               onChange={(e) => setDescription(e.target.value)}
               onBlur={() => description !== task.description && updateMutation.mutate({ description })}
               placeholder="Ajouter une description…"
-              className="w-full resize-none rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-300 placeholder-gray-600 focus:border-indigo-500 focus:outline-none"
+              className="w-full resize-none rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
             />
           </div>
 
@@ -188,7 +188,7 @@ function TaskModal({
               </label>
             </div>
             {totalChecklist > 0 && (
-              <div className="mb-2 h-1 w-full rounded-full bg-gray-800">
+              <div className="mb-2 h-1 w-full rounded-full bg-gray-100">
                 <div
                   className="h-1 rounded-full bg-emerald-500 transition-all"
                   style={{ width: `${Math.round((doneChecklist / totalChecklist) * 100)}%` }}
@@ -220,11 +220,11 @@ function TaskModal({
                 onChange={(e) => setNewCheckItem(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && newCheckItem.trim() && checklistAddMutation.mutate(newCheckItem.trim())}
                 placeholder="Ajouter un item…"
-                className="flex-1 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
               />
               <button
                 onClick={() => newCheckItem.trim() && checklistAddMutation.mutate(newCheckItem.trim())}
-                className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-800 transition-colors"
               >
                 <Plus className="h-4 w-4" />
               </button>
@@ -239,9 +239,9 @@ function TaskModal({
             </label>
             <ul className="mb-3 space-y-2">
               {task.comments.map((c, i) => (
-                <li key={i} className="rounded-lg bg-gray-800/50 px-3 py-2">
+                <li key={i} className="rounded-lg bg-white px-3 py-2">
                   <p className="text-xs font-medium text-gray-400">{formatDate(c.createdAt)}</p>
-                  <p className="mt-0.5 text-sm text-gray-300">{c.text}</p>
+                  <p className="mt-0.5 text-sm text-gray-600">{c.text}</p>
                 </li>
               ))}
             </ul>
@@ -252,11 +252,11 @@ function TaskModal({
                 onChange={(e) => setNewComment(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && newComment.trim() && commentMutation.mutate(newComment.trim())}
                 placeholder="Ajouter un commentaire…"
-                className="flex-1 rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-1.5 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
               />
               <button
                 onClick={() => newComment.trim() && commentMutation.mutate(newComment.trim())}
-                className="rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-100 hover:text-gray-800 transition-colors"
               >
                 Envoyer
               </button>
@@ -278,17 +278,17 @@ function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
   return (
     <div
       onClick={onClick}
-      className="cursor-pointer rounded-lg border border-gray-800 bg-gray-900 p-3 transition-colors hover:border-gray-700"
+      className="cursor-pointer rounded-lg border border-gray-200 bg-white p-3 transition-colors hover:border-gray-200"
     >
       <div className="mb-2 flex items-start justify-between gap-2">
-        <p className="text-sm font-medium text-gray-200 leading-snug">{task.title}</p>
+        <p className="text-sm font-medium text-gray-800 leading-snug">{task.title}</p>
         <span className={cn('mt-0.5 h-2 w-2 shrink-0 rounded-full', p.dot)} />
       </div>
 
       {task.tags.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1">
           {task.tags.map((tag) => (
-            <span key={tag} className="rounded bg-gray-800 px-1.5 py-0.5 text-xs text-gray-400">{tag}</span>
+            <span key={tag} className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-400">{tag}</span>
           ))}
         </div>
       )}
@@ -314,7 +314,7 @@ function TaskCard({ task, onClick }: { task: Task; onClick: () => void }) {
             </span>
           )}
           {task.assignedTo && (
-            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600/30 text-xs font-medium text-indigo-400">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600/30 text-xs font-medium text-indigo-600">
               {task.assignedTo.firstName[0]}{task.assignedTo.lastName[0]}
             </div>
           )}
@@ -355,10 +355,10 @@ function KanbanColumn({
   })
 
   return (
-    <div className="flex w-72 shrink-0 flex-col rounded-xl bg-gray-900/40 p-3">
+    <div className="flex w-72 shrink-0 flex-col rounded-xl bg-white p-3">
       <div className={cn('mb-3 flex items-center justify-between rounded-lg px-2 py-1.5', col.bg)}>
         <span className={cn('text-xs font-semibold', col.color)}>{col.label}</span>
-        <span className="rounded-full bg-gray-800 px-1.5 py-0.5 text-xs text-gray-500">{tasks.length}</span>
+        <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">{tasks.length}</span>
       </div>
 
       <div className="flex-1 space-y-2">
@@ -379,7 +379,7 @@ function KanbanColumn({
               if (e.key === 'Escape') { setAdding(false); setNewTitle('') }
             }}
             placeholder="Titre de la tâche…"
-            className="w-full rounded-lg border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
           />
           <div className="mt-1.5 flex gap-2">
             <button
@@ -390,7 +390,7 @@ function KanbanColumn({
             </button>
             <button
               onClick={() => { setAdding(false); setNewTitle('') }}
-              className="rounded-lg px-3 py-1 text-xs text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors"
+              className="rounded-lg px-3 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors"
             >
               Annuler
             </button>
@@ -399,7 +399,7 @@ function KanbanColumn({
       ) : (
         <button
           onClick={() => setAdding(true)}
-          className="mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-800 hover:text-gray-400 transition-colors"
+          className="mt-2 flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-100 hover:text-gray-400 transition-colors"
         >
           <Plus className="h-3.5 w-3.5" /> Ajouter
         </button>
@@ -419,7 +419,7 @@ function ListView({ tasks, onOpenTask }: { tasks: Task[]; onOpenTask: (t: Task) 
       ) : (
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-800 text-left text-xs text-gray-500">
+            <tr className="border-b border-gray-200 text-left text-xs text-gray-500">
               <th className="pb-3 font-medium">Tâche</th>
               <th className="pb-3 font-medium">Statut</th>
               <th className="pb-3 font-medium">Priorité</th>
@@ -433,9 +433,9 @@ function ListView({ tasks, onOpenTask }: { tasks: Task[]; onOpenTask: (t: Task) 
               const p = PRIORITY_CONFIG[t.priority]
               const isOverdue = t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'done'
               return (
-                <tr key={t._id} onClick={() => onOpenTask(t)} className="cursor-pointer hover:bg-gray-800/30 transition-colors">
+                <tr key={t._id} onClick={() => onOpenTask(t)} className="cursor-pointer hover:bg-gray-50 transition-colors">
                   <td className="py-3 pr-4">
-                    <p className="font-medium text-gray-200">{t.title}</p>
+                    <p className="font-medium text-gray-800">{t.title}</p>
                     {t.description && <p className="text-xs text-gray-500 line-clamp-1">{t.description}</p>}
                   </td>
                   <td className="py-3 pr-4">
@@ -491,10 +491,10 @@ export function ProjectPage() {
   return (
     <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="border-b border-gray-800 px-6 py-4">
+      <div className="border-b border-gray-200 px-6 py-4">
         <button
           onClick={() => navigate('/tasks')}
-          className="mb-2 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-300 transition-colors"
+          className="mb-2 flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-600 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour
@@ -508,21 +508,21 @@ export function ProjectPage() {
               {project.icon}
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-100">{project.title}</h1>
+              <h1 className="text-lg font-semibold text-gray-900">{project.title}</h1>
               <p className="text-xs text-gray-500">{doneTasks}/{totalTasks} tâches terminées</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex rounded-lg border border-gray-800 p-0.5">
+            <div className="flex rounded-lg border border-gray-200 p-0.5">
               <button
                 onClick={() => setView('kanban')}
-                className={cn('rounded-md px-3 py-1.5 text-sm transition-colors', view === 'kanban' ? 'bg-gray-800 text-gray-100' : 'text-gray-500 hover:text-gray-300')}
+                className={cn('rounded-md px-3 py-1.5 text-sm transition-colors', view === 'kanban' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-600')}
               >
                 <Kanban className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setView('list')}
-                className={cn('rounded-md px-3 py-1.5 text-sm transition-colors', view === 'list' ? 'bg-gray-800 text-gray-100' : 'text-gray-500 hover:text-gray-300')}
+                className={cn('rounded-md px-3 py-1.5 text-sm transition-colors', view === 'list' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-600')}
               >
                 <LayoutList className="h-4 w-4" />
               </button>
@@ -531,7 +531,7 @@ export function ProjectPage() {
         </div>
 
         {/* Progress bar */}
-        <div className="mt-3 h-1 w-full rounded-full bg-gray-800">
+        <div className="mt-3 h-1 w-full rounded-full bg-gray-100">
           <div
             className="h-1 rounded-full transition-all"
             style={{

@@ -35,8 +35,8 @@ function InviteModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-md rounded-xl border border-gray-800 bg-gray-900 p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-100">Inviter un membre</h2>
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
+        <h2 className="mb-4 text-base font-semibold text-gray-900">Inviter un membre</h2>
         <div className="space-y-4">
           <Input
             id="inv-email"
@@ -48,11 +48,11 @@ function InviteModal({ onClose }: { onClose: () => void }) {
             autoFocus
           />
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-gray-300">Rôle</label>
+            <label className="mb-1.5 block text-sm font-medium text-gray-600">Rôle</label>
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as UserRole)}
-              className="w-full rounded-lg border border-gray-700 bg-gray-800/50 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
             >
               <option value="member">Membre</option>
               <option value="admin">Admin</option>
@@ -79,8 +79,8 @@ function InviteModal({ onClose }: { onClose: () => void }) {
 
 const invStatusConfig = {
   pending:  { label: 'En attente', icon: Clock,         color: 'text-amber-400',  bg: 'bg-amber-400/10 border-amber-400/20' },
-  accepted: { label: 'Acceptée',   icon: CheckCircle2,  color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/20' },
-  expired:  { label: 'Expirée',    icon: XCircle,       color: 'text-gray-500',    bg: 'bg-gray-800 border-gray-700' },
+  accepted: { label: 'Acceptée',   icon: CheckCircle2,  color: 'text-emerald-600', bg: 'bg-emerald-400/10 border-emerald-400/20' },
+  expired:  { label: 'Expirée',    icon: XCircle,       color: 'text-gray-500',    bg: 'bg-gray-100 border-gray-200' },
 }
 
 export function TeamPage() {
@@ -105,7 +105,7 @@ export function TeamPage() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-100">Équipe</h1>
+          <h1 className="text-xl font-semibold text-gray-900">Équipe</h1>
           <p className="mt-0.5 text-sm text-gray-500">{members.length} membre{members.length !== 1 ? 's' : ''}</p>
         </div>
         {isSuperAdmin && (
@@ -126,12 +126,12 @@ export function TeamPage() {
               const badge = roleBadge[member.role]
               return (
                 <div key={member._id} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600/20 text-sm font-medium text-indigo-400">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-600/20 text-sm font-medium text-indigo-600">
                     {getInitials(member.firstName, member.lastName)}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-100">
+                      <p className="text-sm font-medium text-gray-900">
                         {member.firstName} {member.lastName}
                       </p>
                       <Badge variant={badge.variant}>{badge.label}</Badge>
@@ -150,7 +150,7 @@ export function TeamPage() {
                     </div>
                   </div>
                   {isSuperAdmin && member._id !== currentUser?._id && (
-                    <button className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-800 hover:text-gray-300 transition-colors">
+                    <button className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-600 transition-colors">
                       <MoreHorizontal className="h-4 w-4" />
                     </button>
                   )}
@@ -166,7 +166,7 @@ export function TeamPage() {
         <div className="mt-8">
           <div className="mb-3 flex items-center gap-2">
             <Send className="h-4 w-4 text-gray-400" />
-            <h2 className="text-sm font-semibold text-gray-300">Invitations envoyées</h2>
+            <h2 className="text-sm font-semibold text-gray-600">Invitations envoyées</h2>
             {pendingCount > 0 && (
               <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-xs font-medium text-amber-400">
                 {pendingCount} en attente
@@ -185,7 +185,7 @@ export function TeamPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-sm font-medium text-gray-100">{inv.email}</span>
+                        <span className="text-sm font-medium text-gray-900">{inv.email}</span>
                         <Badge variant={inv.role === 'admin' ? 'warning' : 'default'}>
                           {inv.role === 'admin' ? 'Admin' : 'Membre'}
                         </Badge>

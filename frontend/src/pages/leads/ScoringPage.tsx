@@ -43,8 +43,8 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-xl bg-gray-900 border border-gray-800 p-6">
-        <h2 className="text-lg font-semibold text-gray-100 mb-5">
+      <div className="w-full max-w-md rounded-xl bg-white border border-gray-200 p-6">
+        <h2 className="text-lg font-semibold text-gray-900 mb-5">
           {rule ? 'Modifier la règle' : 'Nouvelle règle de scoring'}
         </h2>
 
@@ -52,7 +52,7 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
           <div>
             <label className="block text-xs text-gray-400 mb-1">Nom *</label>
             <input
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
               placeholder="Ex: Lead venant de Meta Ads"
               value={form.name}
               onChange={(e) => set('name', e.target.value)}
@@ -63,7 +63,7 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
             <div>
               <label className="block text-xs text-gray-400 mb-1">Champ</label>
               <select
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2 py-2 text-sm text-gray-200 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 border border-gray-200 px-2 py-2 text-sm text-gray-800 focus:outline-none"
                 value={form.condition_field}
                 onChange={(e) => set('condition_field', e.target.value)}
               >
@@ -77,7 +77,7 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
             <div>
               <label className="block text-xs text-gray-400 mb-1">Opérateur</label>
               <select
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-2 py-2 text-sm text-gray-200 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 border border-gray-200 px-2 py-2 text-sm text-gray-800 focus:outline-none"
                 value={form.condition_operator}
                 onChange={(e) => set('condition_operator', e.target.value)}
               >
@@ -92,7 +92,7 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
             <div>
               <label className="block text-xs text-gray-400 mb-1">Valeur</label>
               <input
-                className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:outline-none"
                 placeholder="Ex: meta_ads, tiktok..."
                 value={form.condition_value}
                 onChange={(e) => set('condition_value', e.target.value)}
@@ -104,7 +104,7 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
             <label className="block text-xs text-gray-400 mb-1">Points accordés</label>
             <input
               type="number"
-              className="w-full rounded-lg bg-gray-800 border border-gray-700 px-3 py-2 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+              className="w-full rounded-lg bg-gray-100 border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
               value={form.points}
               onChange={(e) => set('points', e.target.value)}
             />
@@ -112,7 +112,7 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
         </div>
 
         <div className="mt-5 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-200">
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400 hover:text-gray-800">
             Annuler
           </button>
           <button
@@ -178,11 +178,11 @@ export function ScoringPage() {
 
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link to="/leads" className="text-gray-500 hover:text-gray-300">
+          <Link to="/leads" className="text-gray-500 hover:text-gray-600">
             <ArrowLeft size={18} />
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-gray-100">Scoring automatique</h1>
+            <h1 className="text-xl font-bold text-gray-900">Scoring automatique</h1>
             <p className="text-sm text-gray-500 mt-0.5">Règles de qualification des leads</p>
           </div>
         </div>
@@ -196,15 +196,15 @@ export function ScoringPage() {
 
       {/* Config thresholds */}
       {config && (
-        <div className="rounded-xl bg-gray-900 border border-gray-800 p-4 mb-5">
+        <div className="rounded-xl bg-white border border-gray-200 p-4 mb-5">
           <div className="flex items-center gap-2 mb-4">
             <Settings size={14} className="text-gray-500" />
-            <h3 className="text-sm font-medium text-gray-300">Seuils de qualification</h3>
+            <h3 className="text-sm font-medium text-gray-600">Seuils de qualification</h3>
           </div>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: 'Seuil MQL', key: 'mql_threshold', val: mqlThreshold ?? config.mql_threshold, setter: setMqlThreshold, color: 'text-blue-400' },
-              { label: 'Seuil SQL', key: 'sql_threshold', val: sqlThreshold ?? config.sql_threshold, setter: setSqlThreshold, color: 'text-indigo-400' },
+              { label: 'Seuil MQL', key: 'mql_threshold', val: mqlThreshold ?? config.mql_threshold, setter: setMqlThreshold, color: 'text-blue-600' },
+              { label: 'Seuil SQL', key: 'sql_threshold', val: sqlThreshold ?? config.sql_threshold, setter: setSqlThreshold, color: 'text-indigo-600' },
             ].map(({ label, key, val, setter, color }) => (
               <div key={key}>
                 <label className={cn('block text-xs font-medium mb-1', color)}>{label}</label>
@@ -212,7 +212,7 @@ export function ScoringPage() {
                   <input
                     type="number"
                     min="0"
-                    className="w-24 rounded-lg bg-gray-800 border border-gray-700 px-3 py-1.5 text-sm text-gray-100 focus:border-indigo-500 focus:outline-none"
+                    className="w-24 rounded-lg bg-gray-100 border border-gray-200 px-3 py-1.5 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none"
                     value={val}
                     onChange={(e) => setter(Number(e.target.value))}
                     onBlur={() => configMutation.mutate({ [key]: val })}
@@ -225,12 +225,12 @@ export function ScoringPage() {
           <button
             disabled={recalcMutation.isPending}
             onClick={() => recalcMutation.mutate()}
-            className="mt-3 text-xs text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
+            className="mt-3 text-xs text-indigo-600 hover:text-indigo-300 disabled:opacity-50"
           >
             {recalcMutation.isPending ? 'Recalcul...' : 'Recalculer tous les scores'}
           </button>
           {recalcMutation.isSuccess && (
-            <span className="ml-2 text-xs text-green-400">Recalcul terminé.</span>
+            <span className="ml-2 text-xs text-green-600">Recalcul terminé.</span>
           )}
         </div>
       )}
@@ -242,13 +242,13 @@ export function ScoringPage() {
             key={rule._id}
             className={cn(
               'rounded-xl border p-4 flex items-center justify-between gap-4',
-              rule.is_active ? 'bg-gray-900 border-gray-800' : 'bg-gray-950 border-gray-800/50 opacity-50',
+              rule.is_active ? 'bg-white border-gray-200' : 'bg-[#f5f6fa] border-gray-200/50 opacity-50',
             )}
           >
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-sm font-medium text-gray-200">{rule.name}</p>
-                <span className={cn('rounded-full px-2 py-0.5 text-xs font-bold', rule.points >= 0 ? 'bg-green-900/30 text-green-400' : 'bg-red-900/30 text-red-400')}>
+                <p className="text-sm font-medium text-gray-800">{rule.name}</p>
+                <span className={cn('rounded-full px-2 py-0.5 text-xs font-bold', rule.points >= 0 ? 'bg-green-900/30 text-green-600' : 'bg-red-900/30 text-red-400')}>
                   {rule.points >= 0 ? '+' : ''}{rule.points} pts
                 </span>
               </div>
@@ -261,14 +261,14 @@ export function ScoringPage() {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => toggleMutation.mutate({ id: rule._id, is_active: !rule.is_active })}
-                className="p-1.5 text-gray-500 hover:text-gray-300"
+                className="p-1.5 text-gray-500 hover:text-gray-600"
                 title={rule.is_active ? 'Désactiver' : 'Activer'}
               >
-                {rule.is_active ? <ToggleRight size={16} className="text-indigo-400" /> : <ToggleLeft size={16} />}
+                {rule.is_active ? <ToggleRight size={16} className="text-indigo-600" /> : <ToggleLeft size={16} />}
               </button>
               <button
                 onClick={() => { setEditing(rule); setModal('edit') }}
-                className="p-1.5 text-gray-500 hover:text-gray-300"
+                className="p-1.5 text-gray-500 hover:text-gray-600"
               >
                 <Settings size={14} />
               </button>
@@ -283,7 +283,7 @@ export function ScoringPage() {
         ))}
 
         {rules.length === 0 && (
-          <div className="rounded-xl bg-gray-900 border border-gray-800 py-16 text-center">
+          <div className="rounded-xl bg-white border border-gray-200 py-16 text-center">
             <Settings size={32} className="mx-auto text-gray-700 mb-3" />
             <p className="text-gray-500 mb-1">Aucune règle de scoring.</p>
             <p className="text-xs text-gray-600">Les scores des leads resteront à 0 jusqu'à la création de règles.</p>
