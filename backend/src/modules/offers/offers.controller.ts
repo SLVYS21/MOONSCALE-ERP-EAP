@@ -35,6 +35,7 @@ class CreatePlanDto {
 }
 
 class UpdatePlanDto {
+  @IsOptional() @IsString() _id?: string
   @IsOptional() @IsString() name?: string
   @IsOptional() @IsNumber() @Min(1) durationMonths?: number
   @IsOptional() @IsNumber() @Min(0) price?: number
