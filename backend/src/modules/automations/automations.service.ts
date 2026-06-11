@@ -812,6 +812,7 @@ export class AutomationsService {
             currency,
             modality,
             status: 'NON TRAITÉ',
+            responseId: ctxResponseId,
           }
           return {
             status: 'ok',
@@ -825,8 +826,46 @@ export class AutomationsService {
           const email = emailRaw.toLowerCase().trim()
           if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
 
-          const existing = await this.studentModel.findOne({ email }).select('_id').lean()
-          if (existing) return { status: 'skipped', message: `Étudiant ${email} existe déjà — ignoré` }
+          type StudentLean = { _id: Types.ObjectId; email: string; name: string; whatsapp?: string | null; occupation?: string | null; source?: string | null; infoStatus?: string }
+          const existing = await this.studentModel.findOne({ email }).lean<StudentLean>()
+
+          // responseId is available either from ctx.payment.responseId (set by create_payment step)
+          // or directly from ctx.responseId (set by form_submitted trigger)
+          const paymentCtxForEnrich = ctx.payment as Record<string, unknown> | undefined
+          const responseId: string | null =
+            (paymentCtxForEnrich?.responseId as string | undefined) ??
+            (ctx.responseId as string | undefined) ??
+            null
+
+          if (existing) {
+            const updates: Record<string, unknown> = {}
+            if (responseId) {
+              const enriched = await this.extractStudentFromResponse(responseId)
+              if (enriched) {
+                if (enriched.name)       updates.name       = enriched.name
+                if (enriched.whatsapp)   updates.whatsapp   = enriched.whatsapp
+                if (enriched.occupation) updates.occupation = enriched.occupation
+                if (enriched.source)     updates.source     = enriched.source
+                if (Object.keys(updates).length) updates.infoStatus = 'EXACTE'
+              }
+            }
+            if (Object.keys(updates).length) {
+              await this.studentModel.updateOne({ email }, { $set: updates })
+              this.logger.log(`create_student: étudiant existant mis à jour via Groq pour ${email}`)
+            }
+
+            const studentCtxUpdate = {
+              _id: String(existing._id),
+              email: existing.email,
+              name: (updates.name as string | undefined) ?? existing.name,
+              whatsapp: (updates.whatsapp as string | undefined) ?? existing.whatsapp ?? null,
+            }
+            return {
+              status: 'ok',
+              message: `Étudiant ${email} existe déjà${Object.keys(updates).length ? ' — mis à jour (Groq)' : ''}`,
+              contextUpdate: { student: studentCtxUpdate },
+            }
+          }
 
           let name = interpolate(step.config.nameExpr ?? '', ctx).trim() || email
           let whatsapp = interpolate(step.config.whatsappExpr ?? '', ctx).trim() || null
@@ -834,24 +873,15 @@ export class AutomationsService {
           let source: string | null = null
           let infoStatus = 'NON VÉRIFIÉ'
 
-          // Enrichissement Groq si un paiement avec responseId est dans le contexte
-          const paymentCtx = ctx.payment as Record<string, unknown> | undefined
-          if (paymentCtx?._id) {
-            const payment = await this.paymentModel
-              .findById(String(paymentCtx._id))
-              .select('responseId')
-              .lean<{ responseId: Types.ObjectId | null }>()
-
-            if (payment?.responseId) {
-              const enriched = await this.extractStudentFromResponse(String(payment.responseId))
-              if (enriched) {
-                if (enriched.name)       name       = enriched.name
-                if (enriched.whatsapp)   whatsapp   = enriched.whatsapp
-                if (enriched.occupation) occupation = enriched.occupation
-                if (enriched.source)     source     = enriched.source
-                infoStatus = 'EXACTE'
-                this.logger.log(`create_student: enrichi via Groq pour ${email}`)
-              }
+          if (responseId) {
+            const enriched = await this.extractStudentFromResponse(responseId)
+            if (enriched) {
+              if (enriched.name)       name       = enriched.name
+              if (enriched.whatsapp)   whatsapp   = enriched.whatsapp
+              if (enriched.occupation) occupation = enriched.occupation
+              if (enriched.source)     source     = enriched.source
+              infoStatus = 'EXACTE'
+              this.logger.log(`create_student: enrichi via Groq pour ${email}`)
             }
           }
 
@@ -875,7 +905,7 @@ export class AutomationsService {
           const name = interpolate(step.config.nameExpr ?? '', ctx).trim() || email
 
           const existing = await this.circleService.searchMember(email)
-          if (existing) return { status: 'skipped', message: `${email} est déjà membre Circle` }
+          if (existing) return { status: 'ok', message: `${email} est déjà membre Circle` }
 
           await this.circleService.inviteMember(email, name)
           return { status: 'ok', message: `Invitation Circle envoyée à ${email}` }
