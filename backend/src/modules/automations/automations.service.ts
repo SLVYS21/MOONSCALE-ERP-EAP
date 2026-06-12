@@ -504,28 +504,59 @@ export class AutomationsService {
 
   private async extractStudentFromResponse(responseId: string): Promise<{
     name?: string
+    email?: string
     whatsapp?: string
     occupation?: string
     source?: string
+    product?: string
+    gateway?: string
+    amount?: number
+    currency?: string
+    modality?: 'Complet' | 'Partiel'
+    proofImages?: string[]
   } | null> {
     try {
       type RespLean = { formId: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }> }
       const response = await this.responseModel.findById(responseId).lean<RespLean>()
       if (!response) return null
 
-      type FormLean = { fields: Array<{ id: string; label: string; type: string }> }
+      type FormLean = { fields: Array<{ id: string; label: string; type: string; options?: string[] }> }
       const form = await this.formModel.findById(response.formId).select('fields').lean<FormLean>()
       const fieldMap = new Map((form?.fields ?? []).map((f) => [f.id, f]))
 
+      // File fields are extracted directly — Groq n'a pas besoin de les voir
+      const proofImages: string[] = []
       const lines: string[] = []
+
       for (const answer of response.answers) {
         const field = fieldMap.get(answer.fieldId)
-        if (!field || ['heading', 'paragraph', 'file'].includes(field.type)) continue
+        if (!field || ['heading', 'paragraph'].includes(field.type)) continue
+
+        if (field.type === 'file') {
+          const files = answer.value
+          if (Array.isArray(files)) {
+            for (const f of files) {
+              const url = typeof f === 'string'
+                ? f
+                : String((f as Record<string, unknown>)?.url ?? (f as Record<string, unknown>)?.src ?? (f as Record<string, unknown>)?.fileUrl ?? '')
+              if (url) proofImages.push(url)
+            }
+          }
+          continue
+        }
+
         const raw = answer.value
         const val = Array.isArray(raw) ? raw.join(', ') : String(raw ?? '')
-        if (val && val !== 'null') lines.push(`${field.label}: ${val}`)
+        if (!val || val === 'null') continue
+
+        // Contexte riche : type + options disponibles + label + réponse
+        const optionsCtx = field.options?.length ? ` [choix: ${field.options.join(' | ')}]` : ''
+        lines.push(`[${field.type}${optionsCtx}] ${field.label}: ${val}`)
       }
-      if (!lines.length) return null
+
+      if (!lines.length) {
+        return proofImages.length ? { proofImages } : null
+      }
 
       const completion = await this.groq.chat.completions.create({
         model: 'llama-3.3-70b-versatile',
@@ -534,17 +565,43 @@ export class AutomationsService {
         messages: [
           {
             role: 'system',
-            content: 'Tu es un extracteur de données. Extrais les informations du profil étudiant depuis les réponses au formulaire. Réponds UNIQUEMENT en JSON valide, sans markdown ni explication.',
+            content: "Tu es un extracteur de données de formulaire. Chaque ligne a le format [type_champ options?] Label: Valeur. Utilise le label ET les options disponibles pour comprendre à quoi correspond chaque champ. Réponds UNIQUEMENT en JSON valide, sans markdown ni explication. Utilise null pour les champs absents.",
           },
           {
             role: 'user',
-            content: `Voici les réponses au formulaire :\n\n${lines.join('\n')}\n\nExtrait ces champs (si absent =, cherche ce qui s'en rapproche le plus) :\n{\n  "name": "nom complet de l\'étudiant",\n  "whatsapp": "numéro WhatsApp avec indicatif pays",\n  "occupation": "métier, profession ou occupation",\n  "source": "comment il a connu le programme (réseau social, ami, publicité, etc.)"\n}`,
+            content: `Réponses au formulaire :\n\n${lines.join('\n')}\n\nExtrait ces champs :\n{\n  "name": "nom complet de l'étudiant",\n  "email": "adresse email",\n  "whatsapp": "numéro WhatsApp avec indicatif pays",\n  "occupation": "métier, profession ou occupation",\n  "source": "comment il a connu le programme",\n  "product": "nom exact de la formation achetée",\n  "gateway": "moyen de paiement utilisé",\n  "amount": nombre_ou_null,\n  "currency": "F CFA ou USD ou EURO",\n  "modality": "Complet si paiement soldé ou en une fois, Partiel si pas encore soldé ou caution"\n}`,
           },
         ],
       })
 
       const content = completion.choices[0]?.message?.content ?? '{}'
-      return JSON.parse(content) as { name?: string; whatsapp?: string; occupation?: string; source?: string }
+      const raw = JSON.parse(content) as {
+        name?: string; email?: string; whatsapp?: string; occupation?: string; source?: string
+        product?: string; gateway?: string; amount?: unknown; currency?: string; modality?: string
+      }
+
+      const amount = raw.amount != null
+        ? parseFloat(String(raw.amount).replace(/\s/g, '').replace(',', '.'))
+        : undefined
+
+      let modality: 'Complet' | 'Partiel' | undefined
+      if (raw.modality) {
+        modality = String(raw.modality).toLowerCase().includes('partiel') ? 'Partiel' : 'Complet'
+      }
+
+      return {
+        name:        raw.name       ?? undefined,
+        email:       raw.email?.toLowerCase().trim() ?? undefined,
+        whatsapp:    raw.whatsapp   ?? undefined,
+        occupation:  raw.occupation ?? undefined,
+        source:      raw.source     ?? undefined,
+        product:     raw.product    ?? undefined,
+        gateway:     raw.gateway    ?? undefined,
+        amount:      amount && !isNaN(amount) ? amount : undefined,
+        currency:    raw.currency   ?? undefined,
+        modality,
+        proofImages: proofImages.length ? proofImages : undefined,
+      }
     } catch (err: unknown) {
       this.logger.warn(`extractStudentFromResponse(${responseId}) failed: ${(err as Error).message}`)
       return null
@@ -847,6 +904,9 @@ export class AutomationsService {
                 if (enriched.occupation) updates.occupation = enriched.occupation
                 if (enriched.source)     updates.source     = enriched.source
                 if (Object.keys(updates).length) updates.infoStatus = 'EXACTE'
+                if (enriched.proofImages?.length) {
+                  this.logger.log(`create_student: ${enriched.proofImages.length} proof(s) extraits pour ${email}`)
+                }
               }
             }
             if (Object.keys(updates).length) {
@@ -877,11 +937,13 @@ export class AutomationsService {
             const enriched = await this.extractStudentFromResponse(responseId)
             if (enriched) {
               if (enriched.name)       name       = enriched.name
+              // email from form as fallback if step config didn't provide one
+              if (!email && enriched.email) email = enriched.email
               if (enriched.whatsapp)   whatsapp   = enriched.whatsapp
               if (enriched.occupation) occupation = enriched.occupation
               if (enriched.source)     source     = enriched.source
               infoStatus = 'EXACTE'
-              this.logger.log(`create_student: enrichi via Groq pour ${email}`)
+              this.logger.log(`create_student: enrichi via Groq pour ${email}${enriched.proofImages?.length ? ` (${enriched.proofImages.length} proof(s))` : ''}`)
             }
           }
 
