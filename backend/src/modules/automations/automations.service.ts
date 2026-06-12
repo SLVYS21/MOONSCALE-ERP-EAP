@@ -880,7 +880,7 @@ export class AutomationsService {
 
         case 'create_student': {
           const emailRaw = interpolate(step.config.emailExpr ?? '', ctx)
-          const email = emailRaw.toLowerCase().trim()
+          let email = emailRaw.toLowerCase().trim()
           if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
 
           type StudentLean = { _id: Types.ObjectId; email: string; name: string; whatsapp?: string | null; occupation?: string | null; source?: string | null; infoStatus?: string }
