@@ -502,7 +502,11 @@ export class AutomationsService {
 
   // ── Extraction Groq depuis une réponse formulaire ─────────────────────────
 
-  private async extractStudentFromResponse(responseId: string): Promise<{
+  private async extractStudentFromResponse(
+    responseId: string,
+    ctxAnswers?: Record<string, unknown>,
+    ctxFormId?: string,
+  ): Promise<{
     name?: string
     email?: string
     whatsapp?: string
@@ -516,43 +520,77 @@ export class AutomationsService {
     proofImages?: string[]
   } | null> {
     try {
-      type RespLean = { formId: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }> }
-      const response = await this.responseModel.findById(responseId).lean<RespLean>()
-      if (!response) return null
+      type FormLean = {
+        title?: string
+        fields: Array<{ id: string; label: string; type: string; options?: string[]; placeholder?: string; order: number; content?: string }>
+      }
 
-      type FormLean = { fields: Array<{ id: string; label: string; type: string; options?: string[] }> }
-      const form = await this.formModel.findById(response.formId).select('fields').lean<FormLean>()
-      const fieldMap = new Map((form?.fields ?? []).map((f) => [f.id, f]))
+      // Prefer ctx data (already available, no extra DB hit) — fall back to DB fetch
+      let answersFlat: Record<string, unknown>
+      let formId: string | Types.ObjectId | undefined
 
-      // File fields are extracted directly — Groq n'a pas besoin de les voir
+      if (ctxAnswers && ctxFormId) {
+        answersFlat = ctxAnswers
+        formId = ctxFormId
+      } else {
+        type RespLean = { formId: Types.ObjectId; answers: Array<{ fieldId: string; value: unknown }> }
+        const response = await this.responseModel.findById(responseId).lean<RespLean>()
+        if (!response) {
+          this.logger.warn(`extractStudentFromResponse: FormResponse ${responseId} introuvable`)
+          return null
+        }
+        const flat: Record<string, unknown> = {}
+        for (const a of response.answers) flat[a.fieldId] = a.value
+        answersFlat = flat
+        formId = response.formId
+      }
+
+      const form = await this.formModel.findById(formId).select('title fields').lean<FormLean>()
+      if (!form) {
+        this.logger.warn(`extractStudentFromResponse: Form ${String(formId)} introuvable`)
+        return null
+      }
+
+      // Sort fields by their declared order in the form
+      const sortedFields = [...(form.fields ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
       const proofImages: string[] = []
       const lines: string[] = []
 
-      for (const answer of response.answers) {
-        const field = fieldMap.get(answer.fieldId)
-        if (!field || ['heading', 'paragraph'].includes(field.type)) continue
+      for (const field of sortedFields) {
+        const raw = answersFlat[field.id]
 
+        // Use heading/paragraph as section dividers — helps Groq understand structure
+        if (field.type === 'heading' || field.type === 'paragraph') {
+          if (field.content) lines.push(`\n## ${field.content}`)
+          continue
+        }
+
+        if (raw === undefined || raw === null) continue
+
+        // File fields: extract URLs directly, skip to Groq
         if (field.type === 'file') {
-          const files = answer.value
-          if (Array.isArray(files)) {
-            for (const f of files) {
-              const url = typeof f === 'string'
-                ? f
-                : String((f as Record<string, unknown>)?.url ?? (f as Record<string, unknown>)?.src ?? (f as Record<string, unknown>)?.fileUrl ?? '')
-              if (url) proofImages.push(url)
-            }
+          const files = Array.isArray(raw) ? raw : [raw]
+          for (const f of files) {
+            const url = typeof f === 'string'
+              ? f
+              : String((f as Record<string, unknown>)?.url ?? (f as Record<string, unknown>)?.src ?? (f as Record<string, unknown>)?.fileUrl ?? '')
+            if (url) proofImages.push(url)
           }
           continue
         }
 
-        const raw = answer.value
-        const val = Array.isArray(raw) ? raw.join(', ') : String(raw ?? '')
-        if (!val || val === 'null') continue
+        const val = Array.isArray(raw) ? raw.join(', ') : String(raw)
+        if (!val || val === 'null' || val === 'undefined') continue
 
-        // Contexte riche : type + options disponibles + label + réponse
-        const optionsCtx = field.options?.length ? ` [choix: ${field.options.join(' | ')}]` : ''
-        lines.push(`[${field.type}${optionsCtx}] ${field.label}: ${val}`)
+        // Build rich context line: [type] Label (options: a | b | c) [hint: placeholder]: Value
+        let meta = `[${field.type}]`
+        if (field.options?.length) meta += ` options: ${field.options.join(' | ')}`
+        const hint = field.placeholder ? ` (ex: ${field.placeholder})` : ''
+        lines.push(`${meta} ${field.label}${hint}: ${val}`)
       }
+
+      this.logger.debug(`extractStudentFromResponse: ${lines.length} ligne(s), ${proofImages.length} preuve(s) — form "${form.title ?? formId}"`)
 
       if (!lines.length) {
         return proofImages.length ? { proofImages } : null
@@ -565,40 +603,68 @@ export class AutomationsService {
         messages: [
           {
             role: 'system',
-            content: "Tu es un extracteur de données de formulaire. Chaque ligne a le format [type_champ options?] Label: Valeur. Utilise le label ET les options disponibles pour comprendre à quoi correspond chaque champ. Réponds UNIQUEMENT en JSON valide, sans markdown ni explication. Utilise null pour les champs absents.",
+            content: [
+              'Tu es un extracteur de données de formulaire.',
+              'Chaque ligne a le format: [type_champ] Label (options: opt1 | opt2): Valeur',
+              'Les lignes "## Section" indiquent des sections du formulaire.',
+              'Utilise le label, le type ET les options disponibles pour identifier chaque champ.',
+              'Réponds UNIQUEMENT en JSON valide, sans markdown ni explication.',
+              'Utilise null pour les champs absents ou inconnus.',
+            ].join(' '),
           },
           {
             role: 'user',
-            content: `Réponses au formulaire :\n\n${lines.join('\n')}\n\nExtrait ces champs :\n{\n  "name": "nom complet de l'étudiant",\n  "email": "adresse email",\n  "whatsapp": "numéro WhatsApp avec indicatif pays",\n  "occupation": "métier, profession ou occupation",\n  "source": "comment il a connu le programme",\n  "product": "nom exact de la formation achetée",\n  "gateway": "moyen de paiement utilisé",\n  "amount": nombre_ou_null,\n  "currency": "F CFA ou USD ou EURO",\n  "modality": "Complet si paiement soldé ou en une fois, Partiel si pas encore soldé ou caution"\n}`,
+            content: [
+              `Formulaire: "${form.title ?? ''}"`,
+              '',
+              'Réponses:',
+              ...lines,
+              '',
+              'Extrait ces champs JSON:',
+              '{',
+              '  "name": "nom complet de l\'étudiant ou null",',
+              '  "email": "adresse email ou null",',
+              '  "whatsapp": "numéro WhatsApp avec indicatif pays ou null",',
+              '  "occupation": "métier ou profession ou null",',
+              '  "source": "comment il a connu le programme ou null",',
+              '  "product": "nom exact de la formation achetée ou null",',
+              '  "gateway": "moyen de paiement utilisé ou null",',
+              '  "amount": nombre_ou_null,',
+              '  "currency": "F CFA ou USD ou EURO ou null",',
+              '  "modality": "Complet si paiement soldé/en une fois, Partiel si pas encore soldé/caution, null si inconnu"',
+              '}',
+            ].join('\n'),
           },
         ],
       })
 
       const content = completion.choices[0]?.message?.content ?? '{}'
-      const raw = JSON.parse(content) as {
+      const parsed = JSON.parse(content) as {
         name?: string; email?: string; whatsapp?: string; occupation?: string; source?: string
         product?: string; gateway?: string; amount?: unknown; currency?: string; modality?: string
       }
 
-      const amount = raw.amount != null
-        ? parseFloat(String(raw.amount).replace(/\s/g, '').replace(',', '.'))
+      const amount = parsed.amount != null
+        ? parseFloat(String(parsed.amount).replace(/\s/g, '').replace(',', '.'))
         : undefined
 
       let modality: 'Complet' | 'Partiel' | undefined
-      if (raw.modality) {
-        modality = String(raw.modality).toLowerCase().includes('partiel') ? 'Partiel' : 'Complet'
+      if (parsed.modality) {
+        modality = String(parsed.modality).toLowerCase().includes('partiel') ? 'Partiel' : 'Complet'
       }
 
+      const str = (v: unknown) => (v != null && String(v).trim() && String(v) !== 'null' ? String(v).trim() : undefined)
+
       return {
-        name:        raw.name       ?? undefined,
-        email:       raw.email?.toLowerCase().trim() ?? undefined,
-        whatsapp:    raw.whatsapp   ?? undefined,
-        occupation:  raw.occupation ?? undefined,
-        source:      raw.source     ?? undefined,
-        product:     raw.product    ?? undefined,
-        gateway:     raw.gateway    ?? undefined,
-        amount:      amount && !isNaN(amount) ? amount : undefined,
-        currency:    raw.currency   ?? undefined,
+        name:        str(parsed.name),
+        email:       parsed.email ? parsed.email.toLowerCase().trim() : undefined,
+        whatsapp:    str(parsed.whatsapp),
+        occupation:  str(parsed.occupation),
+        source:      str(parsed.source),
+        product:     str(parsed.product),
+        gateway:     str(parsed.gateway),
+        amount:      amount !== undefined && !isNaN(amount) ? amount : undefined,
+        currency:    str(parsed.currency),
         modality,
         proofImages: proofImages.length ? proofImages : undefined,
       }
@@ -897,7 +963,11 @@ export class AutomationsService {
           if (existing) {
             const updates: Record<string, unknown> = {}
             if (responseId) {
-              const enriched = await this.extractStudentFromResponse(responseId)
+              const enriched = await this.extractStudentFromResponse(
+                responseId,
+                ctx.answers as Record<string, unknown> | undefined,
+                (ctx.formId as string | undefined) ?? undefined,
+              )
               if (enriched) {
                 if (enriched.name)       updates.name       = enriched.name
                 if (enriched.whatsapp)   updates.whatsapp   = enriched.whatsapp
@@ -934,7 +1004,11 @@ export class AutomationsService {
           let infoStatus = 'NON VÉRIFIÉ'
 
           if (responseId) {
-            const enriched = await this.extractStudentFromResponse(responseId)
+            const enriched = await this.extractStudentFromResponse(
+              responseId,
+              ctx.answers as Record<string, unknown> | undefined,
+              (ctx.formId as string | undefined) ?? undefined,
+            )
             if (enriched) {
               if (enriched.name)       name       = enriched.name
               // email from form as fallback if step config didn't provide one
