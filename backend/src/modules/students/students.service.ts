@@ -455,6 +455,7 @@ export class StudentsService {
           currency: payment.currency,
           plan: payment.plan,
           product: payment.product,
+          responseId: payment.responseId ? String(payment.responseId) : null,
         },
         student: {
           _id: String(student?._id ?? ''),
@@ -679,7 +680,14 @@ export class StudentsService {
 
     // 10. Trigger automation event
     this.automationsService?.triggerEvent('payment_treated', {
-      payment: { _id: String(payment._id), amount: payment.amount, currency: payment.currency, plan: resolvedPlanKey, product: payment.product },
+      payment: {
+        _id: String(payment._id),
+        amount: payment.amount,
+        currency: payment.currency,
+        plan: resolvedPlanKey,
+        product: payment.product,
+        responseId: payment.responseId ? String(payment.responseId) : null,
+      },
       student: { _id: String(student._id), email: student.email, name: student.name, whatsapp: student.whatsapp },
     })
 
