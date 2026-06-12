@@ -18,6 +18,76 @@ import { FormResponse, FormResponseDocument } from '../forms/schemas/form-respon
 import { Offer, OfferDocument } from '../offers/schemas/offer.schema'
 import { Subscription, SubscriptionDocument } from '../offers/schemas/subscription.schema'
 
+// ── Direct field mappings for known forms (bypasses Groq) ────────────────────
+
+interface DirectFormMapping {
+  name?: string; email?: string; whatsapp?: string; source?: string
+  occupation?: string; product?: string; gateway?: string; amount?: string
+  currency?: string; modality?: string; proofImages?: string
+}
+
+const DIRECT_FORM_MAPPINGS: Record<string, DirectFormMapping> = {
+  // Accès Ecom Africa Pro (imported from Tally woB5oM)
+  '6a094afd5e04220ef3802b6f': {
+    name: 'f02', email: 'f04', whatsapp: 'f05', source: 'f06',
+    occupation: 'f07', product: 'f08', gateway: 'f09', amount: 'f10',
+    currency: 'f11', proofImages: 'f12', modality: 'f13',
+  },
+}
+
+function extractDirect(answers: Record<string, unknown>, mapping: DirectFormMapping): {
+  name?: string; email?: string; whatsapp?: string; source?: string
+  occupation?: string; product?: string; gateway?: string; amount?: number
+  currency?: string; modality?: 'Complet' | 'Partiel'; proofImages?: string[]
+} {
+  const str = (fieldId?: string): string | undefined => {
+    if (!fieldId) return undefined
+    const v = answers[fieldId]
+    if (v === undefined || v === null) return undefined
+    const s = Array.isArray(v) ? (v as unknown[]).join(', ') : String(v).trim()
+    return s || undefined
+  }
+
+  const proofImages: string[] = []
+  if (mapping.proofImages) {
+    const raw = answers[mapping.proofImages]
+    const files = Array.isArray(raw) ? raw : (raw !== undefined && raw !== null ? [raw] : [])
+    for (const f of files) {
+      const url = typeof f === 'string'
+        ? f
+        : String((f as Record<string, unknown>)?.url ?? (f as Record<string, unknown>)?.src ?? (f as Record<string, unknown>)?.fileUrl ?? '')
+      if (url) proofImages.push(url)
+    }
+  }
+
+  const amountRaw = str(mapping.amount)
+  const amount = amountRaw ? parseFloat(amountRaw.replace(/\s/g, '').replace(',', '.')) : undefined
+
+  const gatewayRaw = str(mapping.gateway) ?? ''
+  const gateway = /fedapay/i.test(gatewayRaw) ? 'Fedapay'
+    : /carte\s*bancaire/i.test(gatewayRaw) ? 'Carte Bancaire'
+    : gatewayRaw || undefined
+
+  const modalityRaw = str(mapping.modality) ?? ''
+  const modality: 'Complet' | 'Partiel' | undefined = modalityRaw
+    ? (/pas encore soldé|caution/i.test(modalityRaw) ? 'Partiel' : 'Complet')
+    : undefined
+
+  return {
+    name:       str(mapping.name),
+    email:      str(mapping.email)?.toLowerCase(),
+    whatsapp:   str(mapping.whatsapp),
+    source:     str(mapping.source),
+    occupation: str(mapping.occupation),
+    product:    str(mapping.product),
+    gateway,
+    amount:     amount !== undefined && !isNaN(amount) ? amount : undefined,
+    currency:   str(mapping.currency),
+    modality,
+    proofImages: proofImages.length ? proofImages : undefined,
+  }
+}
+
 // ── Cron schedule presets ─────────────────────────────────────────────────────
 
 const SCHEDULE_MATCHERS: Record<string, (d: Date) => boolean> = {
@@ -545,13 +615,22 @@ export class AutomationsService {
         formId = response.formId
       }
 
+      // ── Fast path: known form → direct field mapping, no Groq ────────────────
+      const formIdStr = String(formId)
+      const directMapping = DIRECT_FORM_MAPPINGS[formIdStr]
+
+      if (directMapping) {
+        this.logger.debug(`extractStudentFromResponse: mapping direct — form ${formIdStr}`)
+        return extractDirect(answersFlat, directMapping)
+      }
+
+      // ── Groq path: unknown form → fetch schema + build rich prompt ───────────
       const form = await this.formModel.findById(formId).select('title fields').lean<FormLean>()
       if (!form) {
-        this.logger.warn(`extractStudentFromResponse: Form ${String(formId)} introuvable`)
+        this.logger.warn(`extractStudentFromResponse: Form ${formIdStr} introuvable`)
         return null
       }
 
-      // Sort fields by their declared order in the form
       const sortedFields = [...(form.fields ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
 
       const proofImages: string[] = []
@@ -560,7 +639,6 @@ export class AutomationsService {
       for (const field of sortedFields) {
         const raw = answersFlat[field.id]
 
-        // Use heading/paragraph as section dividers — helps Groq understand structure
         if (field.type === 'heading' || field.type === 'paragraph') {
           if (field.content) lines.push(`\n## ${field.content}`)
           continue
@@ -568,7 +646,6 @@ export class AutomationsService {
 
         if (raw === undefined || raw === null) continue
 
-        // File fields: extract URLs directly, skip to Groq
         if (field.type === 'file') {
           const files = Array.isArray(raw) ? raw : [raw]
           for (const f of files) {
@@ -583,14 +660,13 @@ export class AutomationsService {
         const val = Array.isArray(raw) ? raw.join(', ') : String(raw)
         if (!val || val === 'null' || val === 'undefined') continue
 
-        // Build rich context line: [type] Label (options: a | b | c) [hint: placeholder]: Value
         let meta = `[${field.type}]`
         if (field.options?.length) meta += ` options: ${field.options.join(' | ')}`
         const hint = field.placeholder ? ` (ex: ${field.placeholder})` : ''
         lines.push(`${meta} ${field.label}${hint}: ${val}`)
       }
 
-      this.logger.debug(`extractStudentFromResponse: ${lines.length} ligne(s), ${proofImages.length} preuve(s) — form "${form.title ?? formId}"`)
+      this.logger.debug(`extractStudentFromResponse: ${lines.length} ligne(s), ${proofImages.length} preuve(s) — form "${form.title ?? formIdStr}"`)
 
       if (!lines.length) {
         return proofImages.length ? { proofImages } : null
@@ -952,47 +1028,64 @@ export class AutomationsService {
           type StudentLean = { _id: Types.ObjectId; email: string; name: string; whatsapp?: string | null; occupation?: string | null; source?: string | null; infoStatus?: string }
           const existing = await this.studentModel.findOne({ email }).lean<StudentLean>()
 
-          // responseId is available either from ctx.payment.responseId (set by create_payment step)
-          // or directly from ctx.responseId (set by form_submitted trigger)
+          // responseId available from create_payment context or directly from form_submitted trigger
           const paymentCtxForEnrich = ctx.payment as Record<string, unknown> | undefined
           const responseId: string | null =
             (paymentCtxForEnrich?.responseId as string | undefined) ??
             (ctx.responseId as string | undefined) ??
             null
 
-          if (existing) {
-            const updates: Record<string, unknown> = {}
-            if (responseId) {
-              const enriched = await this.extractStudentFromResponse(
+          // Enrich from response (direct mapping for known forms, Groq otherwise)
+          const enriched = responseId
+            ? await this.extractStudentFromResponse(
                 responseId,
                 ctx.answers as Record<string, unknown> | undefined,
                 (ctx.formId as string | undefined) ?? undefined,
               )
-              if (enriched) {
-                if (enriched.name)       updates.name       = enriched.name
-                if (enriched.whatsapp)   updates.whatsapp   = enriched.whatsapp
-                if (enriched.occupation) updates.occupation = enriched.occupation
-                if (enriched.source)     updates.source     = enriched.source
-                if (Object.keys(updates).length) updates.infoStatus = 'EXACTE'
-                if (enriched.proofImages?.length) {
-                  this.logger.log(`create_student: ${enriched.proofImages.length} proof(s) extraits pour ${email}`)
-                }
-              }
+            : null
+
+          // Helper: apply enriched fields to linked payment if in context
+          const applyPaymentEnrichment = async (enrichedData: NonNullable<typeof enriched>) => {
+            const paymentId = paymentCtxForEnrich?._id as string | undefined
+            if (!paymentId) return
+            const pmtUpdates: Record<string, unknown> = {}
+            if (enrichedData.product)              pmtUpdates.product     = enrichedData.product
+            if (enrichedData.gateway)              pmtUpdates.gateway     = enrichedData.gateway
+            if (enrichedData.amount !== undefined) pmtUpdates.amount      = enrichedData.amount
+            if (enrichedData.currency)             pmtUpdates.currency    = enrichedData.currency
+            if (enrichedData.modality)             pmtUpdates.modality    = enrichedData.modality
+            if (enrichedData.proofImages?.length)  pmtUpdates.proofImages = enrichedData.proofImages
+            if (enrichedData.name)                 pmtUpdates.studentName = enrichedData.name
+            if (Object.keys(pmtUpdates).length) {
+              await this.paymentModel.updateOne({ _id: new Types.ObjectId(paymentId) }, { $set: pmtUpdates })
+              this.logger.log(`create_student: paiement ${paymentId} enrichi (${Object.keys(pmtUpdates).join(', ')})`)
             }
-            if (Object.keys(updates).length) {
-              await this.studentModel.updateOne({ email }, { $set: updates })
-              this.logger.log(`create_student: étudiant existant mis à jour via Groq pour ${email}`)
+          }
+
+          if (existing) {
+            const studentUpdates: Record<string, unknown> = {}
+            if (enriched) {
+              if (enriched.name)       studentUpdates.name       = enriched.name
+              if (enriched.whatsapp)   studentUpdates.whatsapp   = enriched.whatsapp
+              if (enriched.occupation) studentUpdates.occupation = enriched.occupation
+              if (enriched.source)     studentUpdates.source     = enriched.source
+              if (Object.keys(studentUpdates).length) studentUpdates.infoStatus = 'EXACTE'
+              await applyPaymentEnrichment(enriched)
+            }
+            if (Object.keys(studentUpdates).length) {
+              await this.studentModel.updateOne({ email }, { $set: studentUpdates })
+              this.logger.log(`create_student: étudiant existant enrichi pour ${email} (${Object.keys(studentUpdates).join(', ')})`)
             }
 
             const studentCtxUpdate = {
               _id: String(existing._id),
               email: existing.email,
-              name: (updates.name as string | undefined) ?? existing.name,
-              whatsapp: (updates.whatsapp as string | undefined) ?? existing.whatsapp ?? null,
+              name: (studentUpdates.name as string | undefined) ?? existing.name,
+              whatsapp: (studentUpdates.whatsapp as string | undefined) ?? existing.whatsapp ?? null,
             }
             return {
               status: 'ok',
-              message: `Étudiant ${email} existe déjà${Object.keys(updates).length ? ' — mis à jour (Groq)' : ''}`,
+              message: `Étudiant ${email} existe déjà${Object.keys(studentUpdates).length ? ' — mis à jour' : ''}`,
               contextUpdate: { student: studentCtxUpdate },
             }
           }
@@ -1003,25 +1096,22 @@ export class AutomationsService {
           let source: string | null = null
           let infoStatus = 'NON VÉRIFIÉ'
 
-          if (responseId) {
-            const enriched = await this.extractStudentFromResponse(
-              responseId,
-              ctx.answers as Record<string, unknown> | undefined,
-              (ctx.formId as string | undefined) ?? undefined,
-            )
-            if (enriched) {
-              if (enriched.name)       name       = enriched.name
-              // email from form as fallback if step config didn't provide one
-              if (!email && enriched.email) email = enriched.email
-              if (enriched.whatsapp)   whatsapp   = enriched.whatsapp
-              if (enriched.occupation) occupation = enriched.occupation
-              if (enriched.source)     source     = enriched.source
-              infoStatus = 'EXACTE'
-              this.logger.log(`create_student: enrichi via Groq pour ${email}${enriched.proofImages?.length ? ` (${enriched.proofImages.length} proof(s))` : ''}`)
-            }
+          if (enriched) {
+            if (enriched.name)       name       = enriched.name
+            if (!email && enriched.email) email = enriched.email
+            if (enriched.whatsapp)   whatsapp   = enriched.whatsapp
+            if (enriched.occupation) occupation = enriched.occupation
+            if (enriched.source)     source     = enriched.source
+            infoStatus = 'EXACTE'
           }
 
           const createdStudent = await this.studentModel.create({ email, name, whatsapp, occupation, source, infoStatus, notes: '', debtStatus: 'ok' })
+
+          if (enriched) {
+            await applyPaymentEnrichment(enriched)
+            this.logger.log(`create_student: créé ${email}${enriched.proofImages?.length ? ` — ${enriched.proofImages.length} preuve(s)` : ''}`)
+          }
+
           const studentCtxUpdate = {
             _id: String(createdStudent._id),
             email: createdStudent.email,
@@ -1030,7 +1120,7 @@ export class AutomationsService {
           }
           return {
             status: 'ok',
-            message: `Étudiant créé : ${name} (${email})${infoStatus === 'EXACTE' ? ' [enrichi Groq]' : ''}`,
+            message: `Étudiant créé : ${name} (${email})${infoStatus === 'EXACTE' ? ' [enrichi]' : ''}`,
             contextUpdate: { student: studentCtxUpdate },
           }
         }
