@@ -538,7 +538,7 @@ export class AutomationsService {
           },
           {
             role: 'user',
-            content: `Voici les réponses au formulaire :\n\n${lines.join('\n')}\n\nExtrait ces champs (null si absent) :\n{\n  "name": "nom complet de l\'étudiant",\n  "whatsapp": "numéro WhatsApp avec indicatif pays",\n  "occupation": "métier, profession ou occupation",\n  "source": "comment il a connu le programme (réseau social, ami, publicité, etc.)"\n}`,
+            content: `Voici les réponses au formulaire :\n\n${lines.join('\n')}\n\nExtrait ces champs (si absent =, cherche ce qui s'en rapproche le plus) :\n{\n  "name": "nom complet de l\'étudiant",\n  "whatsapp": "numéro WhatsApp avec indicatif pays",\n  "occupation": "métier, profession ou occupation",\n  "source": "comment il a connu le programme (réseau social, ami, publicité, etc.)"\n}`,
           },
         ],
       })
