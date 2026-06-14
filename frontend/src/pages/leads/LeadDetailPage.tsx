@@ -8,9 +8,10 @@ import {
   GitBranch, Star, PhoneCall, PhoneOff, UserCheck, ChevronUp,
   CalendarClock, Send, X, CalendarDays,
   Video, CreditCard, Link2, Link2Off, AlertCircle,
+  RefreshCw, Flame, TrendingUp,
 } from 'lucide-react'
 import api from '@/services/api'
-import type { Lead, LeadCall, SubscriptionOffer, PipelineStatus, AppSettings, Transaction } from '@/types'
+import type { Lead, LeadCall, LeadQualification, SubscriptionOffer, PipelineStatus, AppSettings, Transaction } from '@/types'
 import { cn } from '@/lib/utils'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
@@ -637,6 +638,266 @@ function LinkTransactionModal({
   )
 }
 
+// ── Lead Scoring (EAP) ────────────────────────────────────────────────────────
+
+const QUALIFICATION_META: Record<LeadQualification, {
+  label: string
+  action: string
+  card:  string
+  badge: string
+  dot:   string
+  icon:  React.ElementType
+}> = {
+  HOT_A:         { label: 'HOT A',          action: 'Coaching privé 2M+ · Appel < 2h',  card: 'bg-red-50 border-red-200',         badge: 'bg-red-500 text-white',         dot: 'bg-red-500',     icon: Flame },
+  HOT_B:         { label: 'HOT B',          action: 'Pack Elite 300K · Appel < 4h',      card: 'bg-orange-50 border-orange-200',   badge: 'bg-orange-500 text-white',      dot: 'bg-orange-500',  icon: Flame },
+  WARM:          { label: 'WARM',           action: 'Formation 200K · Appel < 24h',      card: 'bg-yellow-50 border-yellow-200',   badge: 'bg-yellow-500 text-white',      dot: 'bg-yellow-500',  icon: TrendingUp },
+  COLD:          { label: 'COLD',           action: 'Nurturing WhatsApp · contenu gratuit', card: 'bg-emerald-50 border-emerald-200', badge: 'bg-emerald-500 text-white',    dot: 'bg-emerald-500', icon: Sparkles },
+  OUT_OF_TARGET: { label: 'Hors cible',     action: 'Chaîne YouTube · aucun appel',      card: 'bg-gray-50 border-gray-200',       badge: 'bg-gray-400 text-white',        dot: 'bg-gray-400',    icon: XCircle },
+  DISQUALIFIED:  { label: 'Disqualifié',    action: 'Sortie de pipeline',                card: 'bg-rose-50 border-rose-200',       badge: 'bg-rose-500 text-white',        dot: 'bg-rose-500',    icon: XCircle },
+}
+
+function AddBonusForm({ leadId, onClose }: { leadId: string; onClose: () => void }) {
+  const qc = useQueryClient()
+  const [rule, setRule]     = useState('')
+  const [points, setPoints] = useState('10')
+  const [reason, setReason] = useState('')
+
+  const PRESETS = [
+    { rule: 'Étudiant EAP retour', points: 20 },
+    { rule: 'Motivation rédigée',  points: 10 },
+    { rule: 'Bonus diaspora',      points: 15 },
+    { rule: 'Malus incohérence',   points: -20 },
+  ]
+
+  const mutation = useMutation({
+    mutationFn: () => api.post(`/leads/${leadId}/scoring/bonus`, {
+      rule: rule.trim(), points: Number(points), reason: reason.trim() || undefined,
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['lead', leadId] }); onClose() },
+  })
+
+  return (
+    <div className="mt-2 space-y-2 rounded-lg border border-indigo-200 bg-indigo-50 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold text-indigo-700">Ajouter un bonus</p>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700"><X size={12} /></button>
+      </div>
+
+      <div className="flex flex-wrap gap-1">
+        {PRESETS.map((p) => (
+          <button
+            key={p.rule}
+            onClick={() => { setRule(p.rule); setPoints(String(p.points)) }}
+            className="rounded-full bg-white border border-indigo-200 px-2 py-0.5 text-[10px] text-indigo-700 hover:bg-indigo-100"
+          >
+            {p.rule} {p.points >= 0 ? '+' : ''}{p.points}
+          </button>
+        ))}
+      </div>
+
+      <input
+        value={rule}
+        onChange={(e) => setRule(e.target.value)}
+        placeholder="Nom du bonus (ex : 'Lead très chaud')"
+        className="w-full rounded-md bg-white border border-gray-200 px-2 py-1.5 text-xs focus:border-indigo-500 focus:outline-none"
+      />
+      <div className="flex gap-2">
+        <input
+          type="number"
+          value={points}
+          onChange={(e) => setPoints(e.target.value)}
+          placeholder="Points"
+          className="w-20 rounded-md bg-white border border-gray-200 px-2 py-1.5 text-xs focus:border-indigo-500 focus:outline-none"
+        />
+        <input
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Raison (optionnel)"
+          className="flex-1 rounded-md bg-white border border-gray-200 px-2 py-1.5 text-xs focus:border-indigo-500 focus:outline-none"
+        />
+      </div>
+      <button
+        onClick={() => mutation.mutate()}
+        disabled={!rule.trim() || !points || mutation.isPending}
+        className="w-full rounded-md bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+      >
+        {mutation.isPending ? 'Ajout…' : 'Ajouter le bonus'}
+      </button>
+    </div>
+  )
+}
+
+function LeadScoringCard({ lead }: { lead: Lead }) {
+  const qc = useQueryClient()
+  const [showBreakdown, setShowBreakdown] = useState(true)
+  const [showAddBonus, setShowAddBonus]   = useState(false)
+
+  const rescoreMutation = useMutation({
+    mutationFn: () => api.post(`/leads/${lead._id}/scoring/rescore`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['lead', lead._id] }),
+  })
+  const removeBonusMutation = useMutation({
+    mutationFn: (idx: number) => api.delete(`/leads/${lead._id}/scoring/bonus/${idx}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['lead', lead._id] }),
+  })
+
+  // Lead never scored → show a "compute now" pitch instead of empty card.
+  if (!lead.qualification) {
+    return (
+      <div className="rounded-xl bg-white border border-gray-200 p-4 space-y-3">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Scoring EAP</h3>
+        <p className="text-xs text-gray-500">
+          Ce lead n'a pas encore été scoré. Lance le calcul pour voir la qualification, le détail des points et l'action recommandée.
+        </p>
+        <button
+          onClick={() => rescoreMutation.mutate()}
+          disabled={rescoreMutation.isPending}
+          className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium py-2 disabled:opacity-50"
+        >
+          <RefreshCw size={12} className={rescoreMutation.isPending ? 'animate-spin' : ''} />
+          {rescoreMutation.isPending ? 'Calcul…' : 'Calculer le score'}
+        </button>
+      </div>
+    )
+  }
+
+  const meta = QUALIFICATION_META[lead.qualification]
+  const Icon = meta.icon
+  const score = lead.score ?? 0
+  const breakdown = lead.score_breakdown ?? []
+  const manualBonuses = lead.manual_bonuses ?? []
+  const isDisqualified = lead.qualification === 'DISQUALIFIED'
+
+  // Highlight HOT_A / HOT_B leads with score progression vs 220 threshold
+  const SCORE_MAX = 340
+  const progressPct = Math.min((score / SCORE_MAX) * 100, 100)
+
+  return (
+    <div className={cn('rounded-xl border p-4 space-y-3', meta.card)}>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-gray-600">Scoring EAP</h3>
+        <button
+          onClick={() => rescoreMutation.mutate()}
+          disabled={rescoreMutation.isPending}
+          title="Re-scorer ce lead"
+          className="p-1 text-gray-500 hover:text-gray-800 disabled:opacity-50"
+        >
+          <RefreshCw size={12} className={rescoreMutation.isPending ? 'animate-spin' : ''} />
+        </button>
+      </div>
+
+      {/* Hero badge */}
+      <div className="flex items-center gap-3">
+        <div className={cn('w-12 h-12 rounded-xl flex items-center justify-center shrink-0', meta.badge)}>
+          <Icon size={20} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-bold text-gray-900">{meta.label}</p>
+          {!isDisqualified && (
+            <p className="text-xs text-gray-600">
+              <span className="font-semibold">{score}</span>
+              <span className="text-gray-500"> / {SCORE_MAX} pts</span>
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Progress bar (hidden if disqualified) */}
+      {!isDisqualified && (
+        <div className="space-y-1">
+          <div className="relative h-1.5 rounded-full bg-white border border-gray-200 overflow-hidden">
+            <div className={cn('absolute inset-y-0 left-0 rounded-full', meta.dot)} style={{ width: `${progressPct}%` }} />
+            {/* threshold ticks at 50 (COLD), 90 (WARM), 150 (HOT B), 220 (HOT A) */}
+            {[50, 90, 150, 220].map((t) => (
+              <div key={t} className="absolute top-0 bottom-0 w-px bg-gray-300" style={{ left: `${(t / SCORE_MAX) * 100}%` }} />
+            ))}
+          </div>
+          <div className="flex justify-between text-[9px] text-gray-500 font-mono">
+            <span>50</span><span>90</span><span>150</span><span>220</span><span>340</span>
+          </div>
+        </div>
+      )}
+
+      {/* Recommended action */}
+      <div className="rounded-lg bg-white/70 border border-gray-200 px-3 py-2">
+        <p className="text-[10px] uppercase tracking-wide text-gray-500 mb-0.5">Action recommandée</p>
+        <p className="text-xs font-semibold text-gray-800">{meta.action}</p>
+      </div>
+
+      {/* Disqualification reason */}
+      {isDisqualified && lead.disqualified_reason && (
+        <div className="rounded-lg bg-rose-100 border border-rose-200 px-3 py-2 flex items-start gap-2">
+          <AlertCircle size={12} className="text-rose-600 mt-0.5 shrink-0" />
+          <p className="text-xs text-rose-700">{lead.disqualified_reason}</p>
+        </div>
+      )}
+
+      {/* Breakdown */}
+      {breakdown.length > 0 && (
+        <div>
+          <button
+            onClick={() => setShowBreakdown(s => !s)}
+            className="flex items-center justify-between w-full text-[11px] uppercase tracking-wide text-gray-500 hover:text-gray-800"
+          >
+            <span>Détail ({breakdown.length} règles)</span>
+            {showBreakdown ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+          </button>
+          {showBreakdown && (
+            <div className="mt-2 space-y-1">
+              {breakdown.map((entry, i) => {
+                const isManual = manualBonuses.some((mb) => mb.rule === entry.rule && mb.points === entry.points)
+                const manualIdx = isManual ? manualBonuses.findIndex((mb) => mb.rule === entry.rule && mb.points === entry.points) : -1
+                return (
+                  <div key={i} className="flex items-start gap-2 rounded-md bg-white/60 border border-gray-200/70 px-2 py-1.5">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[11px] font-medium text-gray-800 truncate">{entry.rule}</p>
+                        {isManual && <span className="text-[9px] bg-indigo-100 text-indigo-700 px-1 rounded">manuel</span>}
+                      </div>
+                      {entry.detail && (
+                        <p className="text-[10px] text-gray-500 truncate" title={entry.detail}>{entry.detail}</p>
+                      )}
+                    </div>
+                    <span className={cn(
+                      'text-[11px] font-bold tabular-nums shrink-0',
+                      entry.points > 0 ? 'text-emerald-600' : entry.points < 0 ? 'text-rose-600' : 'text-gray-500',
+                    )}>
+                      {entry.points > 0 ? '+' : ''}{entry.points}
+                    </span>
+                    {isManual && manualIdx >= 0 && (
+                      <button
+                        onClick={() => { if (confirm('Retirer ce bonus ?')) removeBonusMutation.mutate(manualIdx) }}
+                        title="Retirer ce bonus"
+                        className="text-gray-400 hover:text-rose-500 shrink-0"
+                      >
+                        <X size={11} />
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Add manual bonus */}
+      {!isDisqualified && (
+        showAddBonus ? (
+          <AddBonusForm leadId={lead._id} onClose={() => setShowAddBonus(false)} />
+        ) : (
+          <button
+            onClick={() => setShowAddBonus(true)}
+            className="w-full flex items-center justify-center gap-1 rounded-lg bg-white/70 border border-dashed border-gray-300 hover:border-indigo-500 hover:text-indigo-600 py-1.5 text-[11px] text-gray-500 transition-colors"
+          >
+            <Plus size={11} /> Ajouter un bonus manuel
+          </button>
+        )
+      )}
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function LeadDetailPage() {
@@ -929,6 +1190,9 @@ export function LeadDetailPage() {
               </div>
             )}
           </div>
+
+          {/* Scoring EAP */}
+          <LeadScoringCard lead={lead} />
 
           {/* Pipeline */}
           <div className="rounded-xl bg-white border border-gray-200 p-4 space-y-3">
