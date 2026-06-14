@@ -337,6 +337,47 @@ export class StudentsService {
     return { total, enRegle, enRetard, withDebt, newThisMonth }
   }
 
+  async clientSearch(q: string): Promise<Array<{
+    type: 'student' | 'lead'
+    _id: string
+    name: string
+    email: string | null
+    extra?: string
+  }>> {
+    if (!q || q.trim().length < 2) return []
+    const regex = new RegExp(q.trim(), 'i')
+
+    const [students, leads] = await Promise.all([
+      this.studentModel
+        .find({ $or: [{ name: regex }, { email: regex }] })
+        .select('name email plan')
+        .limit(6)
+        .lean(),
+      this.leadModel
+        .find({ $or: [{ name: regex }, { email: regex }] })
+        .select('name email pipeline_status')
+        .limit(6)
+        .lean(),
+    ])
+
+    return [
+      ...students.map((s) => ({
+        type: 'student' as const,
+        _id: String(s._id),
+        name: s.name,
+        email: s.email,
+        extra: s.plan ?? undefined,
+      })),
+      ...leads.map((l) => ({
+        type: 'lead' as const,
+        _id: String(l._id),
+        name: l.name,
+        email: l.email,
+        extra: l.pipeline_status ?? undefined,
+      })),
+    ]
+  }
+
   async getPaymentStats() {
     const now = new Date()
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())

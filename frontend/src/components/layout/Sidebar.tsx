@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Crosshair, BarChart2, Gift, Star, Link2,
   CheckSquare, BookOpen, MessageSquare, Settings, Zap, Sparkles,
   RefreshCw, CreditCard, ChevronDown, LogOut,
-  Calendar, GraduationCap,
+  Calendar, GraduationCap, Video, Lightbulb, Stars, Users2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -178,9 +178,13 @@ const MODULES: ModuleDef[] = [
         ],
       },
       {
-        label: 'CRÉATION',
+        label: 'CONTENU',
         items: [
-          { to: '/content', icon: Sparkles, label: 'Contenu' },
+          { to: '/content', icon: Sparkles, label: 'Dashboard', end: true },
+          { to: '/content/projects', icon: Video, label: 'Projets' },
+          { to: '/content/ideas', icon: Lightbulb, label: 'Idées' },
+          { to: '/content/suggestions', icon: Stars, label: 'Suggestions IA' },
+          { to: '/content/creators', icon: Users2, label: 'Créateurs' },
         ],
       },
       {

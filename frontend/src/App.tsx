@@ -66,6 +66,10 @@ export default function App() {
           <Route path="/leads/:id" element={<LeadDetailPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/content" element={<ContentPage />} />
+          <Route path="/content/projects" element={<ContentPage />} />
+          <Route path="/content/ideas" element={<ContentPage />} />
+          <Route path="/content/suggestions" element={<ContentPage />} />
+          <Route path="/content/creators" element={<ContentPage />} />
           <Route path="/messages" element={<PlaceholderPage title="Messages" description="Communication interne d'équipe" />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>

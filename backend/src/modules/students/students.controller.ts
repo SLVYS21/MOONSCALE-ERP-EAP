@@ -25,6 +25,19 @@ class TreatPaymentDto {
   @IsOptional() @IsString() offerId?: string
 }
 
+class CreatePaymentDto {
+  @IsString() studentEmail: string
+  @IsString() studentName: string
+  @IsString() @IsIn(['Complet', 'Partiel']) modality: 'Complet' | 'Partiel'
+  @Type(() => Number) @IsNumber() amount: number
+  @IsString() @IsIn(['F CFA', 'FCFA', 'USD', 'EURO']) currency: string
+  @IsString() product: string
+  @IsOptional() @IsString() gateway?: string
+  @IsOptional() @IsString() plan?: string
+  @IsOptional() @IsString() notes?: string
+  @IsOptional() @IsString({ each: true }) proofImages?: string[]
+}
+
 class UpdatePaymentFieldsDto {
   @IsOptional() @IsString() @IsIn(['NON TRAITÉ', 'TRAITÉ', 'REJETÉ']) status?: string
   @IsOptional() @IsString() @IsIn(['Complet', 'Partiel']) modality?: string
@@ -158,9 +171,27 @@ export class StudentsController {
     return this.studentsService.getPaymentStats()
   }
 
+  @Get('payments/client-search')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  clientSearch(@Query('q') q: string) {
+    return this.studentsService.clientSearch(q ?? '')
+  }
+
   @Get('payments')
   listPayments(@Query() query: ListQuery) {
     return this.studentsService.listPayments(query)
+  }
+
+  @Post('payments')
+  @UseGuards(RolesGuard)
+  @Roles('superadmin', 'admin')
+  async createPaymentManual(@Body() dto: CreatePaymentDto) {
+    const payment = await this.studentsService.createPayment({
+      ...dto,
+      source: 'manual',
+    })
+    return payment
   }
 
   @Patch('payments/:id')

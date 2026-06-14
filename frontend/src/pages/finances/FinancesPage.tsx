@@ -1,9 +1,10 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
 import {
   TrendingUp, TrendingDown, DollarSign, ChevronLeft, ChevronRight,
   Plus, Trash2, Settings, RefreshCw, Upload, CheckCircle2, AlertCircle, X, Pencil,
+  Search, GraduationCap, User,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Card } from '@/components/ui/Card'
@@ -227,6 +228,8 @@ function BarChart({ data }: { data: Array<{ label: string; income: number; expen
 
 // ── Create transaction modal ──────────────────────────────────────────────────
 
+type ClientResult = { type: 'student' | 'lead'; _id: string; name: string; email: string | null; extra?: string }
+
 function CreateTransactionModal({
   categories,
   onClose,
@@ -246,6 +249,41 @@ function CreateTransactionModal({
   const [notes, setNotes] = useState('')
   const [error, setError] = useState('')
 
+  // Client search
+  const [clientQuery, setClientQuery] = useState('')
+  const [clientResults, setClientResults] = useState<ClientResult[]>([])
+  const [selectedClient, setSelectedClient] = useState<ClientResult | null>(null)
+  const [showResults, setShowResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  const searchClients = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setClientResults([]); return }
+    try {
+      const res = await api.get<ClientResult[]>('/payments/client-search', { params: { q } })
+      setClientResults(res.data)
+      setShowResults(true)
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => searchClients(clientQuery), 280)
+    return () => clearTimeout(t)
+  }, [clientQuery, searchClients])
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (!searchRef.current?.contains(e.target as Node)) setShowResults(false)
+    }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
+  }, [])
+
+  const selectClient = (c: ClientResult) => {
+    setSelectedClient(c)
+    setClientQuery(c.name)
+    setShowResults(false)
+  }
+
   const { mutate, isPending } = useMutation({
     mutationFn: (body: object) => api.post('/finances/transactions', body),
     onSuccess: () => {
@@ -258,10 +296,31 @@ function CreateTransactionModal({
 
   const filteredCats = categories.filter((c) => c.type === type || c.type === 'both')
 
+  const handleSubmit = () => {
+    const clientPayload = selectedClient ? {
+      customerEmail: selectedClient.email,
+      customerName: selectedClient.name,
+      leadId: selectedClient.type === 'lead' ? selectedClient._id : null,
+      leadName: selectedClient.type === 'lead' ? selectedClient.name : null,
+      studentId: selectedClient.type === 'student' ? selectedClient._id : null,
+    } : {}
+
+    mutate({
+      type, amount: Number(amount), currency, description,
+      categoryId: categoryId || null, date, gateway, notes,
+      ...clientPayload,
+    })
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
-        <h2 className="mb-4 text-base font-semibold text-gray-900">Nouvelle transaction</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
+      <div className="w-full max-w-lg rounded-xl border border-gray-200 bg-white p-6 shadow-xl" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-semibold text-gray-900">Nouvelle transaction</h2>
+          <button onClick={onClose} className="rounded p-1 text-gray-400 hover:text-gray-600 transition-colors">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
         {/* Type toggle */}
         <div className="mb-4 flex rounded-lg border border-gray-200 p-1">
@@ -281,56 +340,124 @@ function CreateTransactionModal({
           ))}
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-3">
+          {/* Client search */}
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Montant</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className={selectCls}
-              autoFocus
-            />
+            <label className="mb-1.5 block text-xs font-medium text-gray-400">Client (optionnel)</label>
+            <div ref={searchRef} className="relative">
+              <div className={cn(
+                'flex items-center gap-2 rounded-lg border px-3 py-2',
+                selectedClient ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white',
+              )}>
+                <Search className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+                <input
+                  className="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                  placeholder="Rechercher par nom ou email…"
+                  value={clientQuery}
+                  onChange={(e) => { setClientQuery(e.target.value); setSelectedClient(null) }}
+                  onFocus={() => clientResults.length > 0 && setShowResults(true)}
+                />
+                {selectedClient && (
+                  <button type="button" onClick={() => { setSelectedClient(null); setClientQuery('') }}>
+                    <X className="h-3 w-3 text-gray-400 hover:text-gray-600" />
+                  </button>
+                )}
+              </div>
+
+              {/* Selected client */}
+              {selectedClient && (
+                <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
+                  {selectedClient.type === 'student'
+                    ? <GraduationCap className="h-3.5 w-3.5 shrink-0 text-indigo-600" />
+                    : <User className="h-3.5 w-3.5 shrink-0 text-purple-600" />
+                  }
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-xs font-semibold text-gray-900">{selectedClient.name}</p>
+                    <p className="truncate text-[11px] text-gray-500">{selectedClient.email ?? '—'}</p>
+                  </div>
+                  <span className={cn(
+                    'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                    selectedClient.type === 'student' ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700',
+                  )}>
+                    {selectedClient.type === 'student' ? 'Étudiant' : 'Lead'}
+                  </span>
+                </div>
+              )}
+
+              {/* Autocomplete */}
+              {showResults && clientResults.length > 0 && (
+                <div className="absolute left-0 right-0 top-full z-[200] mt-1 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xl">
+                  {clientResults.map((c) => (
+                    <button
+                      key={`${c.type}-${c._id}`}
+                      type="button"
+                      onMouseDown={() => selectClient(c)}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-gray-50"
+                    >
+                      {c.type === 'student'
+                        ? <GraduationCap className="h-3.5 w-3.5 shrink-0 text-indigo-500" />
+                        : <User className="h-3.5 w-3.5 shrink-0 text-purple-500" />
+                      }
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium text-gray-900">{c.name}</p>
+                        <p className="truncate text-xs text-gray-500">{c.email ?? '—'}</p>
+                      </div>
+                      <span className={cn(
+                        'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                        c.type === 'student' ? 'bg-indigo-50 text-indigo-600' : 'bg-purple-50 text-purple-600',
+                      )}>
+                        {c.type === 'student' ? 'Étudiant' : 'Lead'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showResults && clientResults.length === 0 && clientQuery.trim().length >= 2 && (
+                <div className="absolute left-0 right-0 top-full z-[200] mt-1 rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-xl">
+                  <p className="text-sm text-gray-500">Aucun résultat pour «&nbsp;{clientQuery}&nbsp;»</p>
+                </div>
+              )}
+            </div>
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Devise</label>
-            <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={selectCls}>
-              {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="col-span-2">
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Description</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Description de la transaction"
-              className={selectCls}
-            />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Catégorie</label>
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={selectCls}>
-              <option value="">— Sans catégorie</option>
-              {filteredCats.map((c) => (
-                <option key={c._id} value={c._id}>{c.icon} {c.name}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Date</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={selectCls} />
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Gateway / Compte</label>
-            <select value={gateway} onChange={(e) => setGateway(e.target.value as TransactionGateway)} className={selectCls}>
-              {allGateways.map((g) => <option key={g} value={g}>{GATEWAY_LABELS[g] ?? g}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-400">Notes</label>
-            <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optionnel" className={selectCls} />
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Montant</label>
+              <input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="0.00" className={selectCls} autoFocus />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Devise</label>
+              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={selectCls}>
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="col-span-2">
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Description</label>
+              <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description de la transaction" className={selectCls} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Catégorie</label>
+              <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} className={selectCls}>
+                <option value="">— Sans catégorie</option>
+                {filteredCats.map((c) => (
+                  <option key={c._id} value={c._id}>{c.icon} {c.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Date</label>
+              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={selectCls} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Gateway / Compte</label>
+              <select value={gateway} onChange={(e) => setGateway(e.target.value as TransactionGateway)} className={selectCls}>
+                {allGateways.map((g) => <option key={g} value={g}>{GATEWAY_LABELS[g] ?? g}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-xs font-medium text-gray-400">Notes</label>
+              <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optionnel" className={selectCls} />
+            </div>
           </div>
         </div>
 
@@ -338,11 +465,7 @@ function CreateTransactionModal({
 
         <div className="mt-5 flex justify-end gap-3">
           <Button variant="secondary" onClick={onClose}>Annuler</Button>
-          <Button
-            loading={isPending}
-            disabled={!amount || !description || !date}
-            onClick={() => mutate({ type, amount: Number(amount), currency, description, categoryId: categoryId || null, date, gateway, notes })}
-          >
+          <Button loading={isPending} disabled={!amount || !description || !date} onClick={handleSubmit}>
             Enregistrer
           </Button>
         </div>

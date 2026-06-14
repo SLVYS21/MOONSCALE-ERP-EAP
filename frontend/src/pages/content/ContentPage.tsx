@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useLocation, useNavigate } from 'react-router-dom'
 import api from '@/services/api'
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
@@ -8,6 +9,7 @@ import {
   Trash2, Mic, Video, Zap, Users, TrendingUp, Loader2,
   Download, ExternalLink, ArrowRight, Settings, Target, List,
   BookOpen, FileText, Square, Calendar, ArrowUpDown,
+  Lightbulb, Stars, Users2, BarChart2,
 } from 'lucide-react'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -1856,9 +1858,321 @@ function ProjectDrawer({ initialProject, onClose }: {
   )
 }
 
+// ── View helper ───────────────────────────────────────────────────────────────
+
+type ContentView = 'dashboard' | 'projects' | 'ideas' | 'suggestions' | 'creators'
+
+function getView(pathname: string): ContentView {
+  if (pathname.startsWith('/content/projects'))    return 'projects'
+  if (pathname.startsWith('/content/ideas'))       return 'ideas'
+  if (pathname.startsWith('/content/suggestions')) return 'suggestions'
+  if (pathname.startsWith('/content/creators'))    return 'creators'
+  return 'dashboard'
+}
+
+// ── Dashboard view ────────────────────────────────────────────────────────────
+
+function ContentDashboardView({
+  projects,
+  isLoading,
+  onNewProject,
+}: {
+  projects: VideoProject[]
+  isLoading: boolean
+  onNewProject: () => void
+}) {
+  const navigate = useNavigate()
+
+  const byStatus = STATUS_STEPS.map(s => ({
+    ...s,
+    count: projects.filter(p => p.status === s.key).length,
+  }))
+  const published  = projects.filter(p => p.status === 'publie').length
+  const inProd     = projects.filter(p => p.status === 'tournage' || p.status === 'montage').length
+  const inProgress = projects.filter(p => p.status !== 'publie').length
+
+  const STATUS_COLORS: Record<ContentStatus, string> = {
+    idee: '#94a3b8',
+    script: '#60a5fa',
+    tournage: '#f97316',
+    montage: '#a78bfa',
+    publie: '#22c55e',
+  }
+
+  const recent = [...projects].slice(0, 5)
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-6">
+      {/* KPI cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: 'Total projets',    value: projects.length,  icon: Video,    color: '#3b82f6', bg: '#dbeafe' },
+          { label: 'En production',    value: inProd,           icon: Zap,      color: '#f97316', bg: '#ffedd5' },
+          { label: 'Publiés',          value: published,        icon: TrendingUp, color: '#22c55e', bg: '#dcfce7' },
+          { label: 'En cours',         value: inProgress,       icon: BarChart2,  color: '#8b5cf6', bg: '#ede9fe' },
+        ].map(card => (
+          <div key={card.label} className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ backgroundColor: card.bg }}>
+                <card.icon className="h-4 w-4" style={{ color: card.color }} />
+              </div>
+              <span className="text-xs text-gray-500">{card.label}</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-900">
+              {isLoading ? <span className="animate-pulse text-gray-200">--</span> : card.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* Pipeline status bars */}
+      <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold text-gray-800">Pipeline de production</h2>
+          <button
+            onClick={() => navigate('/content/projects')}
+            className="text-xs text-blue-600 hover:text-blue-500 transition-colors flex items-center gap-1 cursor-pointer"
+          >
+            Voir tous <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="space-y-3">
+          {byStatus.map(s => (
+            <div key={s.key} className="flex items-center gap-3">
+              <span className="text-xs text-gray-500 w-20 shrink-0">{s.label}</span>
+              <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{
+                    width: projects.length ? `${(s.count / projects.length) * 100}%` : '0%',
+                    backgroundColor: STATUS_COLORS[s.key],
+                  }}
+                />
+              </div>
+              <span className="text-xs font-semibold text-gray-700 w-5 text-right">{s.count}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick actions + recent projects */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Quick actions */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-800 mb-4">Actions rapides</h2>
+          <div className="space-y-2">
+            {[
+              { label: 'Nouveau projet',      icon: Plus,       action: onNewProject,                               color: '#3b82f6', bg: '#dbeafe' },
+              { label: 'Voir les projets',    icon: Video,      action: () => navigate('/content/projects'),        color: '#8b5cf6', bg: '#ede9fe' },
+              { label: 'Idées & Captures',    icon: Lightbulb,  action: () => navigate('/content/ideas'),          color: '#f97316', bg: '#ffedd5' },
+              { label: 'Suggestions IA',      icon: Stars,      action: () => navigate('/content/suggestions'),    color: '#22c55e', bg: '#dcfce7' },
+              { label: 'Créateurs inspirants',icon: Users2,     action: () => navigate('/content/creators'),       color: '#ec4899', bg: '#fce7f3' },
+            ].map(item => (
+              <button
+                key={item.label}
+                onClick={item.action}
+                className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-gray-50 transition-colors cursor-pointer group"
+              >
+                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg" style={{ backgroundColor: item.bg }}>
+                  <item.icon className="h-3.5 w-3.5" style={{ color: item.color }} />
+                </div>
+                <span className="text-sm text-gray-700 group-hover:text-gray-900">{item.label}</span>
+                <ArrowRight className="ml-auto h-3.5 w-3.5 text-gray-300 group-hover:text-gray-500 transition-colors" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent projects */}
+        <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+          <h2 className="text-sm font-semibold text-gray-800 mb-4">Projets récents</h2>
+          {isLoading ? (
+            <div className="space-y-3">
+              {[1,2,3].map(i => <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse" />)}
+            </div>
+          ) : recent.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Sparkles className="w-8 h-8 text-gray-200 mb-2" />
+              <p className="text-sm text-gray-500">Aucun projet pour le moment</p>
+              <button onClick={onNewProject} className="mt-3 text-xs text-blue-600 hover:text-blue-500 cursor-pointer">
+                Créer le premier →
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {recent.map(p => {
+                const cat = CATEGORY_CONFIG[p.category] ?? CATEGORY_CONFIG.educatif
+                const statusIdx = STATUS_IDX[p.status] ?? 0
+                return (
+                  <button
+                    key={p._id}
+                    onClick={() => navigate('/content/projects')}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 hover:bg-gray-50 transition-colors cursor-pointer text-left"
+                  >
+                    <div className={cn('flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px]', cat.bg)}>
+                      <cat.icon className={cn('w-3 h-3', cat.color)} />
+                    </div>
+                    <span className="flex-1 text-xs text-gray-700 truncate">{p.title}</span>
+                    <div className="flex items-center gap-0.5">
+                      {STATUS_STEPS.map((s, i) => (
+                        <div key={s.key} className={cn(
+                          'w-1.5 h-1.5 rounded-full',
+                          i < statusIdx ? 'bg-emerald-400' : i === statusIdx ? 'bg-blue-400' : 'bg-gray-200',
+                        )} />
+                      ))}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Creators page view (inline, not modal) ────────────────────────────────────
+
+function CreatorsPageView() {
+  const qc = useQueryClient()
+  const [name, setName] = useState('')
+  const [url, setUrl] = useState('')
+  const [platform, setPlatform] = useState<'youtube' | 'tiktok' | 'instagram'>('youtube')
+
+  const { data: creators = [] } = useQuery<ContentCreator[]>({
+    queryKey: ['content-creators'],
+    queryFn: () => api.get('/content/projects/creators').then(r => r.data),
+  })
+
+  const addMut = useMutation({
+    mutationFn: () => api.post('/content/projects/creators', { name, channel_url: url, platform }).then(r => r.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['content-creators'] })
+      setName('')
+      setUrl('')
+    },
+  })
+
+  const removeMut = useMutation({
+    mutationFn: (id: string) => api.delete(`/content/projects/creators/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['content-creators'] }),
+  })
+
+  const PLATFORM_CONFIG: Record<string, { label: string; color: string }> = {
+    youtube:   { label: 'YouTube',   color: 'text-red-500' },
+    tiktok:    { label: 'TikTok',    color: 'text-gray-900' },
+    instagram: { label: 'Instagram', color: 'text-pink-500' },
+  }
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
+      {/* Add form */}
+      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <h2 className="text-sm font-semibold text-gray-800 mb-1">Ajouter un créateur</h2>
+        <p className="text-xs text-gray-500 mb-4">
+          L'IA s'inspire de ces créateurs pour générer des idées de contenu adaptées.
+        </p>
+        <div className="space-y-3">
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            placeholder="Nom du créateur"
+            className="w-full bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 transition-colors"
+          />
+          <div className="flex gap-2">
+            <input
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter' && name.trim() && url.trim()) addMut.mutate() }}
+              placeholder="URL de la chaîne..."
+              className="flex-1 bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-blue-400 transition-colors"
+            />
+            <select
+              value={platform}
+              onChange={e => setPlatform(e.target.value as typeof platform)}
+              className="bg-white border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 focus:outline-none focus:border-blue-400 transition-colors cursor-pointer"
+            >
+              <option value="youtube">YouTube</option>
+              <option value="tiktok">TikTok</option>
+              <option value="instagram">Instagram</option>
+            </select>
+          </div>
+          <button
+            disabled={!name.trim() || !url.trim() || addMut.isPending}
+            onClick={() => addMut.mutate()}
+            className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-sm text-white font-medium disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-150 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {addMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+            Ajouter le créateur
+          </button>
+        </div>
+      </div>
+
+      {/* Creators list */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-800">
+            Créateurs configurés
+            {creators.length > 0 && (
+              <span className="ml-2 text-xs font-normal text-gray-400">{creators.length} créateur{creators.length > 1 ? 's' : ''}</span>
+            )}
+          </h2>
+        </div>
+        {creators.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center px-6">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+              <Users2 className="w-6 h-6 text-gray-400" />
+            </div>
+            <p className="text-sm text-gray-600 font-medium">Aucun créateur configuré</p>
+            <p className="text-xs text-gray-400 mt-1">Ajoute des créateurs pour que l'IA génère des idées inspirées de leur style</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {creators.map(c => {
+              const cfg = PLATFORM_CONFIG[c.platform] ?? PLATFORM_CONFIG.youtube
+              return (
+                <div key={c._id} className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors group">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gray-100">
+                    <Users2 className={cn('w-4 h-4', cfg.color)} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-800 truncate">{c.name}</p>
+                    <div className="flex items-center gap-2">
+                      <span className={cn('text-[11px] font-medium', cfg.color)}>{cfg.label}</span>
+                      <a
+                        href={c.channel_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-gray-400 hover:text-blue-500 transition-colors truncate max-w-[200px]"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        {c.channel_url}
+                      </a>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeMut.mutate(c._id)}
+                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function ContentPage() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const view = getView(location.pathname)
   const qc = useQueryClient()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -1882,19 +2196,26 @@ export function ContentPage() {
     }).then(r => r.data),
   })
 
+  const { data: allProjects = [] } = useQuery<VideoProject[]>({
+    queryKey: ['video-projects-all'],
+    queryFn: () => api.get('/content/projects').then(r => r.data),
+    enabled: view === 'dashboard',
+  })
+
   const createMut = useMutation({
     mutationFn: (data: Record<string, unknown>) => api.post('/content/projects', data).then(r => r.data),
     onSuccess: (created: VideoProject) => {
       qc.invalidateQueries({ queryKey: ['video-projects'] })
+      qc.invalidateQueries({ queryKey: ['video-projects-all'] })
       setShowCreate(false)
       setSelectedId(created._id)
       setCreateInitialData(undefined)
-      // Delete the capture that was converted, if any
       if (pendingCaptureId) {
         api.delete(`/content/projects/captures/${pendingCaptureId}`)
           .then(() => qc.invalidateQueries({ queryKey: ['content-captures'] }))
         setPendingCaptureId(null)
       }
+      navigate('/content/projects')
     },
   })
 
@@ -1923,18 +2244,41 @@ export function ContentPage() {
       notes: structured?.notes,
     })
     setShowCreate(true)
+    if (view !== 'projects') navigate('/content/projects')
+  }
+
+  const handleSuggestionSaved = (projectId: string) => {
+    setSelectedId(projectId)
+    navigate('/content/projects')
+  }
+
+  const handleNewProject = () => {
+    setCreateInitialData(undefined)
+    setShowCreate(true)
   }
 
   const selectedProject = projects.find(p => p._id === selectedId)
 
   return (
     <div className="p-6">
+
+      {/* ── Dashboard view ── */}
+      {view === 'dashboard' && (
+        <ContentDashboardView
+          projects={allProjects}
+          isLoading={isLoading}
+          onNewProject={handleNewProject}
+        />
+      )}
+
+      {/* ── Projects view ── */}
+      {view === 'projects' && (
       <div className="max-w-5xl mx-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Création de contenu</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Projets vidéo</h1>
             <p className="text-sm text-gray-500 mt-0.5">
               {projects.length} projet{projects.length !== 1 ? 's' : ''}
               {filterPeriod !== 'all' && (
@@ -1961,7 +2305,7 @@ export function ContentPage() {
               Capturer
             </button>
             <button
-              onClick={() => { setCreateInitialData(undefined); setShowCreate(true) }}
+              onClick={handleNewProject}
               className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-all duration-150 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
@@ -1969,12 +2313,6 @@ export function ContentPage() {
             </button>
           </div>
         </div>
-
-        {/* Capture bank */}
-        <CapturesPanel onConvert={handleCaptureConvert} />
-
-        {/* AI Suggestions panel */}
-        <SuggestionsPanel onSaved={id => setSelectedId(id)} />
 
         {/* Filters */}
         <div className="space-y-2 mb-6">
@@ -2100,7 +2438,55 @@ export function ContentPage() {
           </div>
         )}
       </div>
+      )}
 
+      {/* ── Ideas view ── */}
+      {view === 'ideas' && (
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">Idées & Captures</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Tes idées brutes, notes vocales et inspirations</p>
+            </div>
+            <button
+              onClick={() => setShowCapture(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-medium transition-all duration-150 cursor-pointer"
+            >
+              <Mic className="w-4 h-4" />
+              Capturer une idée
+            </button>
+          </div>
+          <CapturesPanel onConvert={handleCaptureConvert} />
+        </div>
+      )}
+
+      {/* ── Suggestions view ── */}
+      {view === 'suggestions' && (
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">Suggestions IA</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Idées générées par l'IA basées sur tes créateurs de référence</p>
+            </div>
+          </div>
+          <SuggestionsPanel onSaved={handleSuggestionSaved} />
+        </div>
+      )}
+
+      {/* ── Creators view ── */}
+      {view === 'creators' && (
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-xl font-semibold text-gray-900">Créateurs inspirants</h1>
+              <p className="text-sm text-gray-500 mt-0.5">Créateurs que l'IA utilise pour générer tes suggestions de contenu</p>
+            </div>
+          </div>
+          <CreatorsPageView />
+        </div>
+      )}
+
+      {/* ── Shared overlays (visible from any view) ── */}
       {showCapture && (
         <CaptureModal
           onClose={() => setShowCapture(false)}

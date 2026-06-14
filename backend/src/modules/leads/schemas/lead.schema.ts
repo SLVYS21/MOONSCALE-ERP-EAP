@@ -21,6 +21,20 @@ export type LeadSourceType =
   | 'manual'
   | 'import'
 
+export type LeadQualification =
+  | 'HOT_A'
+  | 'HOT_B'
+  | 'WARM'
+  | 'COLD'
+  | 'OUT_OF_TARGET'
+  | 'DISQUALIFIED'
+
+export interface ScoreBreakdownEntry {
+  rule: string
+  points: number
+  detail?: string
+}
+
 @Schema({ timestamps: true })
 export class Lead {
   @Prop({ required: true }) name: string
@@ -76,6 +90,43 @@ export class Lead {
   // Champs directs extraits des formulaires
   @Prop({ type: String, default: null }) pays: string | null
   @Prop({ type: Number, default: null }) budget: number | null
+
+  // ── Lead Scoring EAP ─────────────────────────────────────────────────────
+  @Prop({ type: Number, default: 0, index: true }) score: number
+
+  @Prop({
+    type: String,
+    enum: ['HOT_A', 'HOT_B', 'WARM', 'COLD', 'OUT_OF_TARGET', 'DISQUALIFIED'],
+    default: null,
+    index: true,
+  })
+  qualification: LeadQualification | null
+
+  @Prop({ type: String, default: null }) disqualified_reason: string | null
+
+  @Prop({
+    type: [{
+      _id: false,
+      rule:   { type: String, required: true },
+      points: { type: Number, required: true },
+      detail: { type: String, default: '' },
+    }],
+    default: [],
+  })
+  score_breakdown: ScoreBreakdownEntry[]
+
+  @Prop({
+    type: [{
+      _id: false,
+      rule:    { type: String, required: true },
+      points:  { type: Number, required: true },
+      reason:  { type: String, default: '' },
+      author_id: { type: String, default: null },
+      date:    { type: Date, default: () => new Date() },
+    }],
+    default: [],
+  })
+  manual_bonuses: Array<{ rule: string; points: number; reason: string; author_id?: string | null; date: Date }>
 
   @Prop({
     type: [{

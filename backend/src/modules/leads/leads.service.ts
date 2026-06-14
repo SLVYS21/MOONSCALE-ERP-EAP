@@ -4,7 +4,8 @@ import { Cron } from '@nestjs/schedule'
 import { Model, Types } from 'mongoose'
 import axios from 'axios'
 import ical from 'ical-generator'
-import { Lead, LeadDocument, PipelineStatus, LeadSourceType } from './schemas/lead.schema'
+import { Lead, LeadDocument, PipelineStatus, LeadSourceType, LeadQualification } from './schemas/lead.schema'
+import { scoreEapLead, extractEapInputFromTypebot, nextPipelineStatus, EapScoringResult } from './eap-scoring'
 import { Call, CallDocument } from './schemas/call.schema'
 import { ScoringRule, ScoringRuleDocument } from './schemas/scoring-rule.schema'
 import { ScoringConfig, ScoringConfigDocument } from './schemas/scoring-config.schema'
@@ -299,6 +300,12 @@ export class LeadsService implements OnApplicationBootstrap {
     ])
 
     return { data, total, page, limit, totalPages: Math.ceil(total / limit) }
+  }
+
+  async getLeadDocument(id: string): Promise<LeadDocument> {
+    const lead = await this.leadModel.findById(id).exec()
+    if (!lead) throw new NotFoundException('Lead introuvable')
+    return lead
   }
 
   async getLead(id: string): Promise<LeadDocument> {
@@ -724,13 +731,25 @@ Sois concis et factuel. Réponds en français.`
       ? submittedRaw
       : (submittedRaw ? new Date(String(submittedRaw)) : null)
 
-    // 1. Dedup by typebot_result_id
+    // Compute EAP score from raw payload + parsed values
+    const eapInput = extractEapInputFromTypebot(payload, {
+      age: parsed.age,
+      phone: parsed.phone,
+      pays: parsed.pays,
+      motivation: parsed.motivation,
+    })
+    const scoring = scoreEapLead(eapInput)
+
+    // 1. Dedup by typebot_result_id — re-score existing lead too (re-submission)
     if (resultId) {
       const byResultId = await this.leadModel.findOne({ typebot_result_id: resultId }).exec()
-      if (byResultId) return byResultId
+      if (byResultId) {
+        await this.applyScoringToLead(byResultId, scoring)
+        return byResultId
+      }
     }
 
-    // 2. Dedup by email → upsert (update empty fields only)
+    // 2. Dedup by email → upsert + re-score
     if (parsed.email) {
       const byEmail = await this.leadModel.findOne({ email: parsed.email }).exec()
       if (byEmail) {
@@ -742,12 +761,13 @@ Sois concis et factuel. Réponds en français.`
         if (!byEmail.pays   && parsed.pays)           upd['pays']   = parsed.pays
         if (!byEmail.budget && finalBudget)            upd['budget'] = finalBudget
         if (Object.keys(upd).length) await this.leadModel.updateOne({ _id: byEmail._id }, { $set: upd })
+        await this.applyScoringToLead(byEmail, scoring)
         return byEmail
       }
     }
 
     // 3. Create new lead
-    return this.createLead({
+    const created = await this.createLead({
       name: parsed.name,
       email: parsed.email ?? undefined,
       phone: parsed.phone ? String(parsed.phone) : undefined,
@@ -764,6 +784,194 @@ Sois concis et factuel. Réponds en français.`
       source_form_name: srcFormName,
       submitted_at: submittedAt ?? undefined,
     })
+
+    await this.applyScoringToLead(created, scoring)
+    return created
+  }
+
+  // ── EAP Scoring application ────────────────────────────────────────────────
+
+  /**
+   * Persist scoring result on a lead + auto-promote pipeline_status (without
+   * downgrading leads already past rdv_programme). Re-uses existing manual
+   * bonuses so re-scoring doesn't wipe a closer's adjustments.
+   */
+  private async applyScoringToLead(
+    lead: LeadDocument,
+    scoring: EapScoringResult,
+  ): Promise<void> {
+    const prevQualif = (lead as Lead).qualification ?? null
+    const prevPipeline = (lead as Lead).pipeline_status
+
+    // Re-inject persisted manual bonuses so they stay in the breakdown / score
+    const manualBonuses = (lead as Lead).manual_bonuses ?? []
+    let finalScore = scoring.score
+    const finalBreakdown = [...scoring.breakdown]
+    if (!scoring.disqualified && manualBonuses.length > 0) {
+      for (const mb of manualBonuses) {
+        finalBreakdown.push({ rule: mb.rule, points: mb.points, detail: mb.reason ?? '' })
+        finalScore += mb.points
+      }
+    }
+    const finalQualif: LeadQualification = scoring.disqualified
+      ? 'DISQUALIFIED'
+      : (finalScore >= 220 ? 'HOT_A'
+        : finalScore >= 150 ? 'HOT_B'
+        : finalScore >= 90  ? 'WARM'
+        : finalScore >= 50  ? 'COLD'
+        : 'OUT_OF_TARGET')
+
+    const newPipeline = nextPipelineStatus(prevPipeline, finalQualif)
+
+    const upd: Record<string, unknown> = {
+      score: finalScore,
+      qualification: finalQualif,
+      disqualified_reason: scoring.disqualified_reason,
+      score_breakdown: finalBreakdown,
+    }
+    if (newPipeline !== prevPipeline) upd['pipeline_status'] = newPipeline
+
+    await this.leadModel.updateOne({ _id: lead._id }, { $set: upd })
+
+    // Audit trail
+    if (prevQualif !== finalQualif) {
+      const msg = scoring.disqualified
+        ? `Disqualifié: ${scoring.disqualified_reason} (score ${finalScore})`
+        : `Scoring EAP: ${finalQualif} (${finalScore} pts)`
+      await this.pushEvent(lead._id as Types.ObjectId, 'lead_scored', msg)
+    }
+    if (newPipeline !== prevPipeline) {
+      const STAGE_LABEL: Record<string, string> = {
+        nouveau: 'Nouveau', mql: 'MQL', sql: 'SQL', rdv_programme: 'RDV Programmé',
+        appel_diagnostic: 'Appel Diagnostic', won: 'Won', lost: 'Lost', nurturing: 'Nurturing',
+      }
+      await this.pushEvent(
+        lead._id as Types.ObjectId,
+        'pipeline_changed',
+        `Pipeline auto: ${STAGE_LABEL[prevPipeline] ?? prevPipeline} → ${STAGE_LABEL[newPipeline] ?? newPipeline} (scoring EAP)`,
+      )
+    }
+  }
+
+  /**
+   * Re-score every Typebot lead by rebuilding the EAP input from stored
+   * fields (lead + dynamic_fields). Useful after rule changes or for backfill.
+   */
+  async recalculateAllScores(): Promise<{ updated: number; disqualified: number; errors: number }> {
+    const leads = await this.leadModel.find({ source_type: 'typebot' }).exec()
+    let updated = 0, disqualified = 0, errors = 0
+
+    for (const lead of leads) {
+      try {
+        const dyn = (lead.dynamic_fields ?? {}) as Record<string, unknown>
+        const str = (key: string): string | null => {
+          const v = dyn[key]
+          return v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null
+        }
+        const scoring = scoreEapLead({
+          age: lead.age,
+          phone: lead.phone,
+          pays: lead.pays,
+          motivation: lead.motivation || null,
+          q9_situation_pro:        str('Situation professionnelle'),
+          q10_experience_ecom:     str('Expérience e-commerce Afrique'),
+          q11_invest_formation:    str('Déjà investi en formation'),
+          q12_connaissance_myril:  str('Connaissance Myril SEKOU') ?? lead.reseau_source ?? null,
+          q14_objectif_gain:       str('Objectif gain 6 mois'),
+          q15_pack_choisi:         str('Pack choisi'),
+          q16_montant_acompte:     str('Montant mobilisable immédiatement') ?? (lead.budget ? String(lead.budget) : null),
+          commentaire_libre:       str('Commentaire libre'),
+        })
+        await this.applyScoringToLead(lead, scoring)
+        if (scoring.disqualified) disqualified++
+        else updated++
+      } catch (err) {
+        this.logger.error(`recalculateAllScores: lead ${lead._id}: ${(err as Error).message}`)
+        errors++
+      }
+    }
+
+    this.logger.log(`recalculateAllScores: updated=${updated} disqualified=${disqualified} errors=${errors}`)
+    return { updated, disqualified, errors }
+  }
+
+  /**
+   * Add (or update) a manual bonus on a lead and re-apply scoring.
+   * Used by closers from LeadDetailPage UI.
+   */
+  async addManualBonus(
+    leadId: string,
+    dto: { rule: string; points: number; reason?: string },
+    userId?: string,
+  ): Promise<LeadDocument> {
+    const lead = await this.leadModel.findById(leadId).exec()
+    if (!lead) throw new NotFoundException('Lead introuvable')
+
+    const newBonus = {
+      rule: dto.rule,
+      points: dto.points,
+      reason: dto.reason ?? '',
+      author_id: userId ?? null,
+      date: new Date(),
+    }
+    const bonuses = [...((lead as Lead).manual_bonuses ?? []), newBonus]
+    await this.leadModel.updateOne({ _id: lead._id }, { $set: { manual_bonuses: bonuses } })
+    await this.pushEvent(
+      lead._id as Types.ObjectId,
+      'bonus_added',
+      `Bonus manuel: ${dto.rule} (${dto.points >= 0 ? '+' : ''}${dto.points} pts) — ${dto.reason ?? ''}`,
+      userId,
+    )
+
+    // Re-run scoring with the new bonus list
+    const refreshed = await this.leadModel.findById(leadId).exec()
+    if (refreshed) await this.rescoreLead(refreshed)
+    return (await this.leadModel.findById(leadId).lean()) as unknown as LeadDocument
+  }
+
+  async removeManualBonus(leadId: string, bonusIndex: number, userId?: string): Promise<LeadDocument> {
+    const lead = await this.leadModel.findById(leadId).exec()
+    if (!lead) throw new NotFoundException('Lead introuvable')
+    const bonuses = [...((lead as Lead).manual_bonuses ?? [])]
+    if (bonusIndex < 0 || bonusIndex >= bonuses.length) throw new BadRequestException('Bonus introuvable')
+    const removed = bonuses.splice(bonusIndex, 1)[0]
+    await this.leadModel.updateOne({ _id: lead._id }, { $set: { manual_bonuses: bonuses } })
+    await this.pushEvent(
+      lead._id as Types.ObjectId,
+      'bonus_removed',
+      `Bonus retiré: ${removed.rule} (${removed.points >= 0 ? '+' : ''}${removed.points} pts)`,
+      userId,
+    )
+    const refreshed = await this.leadModel.findById(leadId).exec()
+    if (refreshed) await this.rescoreLead(refreshed)
+    return (await this.leadModel.findById(leadId).lean()) as unknown as LeadDocument
+  }
+
+  /**
+   * Re-score a single lead from its stored fields. Public counterpart of
+   * recalculateAllScores for one-off use.
+   */
+  async rescoreLead(lead: LeadDocument): Promise<void> {
+    const dyn = (lead.dynamic_fields ?? {}) as Record<string, unknown>
+    const str = (key: string): string | null => {
+      const v = dyn[key]
+      return v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null
+    }
+    const scoring = scoreEapLead({
+      age: lead.age,
+      phone: lead.phone,
+      pays: lead.pays,
+      motivation: lead.motivation || null,
+      q9_situation_pro:        str('Situation professionnelle'),
+      q10_experience_ecom:     str('Expérience e-commerce Afrique'),
+      q11_invest_formation:    str('Déjà investi en formation'),
+      q12_connaissance_myril:  str('Connaissance Myril SEKOU') ?? lead.reseau_source ?? null,
+      q14_objectif_gain:       str('Objectif gain 6 mois'),
+      q15_pack_choisi:         str('Pack choisi'),
+      q16_montant_acompte:     str('Montant mobilisable immédiatement') ?? (lead.budget ? String(lead.budget) : null),
+      commentaire_libre:       str('Commentaire libre'),
+    })
+    await this.applyScoringToLead(lead, scoring)
   }
 
   // ── CSV Import (Typebot historique) ───────────────────────────────────────

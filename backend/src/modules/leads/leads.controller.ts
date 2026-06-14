@@ -206,6 +206,38 @@ export class LeadsController {
     return this.leadsService.migrateQualificationToStatus()
   }
 
+  // ── EAP Scoring engine ─────────────────────────────────────────────────────
+
+  @Post('scoring/recalculate-all')
+  recalculateAllScores() {
+    return this.leadsService.recalculateAllScores()
+  }
+
+  @Post(':id/scoring/rescore')
+  async rescoreLead(@Param('id') id: string) {
+    const lead = await this.leadsService.getLeadDocument(id)
+    await this.leadsService.rescoreLead(lead)
+    return this.leadsService.getLead(id)
+  }
+
+  @Post(':id/scoring/bonus')
+  addManualBonus(
+    @Param('id') id: string,
+    @Body() body: { rule: string; points: number; reason?: string },
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.leadsService.addManualBonus(id, body, String(user._id))
+  }
+
+  @Delete(':id/scoring/bonus/:index')
+  removeManualBonus(
+    @Param('id') id: string,
+    @Param('index') index: string,
+    @CurrentUser() user: UserDocument,
+  ) {
+    return this.leadsService.removeManualBonus(id, Number(index), String(user._id))
+  }
+
   // ── WhatsApp Tracking Links ────────────────────────────────────────────────
 
   @Get('tracking-links')

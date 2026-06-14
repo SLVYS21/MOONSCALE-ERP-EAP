@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, type ElementType, type ReactNode } from 'react'
+import { useState, useEffect, useRef, useCallback, type ElementType, type ReactNode } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
 import {
   ChevronLeft, ChevronRight, ExternalLink, CalendarDays,
   Clock, CheckCircle2, XCircle, Banknote, CreditCard, Search, ChevronDown, Package, Filter, X,
+  Plus, GraduationCap, User,
 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
@@ -90,21 +91,33 @@ function InlineDropdown<T extends string>({
   children: ReactNode
 }) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!open) return
     const fn = (e: MouseEvent) => {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+      if (!btnRef.current?.contains(e.target as Node)) setOpen(false)
     }
     document.addEventListener('mousedown', fn)
     return () => document.removeEventListener('mousedown', fn)
   }, [open])
 
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (pending) return
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      setPos({ top: r.bottom + 4, left: r.left })
+    }
+    setOpen((o) => !o)
+  }
+
   return (
-    <div ref={ref} className="relative inline-flex">
+    <div className="inline-flex">
       <button
-        onClick={(e) => { e.stopPropagation(); if (!pending) setOpen((o) => !o) }}
+        ref={btnRef}
+        onClick={handleOpen}
         disabled={pending}
         className={cn(
           'group flex items-center gap-1 rounded-lg px-1.5 py-0.5 transition-colors',
@@ -119,10 +132,13 @@ function InlineDropdown<T extends string>({
         )} />
       </button>
 
-      {open && (
+      {open && pos && (
         <>
-          <div className="fixed inset-0 z-20" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full z-30 mt-1 min-w-[180px] rounded-xl border border-gray-200 bg-white p-1 shadow-2xl">
+          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
+          <div
+            className="fixed z-[9999] min-w-[180px] rounded-xl border border-gray-200 bg-white p-1 shadow-2xl"
+            style={{ top: pos.top, left: pos.left }}
+          >
             {options.map((opt) => (
               <button
                 key={opt.value}
@@ -304,6 +320,265 @@ function TreatModal({ payment, offers, onClose }: { payment: Payment; offers: Of
   )
 }
 
+// ── Create payment modal ──────────────────────────────────────────────────────
+
+type ClientResult = { type: 'student' | 'lead'; _id: string; name: string; email: string | null; extra?: string }
+
+const CURRENCIES = ['F CFA', 'EURO', 'USD'] as const
+const MODALITIES = ['Complet', 'Partiel'] as const
+
+function CreatePaymentModal({ offers, onClose, onCreated }: {
+  offers: Offer[]
+  onClose: () => void
+  onCreated: () => void
+}) {
+  const [clientQuery, setClientQuery] = useState('')
+  const [clientResults, setClientResults] = useState<ClientResult[]>([])
+  const [selectedClient, setSelectedClient] = useState<ClientResult | null>(null)
+  const [showResults, setShowResults] = useState(false)
+  const searchRef = useRef<HTMLDivElement>(null)
+
+  const [product, setProduct] = useState(offers[0]?.name ?? '')
+  const [amount, setAmount] = useState('')
+  const [currency, setCurrency] = useState<typeof CURRENCIES[number]>('F CFA')
+  const [modality, setModality] = useState<typeof MODALITIES[number]>('Complet')
+  const [gateway, setGateway] = useState('')
+  const [notes, setNotes] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+
+  const search = useCallback(async (q: string) => {
+    if (q.trim().length < 2) { setClientResults([]); return }
+    try {
+      const res = await api.get<ClientResult[]>('/payments/client-search', { params: { q } })
+      setClientResults(res.data)
+      setShowResults(true)
+    } catch { /* silent */ }
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => search(clientQuery), 280)
+    return () => clearTimeout(t)
+  }, [clientQuery, search])
+
+  useEffect(() => {
+    const fn = (e: MouseEvent) => {
+      if (!searchRef.current?.contains(e.target as Node)) setShowResults(false)
+    }
+    document.addEventListener('mousedown', fn)
+    return () => document.removeEventListener('mousedown', fn)
+  }, [])
+
+  const selectClient = (c: ClientResult) => {
+    setSelectedClient(c)
+    setClientQuery(c.name)
+    setShowResults(false)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedClient) { setError('Sélectionnez un client'); return }
+    if (!product) { setError('Choisissez un produit'); return }
+    if (!amount || isNaN(Number(amount))) { setError('Montant invalide'); return }
+    setError('')
+    setSubmitting(true)
+    try {
+      await api.post('/payments', {
+        studentEmail: selectedClient.email ?? '',
+        studentName: selectedClient.name,
+        product,
+        modality,
+        amount: Number(amount),
+        currency,
+        gateway: gateway.trim() || undefined,
+        notes: notes.trim() || undefined,
+      })
+      onCreated()
+      onClose()
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setError(msg ?? 'Erreur lors de la création')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const inputCls = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-100'
+  const labelCls = 'mb-1 block text-xs font-medium text-gray-600'
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <h2 className="text-base font-semibold text-gray-900">Nouveau paiement</h2>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Client search */}
+          <div>
+            <label className={labelCls}>Client <span className="text-red-500">*</span></label>
+            <div ref={searchRef} className="relative">
+              <div className={cn(
+                'flex items-center gap-2 rounded-lg border px-3 py-2',
+                selectedClient ? 'border-indigo-300 bg-indigo-50' : 'border-gray-200 bg-white',
+              )}>
+                <Search size={14} className="shrink-0 text-gray-400" />
+                <input
+                  className="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 focus:outline-none"
+                  placeholder="Rechercher par nom ou email…"
+                  value={clientQuery}
+                  onChange={(e) => { setClientQuery(e.target.value); setSelectedClient(null) }}
+                  onFocus={() => clientResults.length > 0 && setShowResults(true)}
+                />
+                {selectedClient && (
+                  <button type="button" onClick={() => { setSelectedClient(null); setClientQuery('') }}>
+                    <X size={12} className="text-gray-400 hover:text-gray-600" />
+                  </button>
+                )}
+              </div>
+
+              {/* Selected client badge */}
+              {selectedClient && (
+                <div className="mt-2 flex items-center gap-2 rounded-lg bg-indigo-50 border border-indigo-100 px-3 py-2">
+                  {selectedClient.type === 'student'
+                    ? <GraduationCap size={14} className="text-indigo-600 shrink-0" />
+                    : <User size={14} className="text-purple-600 shrink-0" />
+                  }
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-semibold text-gray-900 truncate">{selectedClient.name}</p>
+                    <p className="text-[11px] text-gray-500 truncate">{selectedClient.email}</p>
+                  </div>
+                  <span className={cn(
+                    'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                    selectedClient.type === 'student' ? 'bg-indigo-100 text-indigo-700' : 'bg-purple-100 text-purple-700',
+                  )}>
+                    {selectedClient.type === 'student' ? 'Étudiant' : 'Lead'}
+                  </span>
+                </div>
+              )}
+
+              {/* Autocomplete results */}
+              {showResults && clientResults.length > 0 && (
+                <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-gray-200 bg-white shadow-xl overflow-hidden">
+                  {clientResults.map((c) => (
+                    <button
+                      key={`${c.type}-${c._id}`}
+                      type="button"
+                      onClick={() => selectClient(c)}
+                      className="flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      {c.type === 'student'
+                        ? <GraduationCap size={14} className="text-indigo-500 shrink-0" />
+                        : <User size={14} className="text-purple-500 shrink-0" />
+                      }
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{c.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{c.email ?? '—'}</p>
+                      </div>
+                      <span className={cn(
+                        'shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold',
+                        c.type === 'student' ? 'bg-indigo-50 text-indigo-600' : 'bg-purple-50 text-purple-600',
+                      )}>
+                        {c.type === 'student' ? 'Étudiant' : 'Lead'}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {showResults && clientResults.length === 0 && clientQuery.trim().length >= 2 && (
+                <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-xl">
+                  <p className="text-sm text-gray-500">Aucun résultat pour «&nbsp;{clientQuery}&nbsp;»</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Product + Modality */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Produit <span className="text-red-500">*</span></label>
+              <select className={inputCls} value={product} onChange={(e) => setProduct(e.target.value)} required>
+                {offers.map((o) => (
+                  <option key={o._id} value={o.name}>{o.name}</option>
+                ))}
+                <option value="COMPLEMENT">COMPLEMENT</option>
+                <option value="COACHING">COACHING</option>
+              </select>
+            </div>
+            <div>
+              <label className={labelCls}>Modalité <span className="text-red-500">*</span></label>
+              <select className={inputCls} value={modality} onChange={(e) => setModality(e.target.value as typeof MODALITIES[number])} required>
+                {MODALITIES.map((m) => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Amount + Currency */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>Montant <span className="text-red-500">*</span></label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                className={inputCls}
+                placeholder="0"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Devise</label>
+              <select className={inputCls} value={currency} onChange={(e) => setCurrency(e.target.value as typeof CURRENCIES[number])}>
+                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Gateway */}
+          <div>
+            <label className={labelCls}>Moyen de paiement</label>
+            <input
+              className={inputCls}
+              placeholder="Fedapay, Carte Bancaire, Wave…"
+              value={gateway}
+              onChange={(e) => setGateway(e.target.value)}
+            />
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className={labelCls}>Notes</label>
+            <textarea
+              className={cn(inputCls, 'resize-none')}
+              rows={2}
+              placeholder="Remarques éventuelles…"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
+          </div>
+
+          {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button type="button" onClick={onClose} className="rounded-lg px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 transition-colors">
+              Annuler
+            </button>
+            <Button type="submit" disabled={submitting || !selectedClient}>
+              {submitting ? 'Création…' : 'Créer le paiement'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 // ── Payments page ─────────────────────────────────────────────────────────────
 
 export function PaymentsPage() {
@@ -323,6 +598,7 @@ export function PaymentsPage() {
   const [treatPayment, setTreatPayment] = useState<Payment | null>(null)
   const [lightbox, setLightbox] = useState<{ images: string[]; idx: number } | null>(null)
   const [updatingCell, setUpdatingCell] = useState<{ id: string; field: string } | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(search), 300)
@@ -401,13 +677,24 @@ export function PaymentsPage() {
           <h1 className="text-xl font-semibold text-gray-900">Paiements</h1>
           <p className="mt-0.5 text-sm text-gray-500">{total} paiement{total !== 1 ? 's' : ''} affichés</p>
         </div>
-        <Link
-          to="/payments/offers"
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-600 hover:text-gray-900 transition-colors border border-gray-200"
-        >
-          <Package size={14} />
-          Offres & Souscriptions
-        </Link>
+        <div className="flex items-center gap-2">
+          {isAdmin && (
+            <Button
+              onClick={() => setCreateOpen(true)}
+              className="flex items-center gap-1.5"
+            >
+              <Plus size={14} />
+              Nouveau paiement
+            </Button>
+          )}
+          <Link
+            to="/payments/offers"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm text-gray-600 hover:text-gray-900 transition-colors border border-gray-200"
+          >
+            <Package size={14} />
+            Offres & Souscriptions
+          </Link>
+        </div>
       </div>
 
       {/* KPI cards */}
@@ -754,6 +1041,16 @@ export function PaymentsPage() {
           images={lightbox.images}
           initialIndex={lightbox.idx}
           onClose={() => setLightbox(null)}
+        />
+      )}
+      {createOpen && (
+        <CreatePaymentModal
+          offers={offers}
+          onClose={() => setCreateOpen(false)}
+          onCreated={() => {
+            qc.invalidateQueries({ queryKey: ['payments'] })
+            qc.invalidateQueries({ queryKey: ['payments-stats'] })
+          }}
         />
       )}
     </div>

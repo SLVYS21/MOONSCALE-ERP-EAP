@@ -40,6 +40,11 @@ class CreateTransactionDto {
   @IsOptional() @IsIn(['pending', 'completed', 'failed', 'refunded']) status?: string
   @IsOptional() @IsString() reference?: string
   @IsOptional() @IsString() notes?: string
+  @IsOptional() @IsString() customerEmail?: string | null
+  @IsOptional() @IsString() customerName?: string | null
+  @IsOptional() @IsString() leadId?: string | null
+  @IsOptional() @IsString() leadName?: string | null
+  @IsOptional() @IsString() studentId?: string | null
 }
 
 class UpdateTransactionDto {

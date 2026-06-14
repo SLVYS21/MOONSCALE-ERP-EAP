@@ -225,7 +225,9 @@ export class FinancesService {
     type: string; amount: number; currency?: string; description: string
     categoryId?: string | null; date: string; gateway?: string; status?: string
     reference?: string; notes?: string; createdById: string
-    customerEmail?: string | null
+    customerEmail?: string | null; customerName?: string | null
+    leadId?: string | null; leadName?: string | null
+    studentId?: string | null
   }) {
     const tx = await this.transactionModel.create({
       type: data.type,
@@ -240,6 +242,10 @@ export class FinancesService {
       notes: data.notes ?? '',
       createdBy: new Types.ObjectId(data.createdById),
       customerEmail: data.customerEmail ?? null,
+      customerName: data.customerName ?? null,
+      leadId: data.leadId ? new Types.ObjectId(data.leadId) : null,
+      leadName: data.leadName ?? null,
+      studentId: data.studentId ? new Types.ObjectId(data.studentId) : null,
     })
     await this.autoLinkTransaction(tx)
     if (tx.isModified()) await tx.save()
