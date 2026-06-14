@@ -704,6 +704,20 @@ export type LeadSourceType =
   | 'manual'
   | 'import'
 
+export type LeadQualification =
+  | 'HOT_A'
+  | 'HOT_B'
+  | 'WARM'
+  | 'COLD'
+  | 'OUT_OF_TARGET'
+  | 'DISQUALIFIED'
+
+export interface ScoreBreakdownEntry {
+  rule: string
+  points: number
+  detail?: string
+}
+
 export interface Lead {
   _id: string
   name: string
@@ -730,6 +744,11 @@ export interface Lead {
   submitted_at?: string | null
   pays?: string | null
   budget?: number | null
+  score?: number
+  qualification?: LeadQualification | null
+  disqualified_reason?: string | null
+  score_breakdown?: ScoreBreakdownEntry[]
+  manual_bonuses?: Array<{ rule: string; points: number; reason?: string; author_id?: string | null; date: string }>
   events: Array<{ type: string; message: string; date: string; actor_id?: string | null }>
   createdAt: string
   updatedAt: string

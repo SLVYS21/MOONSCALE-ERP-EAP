@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip } from 'recharts'
 import api from '@/services/api'
-import type { Lead, PipelineStatus, AppSettings } from '@/types'
+import type { Lead, LeadQualification, PipelineStatus, AppSettings } from '@/types'
 import { cn } from '@/lib/utils'
 import { type Period, periodToDates } from '@/lib/periods'
 import { DateRangePicker, ALL_PERIODS } from '@/components/ui/DateRangePicker'
@@ -114,6 +114,44 @@ function formatBudget(amount: number, lead: Lead): string {
   const explicit = (d['devise'] ?? d['Devise'] ?? d['currency'] ?? d['Currency']) as string | undefined
   const cur = explicit || (amount < 10000 ? '€' : 'F CFA')
   return `${amount.toLocaleString('fr-FR')} ${cur}`
+}
+
+// ── Lead Scoring badge helpers ────────────────────────────────────────────────
+
+const QUALIFICATION_STYLES: Record<LeadQualification, { label: string; classes: string; dot: string }> = {
+  HOT_A:         { label: 'HOT A',  classes: 'bg-red-50 text-red-700 border-red-200',         dot: 'bg-red-500' },
+  HOT_B:         { label: 'HOT B',  classes: 'bg-orange-50 text-orange-700 border-orange-200', dot: 'bg-orange-500' },
+  WARM:          { label: 'WARM',   classes: 'bg-yellow-50 text-yellow-700 border-yellow-200', dot: 'bg-yellow-500' },
+  COLD:          { label: 'COLD',   classes: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-500' },
+  OUT_OF_TARGET: { label: 'OUT',    classes: 'bg-gray-100 text-gray-500 border-gray-200',     dot: 'bg-gray-400' },
+  DISQUALIFIED:  { label: 'DISQ.',  classes: 'bg-rose-50 text-rose-700 border-rose-200 line-through decoration-rose-300', dot: 'bg-rose-500' },
+}
+
+function ScoreBadge({ lead, size = 'sm' }: { lead: Lead; size?: 'xs' | 'sm' }) {
+  if (!lead.qualification) return null
+  const style = QUALIFICATION_STYLES[lead.qualification]
+  const padding = size === 'xs' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-0.5 text-[11px]'
+  return (
+    <span
+      title={lead.disqualified_reason ?? `Score EAP : ${lead.score ?? 0} pts`}
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full border font-semibold shrink-0',
+        padding,
+        style.classes,
+      )}
+    >
+      <span className={cn('w-1.5 h-1.5 rounded-full', style.dot)} />
+      {style.label}
+      {typeof lead.score === 'number' && !['DISQUALIFIED'].includes(lead.qualification) && (
+        <span className="opacity-70 font-bold">·{lead.score}</span>
+      )}
+    </span>
+  )
+}
+
+// WhatsApp deep-link from a phone string (strips non-digits).
+function whatsappLink(phone: string): string {
+  return `https://wa.me/${phone.replace(/\D/g, '')}`
 }
 
 // ── Create Lead Modal ─────────────────────────────────────────────────────────
@@ -436,7 +474,7 @@ function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () =>
       to={`/leads/${lead._id}`}
       className="block rounded-xl bg-white border border-gray-200 hover:border-gray-200 hover:bg-gray-50 p-4 transition-all"
     >
-      {/* Avatar + call button */}
+      {/* Avatar + score badge + call button */}
       <div className="flex items-start justify-between gap-2">
         <div className={cn(
           'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0',
@@ -444,15 +482,18 @@ function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () =>
         )}>
           {getInitials(lead.name)}
         </div>
-        {onScheduleCall && (
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onScheduleCall() }}
-            title="Programmer un appel"
-            className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors shrink-0"
-          >
-            <CalendarDays size={14} />
-          </button>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <ScoreBadge lead={lead} />
+          {onScheduleCall && (
+            <button
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onScheduleCall() }}
+              title="Programmer un appel"
+              className="p-1.5 rounded-lg text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+            >
+              <CalendarDays size={14} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* NOM Prénom */}
@@ -469,6 +510,21 @@ function LeadCard({ lead, onScheduleCall }: { lead: Lead; onScheduleCall?: () =>
             {[profession, lead.age ? `${lead.age} ans` : null].filter(Boolean).join(' · ')}
           </span>
         </div>
+      )}
+
+      {/* Phone / WhatsApp */}
+      {lead.phone && (
+        <a
+          href={whatsappLink(lead.phone)}
+          target="_blank"
+          rel="noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          title="Ouvrir WhatsApp"
+          className="mt-1.5 inline-flex items-center gap-1.5 text-[11px] text-gray-600 hover:text-emerald-600 transition-colors"
+        >
+          <Phone size={10} className="shrink-0" />
+          <span className="truncate">{lead.phone}</span>
+        </a>
       )}
 
       {/* Budget */}
@@ -625,7 +681,7 @@ function TableView({ leads, onStatusChange, onScheduleCall }: {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-white">
-            {['Nom', 'Contact', 'Source', 'Pipeline', 'Closer', ''].map((h) => (
+            {['Nom', 'Contact', 'Scoring', 'Source', 'Pipeline', 'Closer', ''].map((h) => (
               <th key={h} className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wide">
                 {h}
               </th>
@@ -660,11 +716,21 @@ function TableView({ leads, onStatusChange, onScheduleCall }: {
                     </div>
                   )}
                   {lead.phone && (
-                    <div className="flex items-center gap-1.5 text-gray-400 mt-0.5">
+                    <a
+                      href={whatsappLink(lead.phone)}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Ouvrir WhatsApp"
+                      className="flex items-center gap-1.5 text-gray-500 hover:text-emerald-600 mt-0.5 transition-colors"
+                    >
                       <Phone size={12} />
                       <span className="text-xs">{lead.phone}</span>
-                    </div>
+                    </a>
                   )}
+                </td>
+                <td className="px-4 py-3">
+                  <ScoreBadge lead={lead} />
                 </td>
                 <td className="px-4 py-3">
                   {lead.utm_source ? (
@@ -730,7 +796,7 @@ function TableView({ leads, onStatusChange, onScheduleCall }: {
           })}
           {leads.length === 0 && (
             <tr>
-              <td colSpan={6} className="px-4 py-12 text-center text-sm text-gray-500">
+              <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-500">
                 Aucun lead trouvé
               </td>
             </tr>
