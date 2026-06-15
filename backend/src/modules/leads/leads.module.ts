@@ -4,6 +4,7 @@ import { Lead, LeadSchema } from './schemas/lead.schema'
 import { Call, CallSchema } from './schemas/call.schema'
 import { ScoringRule, ScoringRuleSchema } from './schemas/scoring-rule.schema'
 import { ScoringConfig, ScoringConfigSchema } from './schemas/scoring-config.schema'
+import { EapScoringRule, EapScoringRuleSchema } from './schemas/eap-scoring-rule.schema'
 import { WhatsAppLink, WhatsAppLinkSchema } from './schemas/whatsapp-link.schema'
 import { WhatsAppClick, WhatsAppClickSchema } from './schemas/whatsapp-click.schema'
 import { TypebotFormConfig, TypebotFormConfigSchema } from './schemas/typebot-form-config.schema'
@@ -23,6 +24,7 @@ import { User, UserSchema } from '../users/schemas/user.schema'
       { name: Call.name, schema: CallSchema },
       { name: ScoringRule.name, schema: ScoringRuleSchema },
       { name: ScoringConfig.name, schema: ScoringConfigSchema },
+      { name: EapScoringRule.name, schema: EapScoringRuleSchema },
       { name: WhatsAppLink.name, schema: WhatsAppLinkSchema },
       { name: WhatsAppClick.name, schema: WhatsAppClickSchema },
       { name: Student.name, schema: StudentSchema },

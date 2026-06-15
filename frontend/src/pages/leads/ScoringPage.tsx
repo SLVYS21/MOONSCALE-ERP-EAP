@@ -5,6 +5,9 @@ import { ArrowLeft, Plus, Trash2, ToggleLeft, ToggleRight, Settings } from 'luci
 import api from '@/services/api'
 import type { ScoringRule, ScoringConfig } from '@/types'
 import { cn } from '@/lib/utils'
+import { EapScoringTab } from './EapScoringTab'
+
+type TabKey = 'generic' | 'eap'
 
 const OPERATOR_LABELS: Record<string, string> = {
   equals: 'est égal à',
@@ -130,6 +133,7 @@ function RuleModal({ rule, onClose }: { rule?: ScoringRule; onClose: () => void 
 
 export function ScoringPage() {
   const qc = useQueryClient()
+  const [tab, setTab] = useState<TabKey>('eap')
   const [modal, setModal] = useState<'create' | 'edit' | null>(null)
   const [editing, setEditing] = useState<ScoringRule | undefined>()
 
@@ -176,7 +180,7 @@ export function ScoringPage() {
         />
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <Link to="/leads" className="text-gray-500 hover:text-gray-600">
             <ArrowLeft size={18} />
@@ -186,14 +190,40 @@ export function ScoringPage() {
             <p className="text-sm text-gray-500 mt-0.5">Règles de qualification des leads</p>
           </div>
         </div>
-        <button
-          onClick={() => { setEditing(undefined); setModal('create') }}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm text-white font-medium"
-        >
-          <Plus size={16} /> Nouvelle règle
-        </button>
+        {tab === 'generic' && (
+          <button
+            onClick={() => { setEditing(undefined); setModal('create') }}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-sm text-white font-medium"
+          >
+            <Plus size={16} /> Nouvelle règle
+          </button>
+        )}
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-gray-200 mb-5">
+        {[
+          { key: 'eap',     label: 'Règles EAP (Typebot)' },
+          { key: 'generic', label: 'Règles génériques' },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key as TabKey)}
+            className={cn(
+              'px-3 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+              tab === t.key
+                ? 'border-indigo-600 text-indigo-700'
+                : 'border-transparent text-gray-500 hover:text-gray-700',
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'eap' && <EapScoringTab />}
+
+      {tab === 'generic' && <>
       {/* Config thresholds */}
       {config && (
         <div className="rounded-xl bg-white border border-gray-200 p-4 mb-5">
@@ -290,6 +320,7 @@ export function ScoringPage() {
           </div>
         )}
       </div>
+      </>}
     </div>
   )
 }

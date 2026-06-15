@@ -5,10 +5,12 @@ import { Model, Types } from 'mongoose'
 import axios from 'axios'
 import ical from 'ical-generator'
 import { Lead, LeadDocument, PipelineStatus, LeadSourceType, LeadQualification } from './schemas/lead.schema'
-import { scoreEapLead, extractEapInputFromTypebot, nextPipelineStatus, EapScoringResult } from './eap-scoring'
+import { scoreEapLead, extractEapInputFromTypebot, nextPipelineStatus, EapScoringResult, EapScoringThresholds } from './eap-scoring'
 import { Call, CallDocument } from './schemas/call.schema'
 import { ScoringRule, ScoringRuleDocument } from './schemas/scoring-rule.schema'
 import { ScoringConfig, ScoringConfigDocument } from './schemas/scoring-config.schema'
+import { EapScoringRule, EapScoringRuleDocument, EapRuleCategory, EapMatchType, MatchConfig } from './schemas/eap-scoring-rule.schema'
+import { EAP_SCORING_SEED } from './eap-scoring-seed'
 import { WhatsAppLink, WhatsAppLinkDocument } from './schemas/whatsapp-link.schema'
 import { WhatsAppClick, WhatsAppClickDocument } from './schemas/whatsapp-click.schema'
 import { TypebotFormConfig, TypebotFormConfigDocument, TypebotFieldMapping } from './schemas/typebot-form-config.schema'
@@ -204,6 +206,7 @@ export class LeadsService implements OnApplicationBootstrap {
     @InjectModel(Call.name) private callModel: Model<CallDocument>,
     @InjectModel(ScoringRule.name) private scoringRuleModel: Model<ScoringRuleDocument>,
     @InjectModel(ScoringConfig.name) private scoringConfigModel: Model<ScoringConfigDocument>,
+    @InjectModel(EapScoringRule.name) private eapRuleModel: Model<EapScoringRuleDocument>,
     @InjectModel(WhatsAppLink.name) private whatsappLinkModel: Model<WhatsAppLinkDocument>,
     @InjectModel(WhatsAppClick.name) private whatsappClickModel: Model<WhatsAppClickDocument>,
     @InjectModel(Student.name) private studentModel: Model<StudentDocument>,
@@ -220,6 +223,35 @@ export class LeadsService implements OnApplicationBootstrap {
     if (ruleCount === 0) {
       await this.scoringRuleModel.insertMany(DEFAULT_SCORING_RULES)
       this.logger.log('Seeded 7 default scoring rules')
+    }
+
+    // Seed EAP rules (idempotent — n'écrase pas les règles existantes,
+    // ajoute seulement les keys manquantes)
+    const existingKeys = new Set(
+      (await this.eapRuleModel.find({}, { key: 1 }).lean()).map((r) => (r as { key: string }).key),
+    )
+    const toInsert = EAP_SCORING_SEED.filter((r) => !existingKeys.has(r.key))
+    if (toInsert.length > 0) {
+      await this.eapRuleModel.insertMany(toInsert)
+      this.logger.log(`Seeded ${toInsert.length} EAP scoring rules`)
+    }
+  }
+
+  // ── EAP context loading ──────────────────────────────────────────────────
+
+  private async loadEapContext(): Promise<{ rules: EapScoringRule[]; thresholds: EapScoringThresholds }> {
+    const [rules, config] = await Promise.all([
+      this.eapRuleModel.find().lean() as unknown as Promise<EapScoringRule[]>,
+      this.getOrCreateScoringConfig(),
+    ])
+    return {
+      rules,
+      thresholds: {
+        hot_a: config.eap_hot_a_threshold ?? 220,
+        hot_b: config.eap_hot_b_threshold ?? 150,
+        warm:  config.eap_warm_threshold  ?? 90,
+        cold:  config.eap_cold_threshold  ?? 50,
+      },
     }
   }
 
@@ -585,16 +617,78 @@ Sois concis et factuel. Réponds en français.`
     return this.getOrCreateScoringConfig()
   }
 
-  async updateScoringConfig(dto: { mql_threshold?: number; sql_threshold?: number }) {
+  async updateScoringConfig(dto: {
+    mql_threshold?: number; sql_threshold?: number;
+    eap_hot_a_threshold?: number; eap_hot_b_threshold?: number;
+    eap_warm_threshold?: number; eap_cold_threshold?: number;
+  }) {
     let config = await this.scoringConfigModel.findOne()
     if (!config) {
       config = await this.scoringConfigModel.create(dto)
     } else {
       if (dto.mql_threshold !== undefined) config.mql_threshold = dto.mql_threshold
       if (dto.sql_threshold !== undefined) config.sql_threshold = dto.sql_threshold
+      if (dto.eap_hot_a_threshold !== undefined) config.eap_hot_a_threshold = dto.eap_hot_a_threshold
+      if (dto.eap_hot_b_threshold !== undefined) config.eap_hot_b_threshold = dto.eap_hot_b_threshold
+      if (dto.eap_warm_threshold !== undefined)  config.eap_warm_threshold  = dto.eap_warm_threshold
+      if (dto.eap_cold_threshold !== undefined)  config.eap_cold_threshold  = dto.eap_cold_threshold
       await config.save()
     }
     return config
+  }
+
+  // ── EAP Scoring Rules ─────────────────────────────────────────────────────
+
+  async listEapScoringRules(): Promise<EapScoringRuleDocument[]> {
+    return this.eapRuleModel
+      .find()
+      .sort({ category: 1, priority: -1, display_order: 1 })
+      .lean() as unknown as EapScoringRuleDocument[]
+  }
+
+  async createEapScoringRule(dto: {
+    key: string; category: EapRuleCategory; label: string; description?: string;
+    match_type: EapMatchType; match_config?: MatchConfig;
+    points: number; priority?: number; display_order?: number;
+    is_active?: boolean; disqualification_reason?: string;
+  }): Promise<EapScoringRuleDocument> {
+    const existing = await this.eapRuleModel.findOne({ key: dto.key }).lean()
+    if (existing) throw new BadRequestException(`La règle "${dto.key}" existe déjà`)
+    return this.eapRuleModel.create({ ...dto, is_system: false })
+  }
+
+  async updateEapScoringRule(
+    id: string,
+    dto: Partial<{
+      label: string; description: string; match_type: EapMatchType;
+      match_config: MatchConfig; points: number;
+      priority: number; display_order: number; is_active: boolean;
+      disqualification_reason: string;
+    }>,
+  ): Promise<EapScoringRuleDocument> {
+    // On laisse modifier les règles système sauf la clé et le flag is_system
+    const safe: Record<string, unknown> = { ...dto }
+    delete (safe as Record<string, unknown>).key
+    delete (safe as Record<string, unknown>).is_system
+    const rule = await this.eapRuleModel.findByIdAndUpdate(id, safe, { new: true }).lean()
+    if (!rule) throw new NotFoundException('Règle EAP introuvable')
+    return rule as unknown as EapScoringRuleDocument
+  }
+
+  async deleteEapScoringRule(id: string): Promise<void> {
+    const rule = await this.eapRuleModel.findById(id).lean() as { is_system?: boolean } | null
+    if (!rule) throw new NotFoundException('Règle EAP introuvable')
+    if (rule.is_system) {
+      throw new BadRequestException('Impossible de supprimer une règle système — désactivez-la à la place')
+    }
+    await this.eapRuleModel.findByIdAndDelete(id)
+  }
+
+  async resetEapScoringSeed(): Promise<{ reinserted: number }> {
+    // Supprime toutes les règles is_system et les ré-insère depuis le seed
+    await this.eapRuleModel.deleteMany({ is_system: true })
+    await this.eapRuleModel.insertMany(EAP_SCORING_SEED)
+    return { reinserted: EAP_SCORING_SEED.length }
   }
 
   // ── WhatsApp Tracking ─────────────────────────────────────────────────────
@@ -738,7 +832,8 @@ Sois concis et factuel. Réponds en français.`
       pays: parsed.pays,
       motivation: parsed.motivation,
     })
-    const scoring = scoreEapLead(eapInput)
+    const eapCtx = await this.loadEapContext()
+    const scoring = scoreEapLead(eapInput, eapCtx.rules, eapCtx.thresholds)
 
     // 1. Dedup by typebot_result_id — re-score existing lead too (re-submission)
     if (resultId) {
@@ -799,6 +894,7 @@ Sois concis et factuel. Réponds en français.`
   private async applyScoringToLead(
     lead: LeadDocument,
     scoring: EapScoringResult,
+    thresholds?: EapScoringThresholds,
   ): Promise<void> {
     const prevQualif = (lead as Lead).qualification ?? null
     const prevPipeline = (lead as Lead).pipeline_status
@@ -813,12 +909,13 @@ Sois concis et factuel. Réponds en français.`
         finalScore += mb.points
       }
     }
+    const t: EapScoringThresholds = thresholds ?? (await this.loadEapContext()).thresholds
     const finalQualif: LeadQualification = scoring.disqualified
       ? 'DISQUALIFIED'
-      : (finalScore >= 220 ? 'HOT_A'
-        : finalScore >= 150 ? 'HOT_B'
-        : finalScore >= 90  ? 'WARM'
-        : finalScore >= 50  ? 'COLD'
+      : (finalScore >= t.hot_a ? 'HOT_A'
+        : finalScore >= t.hot_b ? 'HOT_B'
+        : finalScore >= t.warm  ? 'WARM'
+        : finalScore >= t.cold  ? 'COLD'
         : 'OUT_OF_TARGET')
 
     const newPipeline = nextPipelineStatus(prevPipeline, finalQualif)
@@ -860,6 +957,7 @@ Sois concis et factuel. Réponds en français.`
   async recalculateAllScores(): Promise<{ updated: number; disqualified: number; errors: number }> {
     const leads = await this.leadModel.find({ source_type: 'typebot' }).exec()
     let updated = 0, disqualified = 0, errors = 0
+    const eapCtx = await this.loadEapContext()
 
     for (const lead of leads) {
       try {
@@ -881,8 +979,8 @@ Sois concis et factuel. Réponds en français.`
           q15_pack_choisi:         str('Pack choisi'),
           q16_montant_acompte:     str('Montant mobilisable immédiatement') ?? (lead.budget ? String(lead.budget) : null),
           commentaire_libre:       str('Commentaire libre'),
-        })
-        await this.applyScoringToLead(lead, scoring)
+        }, eapCtx.rules, eapCtx.thresholds)
+        await this.applyScoringToLead(lead, scoring, eapCtx.thresholds)
         if (scoring.disqualified) disqualified++
         else updated++
       } catch (err) {
@@ -957,6 +1055,7 @@ Sois concis et factuel. Réponds en français.`
       const v = dyn[key]
       return v !== null && v !== undefined && String(v).trim() !== '' ? String(v).trim() : null
     }
+    const eapCtx = await this.loadEapContext()
     const scoring = scoreEapLead({
       age: lead.age,
       phone: lead.phone,
@@ -970,8 +1069,8 @@ Sois concis et factuel. Réponds en français.`
       q15_pack_choisi:         str('Pack choisi'),
       q16_montant_acompte:     str('Montant mobilisable immédiatement') ?? (lead.budget ? String(lead.budget) : null),
       commentaire_libre:       str('Commentaire libre'),
-    })
-    await this.applyScoringToLead(lead, scoring)
+    }, eapCtx.rules, eapCtx.thresholds)
+    await this.applyScoringToLead(lead, scoring, eapCtx.thresholds)
   }
 
   // ── CSV Import (Typebot historique) ───────────────────────────────────────

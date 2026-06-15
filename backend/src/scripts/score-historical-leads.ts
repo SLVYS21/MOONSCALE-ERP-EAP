@@ -30,7 +30,9 @@ import * as dotenv from 'dotenv'
 import * as path from 'node:path'
 import mongoose, { Types } from 'mongoose'
 
-import { scoreEapLead, nextPipelineStatus } from '../modules/leads/eap-scoring'
+import { scoreEapLead, nextPipelineStatus, EapScoringThresholds } from '../modules/leads/eap-scoring'
+import type { EapScoringRule } from '../modules/leads/schemas/eap-scoring-rule.schema'
+import { EAP_SCORING_SEED } from '../modules/leads/eap-scoring-seed'
 import type { LeadQualification, PipelineStatus } from '../modules/leads/schemas/lead.schema'
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') })
@@ -99,6 +101,20 @@ async function main() {
 
   const leads = await query.lean() as RawLead[]
 
+  // Charger les règles EAP + seuils depuis la DB (fallback seed si vide)
+  const EapRuleModel = mongoose.model('EapScoringRule', new mongoose.Schema({}, { strict: false, collection: 'eapscoringrules' }))
+  const ScoringConfigModel = mongoose.model('ScoringConfig', new mongoose.Schema({}, { strict: false, collection: 'scoringconfigs' }))
+  const dbRules = await EapRuleModel.find().lean() as unknown as EapScoringRule[]
+  const rules: EapScoringRule[] = dbRules.length > 0 ? dbRules : (EAP_SCORING_SEED as unknown as EapScoringRule[])
+  const cfg = await ScoringConfigModel.findOne().lean() as { eap_hot_a_threshold?: number; eap_hot_b_threshold?: number; eap_warm_threshold?: number; eap_cold_threshold?: number } | null
+  const thresholds: EapScoringThresholds = {
+    hot_a: cfg?.eap_hot_a_threshold ?? 220,
+    hot_b: cfg?.eap_hot_b_threshold ?? 150,
+    warm:  cfg?.eap_warm_threshold  ?? 90,
+    cold:  cfg?.eap_cold_threshold  ?? 50,
+  }
+  console.log(`📜  Règles EAP : ${rules.length} chargées${dbRules.length === 0 ? ' (seed fallback)' : ''}`)
+
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
   console.log(`📊  Lead Scoring EAP — Migration historique`)
   console.log(`🏃  Mode       : ${APPLY ? '⚠️  APPLY (écrit en BDD)' : '🔍 DRY RUN (simulation)'}`)
@@ -141,7 +157,7 @@ async function main() {
         q16_montant_acompte:     str(dyn, 'Montant mobilisable immédiatement') ?? (lead.budget ? String(lead.budget) : null),
         commentaire_libre:       str(dyn, 'Commentaire libre'),
         manual_bonuses:          lead.manual_bonuses ?? [],
-      })
+      }, rules, thresholds)
 
       counts[result.qualification]++
       const pipelineBefore = lead.pipeline_status

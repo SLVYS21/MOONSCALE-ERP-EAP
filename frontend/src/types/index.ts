@@ -810,6 +810,59 @@ export interface ScoringConfig {
   _id: string
   mql_threshold: number
   sql_threshold: number
+  eap_hot_a_threshold: number
+  eap_hot_b_threshold: number
+  eap_warm_threshold: number
+  eap_cold_threshold: number
+}
+
+export type EapRuleCategory =
+  | 'pack' | 'acompte' | 'objectif_gain' | 'connaissance_myril'
+  | 'experience_ecom' | 'invest_formation' | 'situation_pro'
+  | 'bonus' | 'malus' | 'disqualification'
+
+export type EapMatchType =
+  | 'pack_tier' | 'amount_range' | 'regex' | 'text_length'
+  | 'contains_any' | 'pack_acompte_combo' | 'age_below' | 'phone_invalid'
+
+export type EapSourceField =
+  | 'q9_situation_pro' | 'q10_experience_ecom' | 'q11_invest_formation'
+  | 'q12_connaissance_myril' | 'q14_objectif_gain' | 'q15_pack_choisi'
+  | 'q16_montant_acompte' | 'commentaire_libre' | 'motivation'
+  | 'pays' | 'age' | 'phone'
+
+export interface EapMatchConfig {
+  tier?: 'A' | 'B' | 'C' | 'D' | 'E'
+  field?: EapSourceField
+  min_amount?: number | null
+  max_amount?: number | null
+  pattern?: string
+  case_insensitive?: boolean
+  min_length?: number
+  requires_punctuation?: boolean
+  values?: string[]
+  pack_tiers?: Array<'A' | 'B' | 'C' | 'D' | 'E'>
+  acompte_threshold?: number
+  acompte_compare?: '<' | '>'
+  age_threshold?: number
+}
+
+export interface EapScoringRule {
+  _id: string
+  key: string
+  category: EapRuleCategory
+  label: string
+  description: string
+  match_type: EapMatchType
+  match_config: EapMatchConfig
+  points: number
+  priority: number
+  display_order: number
+  is_active: boolean
+  is_system: boolean
+  disqualification_reason: string
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface WhatsAppTrackingLink {

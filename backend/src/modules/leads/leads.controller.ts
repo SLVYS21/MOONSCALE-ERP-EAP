@@ -8,6 +8,7 @@ import type { Response } from 'express'
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard'
 import { CurrentUser } from '../../common/decorators/current-user.decorator'
 import { LeadsService, CreateLeadDto, UpdateLeadDto, ListLeadsQuery, CreateCallDto, UpdateCallDto, CreateScoringRuleDto, CreateTrackingLinkDto } from './leads.service'
+import type { EapRuleCategory, EapMatchType, MatchConfig } from './schemas/eap-scoring-rule.schema'
 import type { UserDocument } from '../users/schemas/user.schema'
 import { IsOptional as IOpt, IsString as IStr, IsNumber as INum, IsBoolean as IBool, IsIn as IIn } from 'class-validator'
 import { Type } from 'class-transformer'
@@ -104,6 +105,36 @@ class CreateScoringRuleBody implements CreateScoringRuleDto {
 class UpdateScoringConfigBody {
   @IOpt() @Type(() => Number) @INum() mql_threshold?: number
   @IOpt() @Type(() => Number) @INum() sql_threshold?: number
+  @IOpt() @Type(() => Number) @INum() eap_hot_a_threshold?: number
+  @IOpt() @Type(() => Number) @INum() eap_hot_b_threshold?: number
+  @IOpt() @Type(() => Number) @INum() eap_warm_threshold?: number
+  @IOpt() @Type(() => Number) @INum() eap_cold_threshold?: number
+}
+
+class CreateEapScoringRuleBody {
+  @IStr() key: string
+  @IStr() category: EapRuleCategory
+  @IStr() label: string
+  @IOpt() @IStr() description?: string
+  @IStr() match_type: EapMatchType
+  @IOpt() match_config?: MatchConfig
+  @Type(() => Number) @INum() points: number
+  @IOpt() @Type(() => Number) @INum() priority?: number
+  @IOpt() @Type(() => Number) @INum() display_order?: number
+  @IOpt() @IBool() is_active?: boolean
+  @IOpt() @IStr() disqualification_reason?: string
+}
+
+class UpdateEapScoringRuleBody {
+  @IOpt() @IStr() label?: string
+  @IOpt() @IStr() description?: string
+  @IOpt() @IStr() match_type?: EapMatchType
+  @IOpt() match_config?: MatchConfig
+  @IOpt() @Type(() => Number) @INum() points?: number
+  @IOpt() @Type(() => Number) @INum() priority?: number
+  @IOpt() @Type(() => Number) @INum() display_order?: number
+  @IOpt() @IBool() is_active?: boolean
+  @IOpt() @IStr() disqualification_reason?: string
 }
 
 class CreateTrackingLinkBody implements CreateTrackingLinkDto {
@@ -204,6 +235,35 @@ export class LeadsController {
   @Post('migrate-qualification-to-status')
   migrateQualificationToStatus() {
     return this.leadsService.migrateQualificationToStatus()
+  }
+
+  // ── EAP Scoring rules (CRUD) ───────────────────────────────────────────────
+
+  @Get('eap-scoring-rules')
+  listEapScoringRules() {
+    return this.leadsService.listEapScoringRules()
+  }
+
+  @Post('eap-scoring-rules')
+  createEapScoringRule(@Body() body: CreateEapScoringRuleBody) {
+    return this.leadsService.createEapScoringRule(body)
+  }
+
+  @Patch('eap-scoring-rules/:ruleId')
+  updateEapScoringRule(@Param('ruleId') ruleId: string, @Body() body: UpdateEapScoringRuleBody) {
+    return this.leadsService.updateEapScoringRule(ruleId, body)
+  }
+
+  @Delete('eap-scoring-rules/:ruleId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteEapScoringRule(@Param('ruleId') ruleId: string) {
+    return this.leadsService.deleteEapScoringRule(ruleId)
+  }
+
+  @Post('eap-scoring-rules/reset-seed')
+  @HttpCode(HttpStatus.OK)
+  resetEapScoringSeed() {
+    return this.leadsService.resetEapScoringSeed()
   }
 
   // ── EAP Scoring engine ─────────────────────────────────────────────────────
