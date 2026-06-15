@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import type { LucideIcon } from 'lucide-react'
 import {
   ArrowLeft, Eye, EyeOff, ExternalLink, Plus, Trash2, GripVertical,
-  ChevronUp, ChevronDown, Star,
+  ChevronUp, ChevronDown, Star, RotateCw,
   Type, AlignLeft, Mail, Phone, Hash, List, Circle, CheckSquare,
   Calendar, Paperclip, AlignJustify,
 } from 'lucide-react'
@@ -22,6 +22,8 @@ const fetchResponses = (id: string, page: number): Promise<PaginatedResponse<For
   api.get(`/forms/${id}/responses`, { params: { page, limit: 25 } }).then((r) => r.data)
 const deleteResponse = (formId: string, responseId: string) =>
   api.delete(`/forms/${formId}/responses/${responseId}`)
+const resubmitResponse = (formId: string, responseId: string) =>
+  api.post(`/forms/${formId}/responses/${responseId}/resubmit`)
 
 // ── Field type config ─────────────────────────────────────────────────────────
 
@@ -471,6 +473,10 @@ function ResponsesTab({ form }: { form: Form }) {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['form-responses', form._id] }),
   })
 
+  const resubmitMut = useMutation({
+    mutationFn: (responseId: string) => resubmitResponse(form._id, responseId),
+  })
+
   const answerableFields = form.fields.filter((f) => f.type !== 'heading' && f.type !== 'paragraph')
 
   if (isLoading) return <div className="py-8 text-center text-sm text-gray-500">Chargement...</div>
@@ -512,14 +518,32 @@ function ResponsesTab({ form }: { form: Form }) {
                   )
                 })}
                 <td className="px-4 py-3 text-right">
-                  <button
-                    onClick={() => {
-                      if (confirm('Supprimer cette réponse ?')) delMut.mutate(resp._id)
-                    }}
-                    className="rounded p-1 text-gray-500 hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  <div className="flex items-center justify-end gap-1">
+                    <button
+                      onClick={() => {
+                        if (confirm('Renvoyer cette réponse aux automatisations comme une nouvelle soumission ?')) {
+                          resubmitMut.mutate(resp._id, {
+                            onSuccess: () => alert('Réponse renvoyée aux automatisations'),
+                            onError: () => alert('Erreur lors du renvoi'),
+                          })
+                        }
+                      }}
+                      disabled={resubmitMut.isPending}
+                      title="Resoumettre (déclenche les automatisations)"
+                      className="rounded p-1 text-gray-500 hover:text-indigo-600 transition-colors disabled:opacity-40"
+                    >
+                      <RotateCw className={cn('h-3.5 w-3.5', resubmitMut.isPending && resubmitMut.variables === resp._id && 'animate-spin')} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm('Supprimer cette réponse ?')) delMut.mutate(resp._id)
+                      }}
+                      title="Supprimer"
+                      className="rounded p-1 text-gray-500 hover:text-red-400 transition-colors"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}

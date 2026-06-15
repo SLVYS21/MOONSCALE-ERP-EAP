@@ -106,6 +106,12 @@ export class FormsController {
     return this.formsService.deleteResponse(responseId)
   }
 
+  @Post(':id/responses/:responseId/resubmit')
+  @HttpCode(HttpStatus.OK)
+  resubmitResponse(@Param('responseId') responseId: string) {
+    return this.formsService.resubmitResponse(responseId)
+  }
+
   @Get(':id/stats')
   getFormStats(@Param('id') id: string) {
     return this.formsService.getFormStats(id)

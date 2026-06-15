@@ -237,6 +237,28 @@ export class FormsService {
     return { deleted: true }
   }
 
+  async resubmitResponse(responseId: string) {
+    const response = await this.responseModel.findById(responseId).lean()
+    if (!response) throw new NotFoundException('Réponse introuvable')
+
+    const form = await this.formModel.findById(response.formId).lean()
+    if (!form) throw new NotFoundException('Formulaire introuvable')
+
+    const answerMap: Record<string, unknown> = {}
+    for (const a of response.answers) answerMap[a.fieldId] = a.value
+
+    this.automationsService?.triggerEvent('form_submitted', {
+      formId: String(form._id),
+      responseId: String(response._id),
+      form: { title: form.title, slug: form.slug },
+      answers: answerMap,
+      submittedAt: new Date().toISOString(),
+      resubmitted: true,
+    })
+
+    return { resubmitted: true }
+  }
+
   async getFormStats(formId: string) {
     const form = await this.formModel.findById(formId).lean()
     if (!form) throw new NotFoundException('Formulaire introuvable')
