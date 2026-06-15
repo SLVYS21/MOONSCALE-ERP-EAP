@@ -788,6 +788,33 @@ export class AutomationsService {
         _createdBy: (automation as AutomationDocument).createdBy ?? (automation as Automation & { _id: Types.ObjectId }).createdBy,
       }
 
+      // form_submitted: pré-extraire la réponse une seule fois et l'exposer sous ctx.response
+      // Cela permet aux exprs par défaut ({{response.email}}, {{response.amount}}, …) de fonctionner
+      // et évite de re-faire l'extraction à chaque step.
+      if (automation.trigger.type === 'form_submitted' && context.responseId) {
+        const extracted = await this.extractStudentFromResponse(
+          String(context.responseId),
+          context.answers as Record<string, unknown> | undefined,
+          context.formId as string | undefined,
+        )
+        if (extracted) {
+          enrichedCtx.response = {
+            email:       extracted.email ?? '',
+            name:        extracted.name ?? '',
+            whatsapp:    extracted.whatsapp ?? '',
+            occupation:  extracted.occupation ?? '',
+            source:      extracted.source ?? '',
+            product:     extracted.product ?? '',
+            gateway:     extracted.gateway ?? '',
+            amount:      extracted.amount ?? '',
+            currency:    extracted.currency ?? '',
+            modality:    extracted.modality ?? '',
+            proofImages: extracted.proofImages ?? [],
+          }
+          enrichedCtx._extractedResponse = extracted
+        }
+      }
+
       for (const step of automation.steps) {
         const result = await this.executeStep(step, enrichedCtx)
         // Merge step outputs into context so subsequent steps can reference them
@@ -971,37 +998,63 @@ export class AutomationsService {
         }
 
         case 'create_payment': {
+          // Extraction depuis la réponse formulaire (mapping direct ou Groq), si dispo dans ctx
+          const extracted = ctx._extractedResponse as
+            | { name?: string; email?: string; amount?: number; currency?: string; modality?: 'Complet' | 'Partiel'; gateway?: string; product?: string; proofImages?: string[] }
+            | undefined
+
+          // Email: prend l'expr interpolée, sinon fallback sur la réponse extraite
           const emailRaw = interpolate(step.config.emailExpr ?? '', ctx)
-          const email = emailRaw.toLowerCase().trim()
+          const email = (emailRaw.toLowerCase().trim() || extracted?.email || '').toLowerCase().trim()
           if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
 
-          const amountRaw = interpolate(step.config.amountExpr ?? '0', ctx)
-          const amount = parseFloat(String(amountRaw).replace(/\s/g, '').replace(',', '.')) || 0
+          // Montant: expr → sinon valeur extraite
+          const amountRaw = interpolate(step.config.amountExpr ?? '', ctx)
+          const amountFromExpr = parseFloat(String(amountRaw).replace(/\s/g, '').replace(',', '.'))
+          const amount = !isNaN(amountFromExpr) && amountFromExpr > 0
+            ? amountFromExpr
+            : (extracted?.amount ?? 0)
 
           const student = await this.studentModel.findOne({ email }).select('_id name').lean()
 
-          const modality = (step.config.modality === 'Partiel' ? 'Partiel' : 'Complet') as 'Complet' | 'Partiel'
-          const currency = (['F CFA', 'USD', 'EURO'].includes(step.config.currency ?? '')
-            ? step.config.currency : 'F CFA') as 'F CFA' | 'USD' | 'EURO'
-          const product = step.config.product ?? ''
+          // Currency / modality / gateway / product: garde la config si valide, sinon valeur extraite
+          const allowedCurrencies = ['F CFA', 'USD', 'EURO'] as const
+          const currency = (allowedCurrencies.includes(step.config.currency as typeof allowedCurrencies[number])
+            ? step.config.currency
+            : (extracted?.currency && allowedCurrencies.includes(extracted.currency as typeof allowedCurrencies[number])
+                ? extracted.currency
+                : 'F CFA')) as 'F CFA' | 'USD' | 'EURO'
+
+          const modality = (step.config.modality === 'Partiel' || step.config.modality === 'Complet'
+            ? step.config.modality
+            : (extracted?.modality ?? 'Complet')) as 'Complet' | 'Partiel'
+
+          const product = step.config.product?.trim() || extracted?.product || ''
+
+          const gatewayInterpolated = interpolate(step.config.gateway ?? '', ctx).trim()
+          const gateway = gatewayInterpolated || extracted?.gateway || null
+
           const plan = step.config.plan ?? null
 
           const ctxResponseId = (ctx.responseId as string | undefined) ?? null
+          const proofImages = extracted?.proofImages?.length ? extracted.proofImages : []
 
           const createdPayment = await this.paymentModel.create({
             studentId: student?._id ?? null,
             studentEmail: email,
-            studentName: (student as unknown as { name?: string })?.name ?? null,
+            studentName: (student as unknown as { name?: string })?.name ?? extracted?.name ?? null,
             status: 'NON TRAITÉ',
             modality,
             amount,
             currency,
             product,
-            gateway: interpolate(step.config.gateway ?? '', ctx) || null,
+            gateway,
             plan,
-            source: 'manual',
+            proofImages,
+            source: ctxResponseId ? 'form' : 'manual',
             responseId: ctxResponseId ? new Types.ObjectId(ctxResponseId) : null,
           })
+
           const paymentCtxUpdate = {
             _id: String(createdPayment._id),
             studentEmail: email,
@@ -1010,19 +1063,25 @@ export class AutomationsService {
             amount,
             currency,
             modality,
+            gateway,
+            proofImages,
             status: 'NON TRAITÉ',
             responseId: ctxResponseId,
           }
           return {
             status: 'ok',
-            message: `Paiement créé pour ${email} — ${amount} ${currency}`,
+            message: `Paiement créé pour ${email} — ${amount} ${currency}${proofImages.length ? ` (${proofImages.length} preuve${proofImages.length > 1 ? 's' : ''})` : ''}`,
             contextUpdate: { payment: paymentCtxUpdate },
           }
         }
 
         case 'create_student': {
+          const ctxExtracted = ctx._extractedResponse as
+            | { name?: string; email?: string; whatsapp?: string; occupation?: string; source?: string; product?: string; gateway?: string; amount?: number; currency?: string; modality?: 'Complet' | 'Partiel'; proofImages?: string[] }
+            | undefined
+
           const emailRaw = interpolate(step.config.emailExpr ?? '', ctx)
-          let email = emailRaw.toLowerCase().trim()
+          let email = (emailRaw.toLowerCase().trim() || ctxExtracted?.email || '').toLowerCase().trim()
           if (!email) return { status: 'skipped', message: 'Email vide — étape ignorée' }
 
           type StudentLean = { _id: Types.ObjectId; email: string; name: string; whatsapp?: string | null; occupation?: string | null; source?: string | null; infoStatus?: string }
@@ -1035,14 +1094,14 @@ export class AutomationsService {
             (ctx.responseId as string | undefined) ??
             null
 
-          // Enrich from response (direct mapping for known forms, Groq otherwise)
-          const enriched = responseId
+          // Réutilise l'extraction déjà faite dans runAutomation si dispo, sinon refait l'appel
+          const enriched = ctxExtracted ?? (responseId
             ? await this.extractStudentFromResponse(
                 responseId,
                 ctx.answers as Record<string, unknown> | undefined,
                 (ctx.formId as string | undefined) ?? undefined,
               )
-            : null
+            : null)
 
           // Helper: apply enriched fields to linked payment if in context
           const applyPaymentEnrichment = async (enrichedData: NonNullable<typeof enriched>) => {
