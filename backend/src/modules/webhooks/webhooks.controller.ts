@@ -82,6 +82,13 @@ export class WebhooksController {
 
   // ── Tally → nouveau formulaire d'inscription ──────────────────────────────
 
+  @Post('test')
+  @HttpCode(HttpStatus.OK)
+  async handleTest(@Body() body: Record<string, unknown>) {
+    console.log(body);
+    return { received: true }
+  }
+
   @Post('tally')
   @HttpCode(HttpStatus.OK)
   async handleTally(@Body() body: Record<string, unknown>) {
@@ -134,7 +141,7 @@ export class WebhooksController {
   @Post('chariow')
   @HttpCode(HttpStatus.OK)
   async handleChariow(
-    @Body() body: Record<string, unknown>,
+    @Body() body: any,
     @Query('tag') tag: string,
     @Query() query: any
   ) {
@@ -145,7 +152,7 @@ export class WebhooksController {
       const name   = customer?.name as string
       const product = body.product as Record<string, unknown>
       const price   = (product?.price as Record<string, unknown>)
-      const amount  = Number(price?.value) || 0
+      const amount  = Number(price?.value) || Number(body.sale?.amount?.value as any) || 0
       const currency = (price?.currency as string) ?? 'XOF'
       const reference = (body.id ?? body.order_id ?? body.transaction_id) as string | undefined
 
