@@ -249,7 +249,7 @@ export function DashboardPage() {
       {
         queryKey: ['recent-transactions-dash'],
         queryFn: () =>
-          api.get<{ data: Transaction[] }>('/finances/transactions', { params: { limit: 8 } })
+          api.get<{ data: Transaction[] }>('/finances/transactions?status=completed', { params: { limit: 8 } })
             .then((r) => r.data.data),
       },
     ],
