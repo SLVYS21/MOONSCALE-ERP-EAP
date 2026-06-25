@@ -5,6 +5,7 @@ import {
   CheckSquare, BookOpen, MessageSquare, Settings, Zap, Sparkles,
   RefreshCw, CreditCard, ChevronDown, LogOut,
   Calendar, GraduationCap, Video, Lightbulb, Stars, Users2,
+  MessageCircle, FlaskConical, Bot, TrendingUp as TrendingUpIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -52,7 +53,7 @@ const MODULES: ModuleDef[] = [
     textColor: '#16a34a',
     activeBg: '#f0fdf4',
     borderColor: '#22c55e',
-    paths: ['/leads', '/analytics', '/students', '/payments'],
+    paths: ['/leads', '/analytics', '/students', '/payments', '/whatsapp'],
     defaultPath: '/leads',
     sections: [
       {
@@ -61,6 +62,15 @@ const MODULES: ModuleDef[] = [
           { to: '/leads', icon: LayoutDashboard, label: 'Dashboard', end: true },
           { to: '/leads', icon: Crosshair, label: 'Leads' },
           { to: '/analytics', icon: BarChart2, label: 'Analytics' },
+        ],
+      },
+      {
+        label: 'MESSAGERIE',
+        items: [
+          { to: '/whatsapp', icon: MessageCircle, label: 'Inbox WhatsApp' },
+          { to: '/whatsapp/assistant', icon: Bot, label: 'Assistant IA' },
+          { to: '/whatsapp/stats', icon: TrendingUpIcon, label: 'Statistiques' },
+          { to: '/whatsapp/simulator', icon: FlaskConical, label: 'Simulateur' },
         ],
       },
       {

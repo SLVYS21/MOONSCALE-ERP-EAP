@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { Search, Bell, Settings, Plus, Clock } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { cn } from '@/lib/utils'
+import { useWhatsAppNotifications } from '@/hooks/useWhatsAppNotifications'
 
 // ── Page metadata map ─────────────────────────────────────────────────────────
 
@@ -30,6 +31,10 @@ const PAGE_META: Record<string, { title: string; breadcrumb: string[] }> = {
   '/sync':             { title: 'Synchronisation',       breadcrumb: ['Home', 'Workspace', 'Sync'] },
   '/messages':         { title: 'Messages',              breadcrumb: ['Home', 'Workspace', 'Messages'] },
   '/settings':         { title: 'Paramètres',            breadcrumb: ['Home', 'Workspace', 'Paramètres'] },
+  '/whatsapp':           { title: 'Messagerie WhatsApp',     breadcrumb: ['Home', 'Sales', 'Messagerie'] },
+  '/whatsapp/simulator': { title: 'Simulateur WhatsApp',     breadcrumb: ['Home', 'Sales', 'Messagerie', 'Simulateur'] },
+  '/whatsapp/assistant': { title: 'Configuration Assistant', breadcrumb: ['Home', 'Sales', 'Messagerie', 'Assistant'] },
+  '/whatsapp/stats':     { title: 'Statistiques WhatsApp',   breadcrumb: ['Home', 'Sales', 'Messagerie', 'Stats'] },
 }
 
 function getPageMeta(pathname: string) {
@@ -91,6 +96,7 @@ function TopBar() {
 // ── Layout ────────────────────────────────────────────────────────────────────
 
 export function Layout() {
+  useWhatsAppNotifications()
   return (
     <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#f5f6fa' }}>
       <Sidebar />

@@ -24,6 +24,9 @@ import { AppSettingsModule } from './modules/app-settings/app-settings.module'
 import { ContentModule } from './modules/content/content.module'
 import { OffersModule } from './modules/offers/offers.module'
 import { CalcomDbModule } from './modules/calcom-db/calcom-db.module'
+import { LlmModule } from './modules/llm/llm.module'
+import { AssistantModule } from './modules/assistant/assistant.module'
+import { WhatsAppModule } from './modules/whatsapp/whatsapp.module'
 
 @Module({
   imports: [
@@ -57,6 +60,9 @@ import { CalcomDbModule } from './modules/calcom-db/calcom-db.module'
     ContentModule,
     OffersModule,
     CalcomDbModule,
+    LlmModule,
+    AssistantModule,
+    WhatsAppModule,
   ],
 })
 export class AppModule {}

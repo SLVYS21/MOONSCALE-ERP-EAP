@@ -28,6 +28,10 @@ import { AnalyticsPage } from '@/pages/analytics/AnalyticsPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { ContentPage } from '@/pages/content/ContentPage'
 import { SubscriptionOffersPage } from '@/pages/payments/SubscriptionOffersPage'
+import { InboxPage } from '@/pages/whatsapp/InboxPage'
+import { SimulatorPage } from '@/pages/whatsapp/SimulatorPage'
+import { AssistantConfigPage } from '@/pages/whatsapp/AssistantConfigPage'
+import { WhatsAppStatsPage } from '@/pages/whatsapp/WhatsAppStatsPage'
 
 export default function App() {
   return (
@@ -71,6 +75,10 @@ export default function App() {
           <Route path="/content/suggestions" element={<ContentPage />} />
           <Route path="/content/creators" element={<ContentPage />} />
           <Route path="/messages" element={<PlaceholderPage title="Messages" description="Communication interne d'équipe" />} />
+          <Route path="/whatsapp" element={<InboxPage />} />
+          <Route path="/whatsapp/simulator" element={<SimulatorPage />} />
+          <Route path="/whatsapp/assistant" element={<AssistantConfigPage />} />
+          <Route path="/whatsapp/stats" element={<WhatsAppStatsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Route>
