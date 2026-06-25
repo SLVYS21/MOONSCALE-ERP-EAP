@@ -13,6 +13,7 @@ import { normalizePhone } from '../../common/utils/phone.util'
 import { WhatsAppGateway } from './whatsapp.gateway'
 import { AssistantService } from '../assistant/assistant.service'
 import { LlmService } from '../llm/llm.service'
+import { KbService } from '../assistant/kb/kb.service'
 import { detectLanguage } from '../assistant/language'
 import type { LlmMessage, LlmToolCall, ToolDef } from '../llm/llm-provider.interface'
 import { ALL_TOOLS, getToolByName, type ToolContext } from './tools'
@@ -52,6 +53,7 @@ export class WhatsAppService {
     private readonly assistant: AssistantService,
     private readonly llm: LlmService,
     private readonly formRunner: FormRunnerService,
+    private readonly kb: KbService,
   ) {}
 
   // ── Incoming (from Evolution webhook OR simulator) ──────────────────────────
@@ -208,7 +210,21 @@ export class WhatsAppService {
       }))
 
     const contextHeader = this.buildContextHeader(conv)
-    const systemPrompt = `${config.systemPrompt}\n\n# Contexte conversation\n${contextHeader}`
+
+    // Build knowledge base context: always-included docs + retrieved chunks for current query
+    const lastUserText = [...ordered].reverse().find((m) => m.fromType === 'client')?.content ?? ''
+    const [alwaysIncluded, retrieved] = await Promise.all([
+      this.kb.getAlwaysIncludedContext(6000).catch(() => ''),
+      lastUserText ? this.kb.retrieveTopK(lastUserText, 3, 0.35).catch(() => []) : Promise.resolve([]),
+    ])
+    let kbSection = ''
+    if (alwaysIncluded) kbSection += `\n\n# Base de connaissance — toujours pertinente\n${alwaysIncluded}`
+    if (retrieved.length > 0) {
+      kbSection += `\n\n# Base de connaissance — extraits pertinents pour ce message\n` +
+        retrieved.map((r) => `--- ${r.documentName} (sim=${r.similarity.toFixed(2)}) ---\n${r.text}`).join('\n\n')
+    }
+
+    const systemPrompt = `${config.systemPrompt}${kbSection}\n\n# Contexte conversation\n${contextHeader}`
 
     const toolDefs: ToolDef[] = ALL_TOOLS.map((t) => t.def)
     const toolCtx: ToolContext = {

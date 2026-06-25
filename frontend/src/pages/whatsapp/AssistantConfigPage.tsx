@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bot, Save, Power, Clock, Sparkles } from 'lucide-react'
-import { assistantApi, type AssistantConfig, type LlmProviderName, MODELS_BY_PROVIDER } from '@/services/assistant'
+import { Bot, Save, Power, Clock, Sparkles, BookOpen, Upload, FileText, Image as ImageIcon, FileType, Trash2, Loader2, CheckCircle2, AlertTriangle } from 'lucide-react'
+import { assistantApi, type AssistantConfig, type LlmProviderName, MODELS_BY_PROVIDER, type KnowledgeDoc } from '@/services/assistant'
 import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 
@@ -259,6 +259,9 @@ export function AssistantConfigPage() {
         )}
       </Section>
 
+      {/* KB */}
+      <KbSection />
+
       {/* Save */}
       <div className="flex justify-end gap-2">
         <Button onClick={save} loading={saving}>
@@ -266,5 +269,150 @@ export function AssistantConfigPage() {
         </Button>
       </div>
     </div>
+  )
+}
+
+// ── KB section ───────────────────────────────────────────────────────────────
+
+function formatBytes(b: number): string {
+  if (b < 1024) return `${b} B`
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`
+  return `${(b / 1024 / 1024).toFixed(1)} MB`
+}
+
+function docIcon(type: KnowledgeDoc['type']) {
+  if (type === 'pdf') return FileText
+  if (type === 'image') return ImageIcon
+  return FileType
+}
+
+function KbSection() {
+  const qc = useQueryClient()
+  const { data: docs } = useQuery({
+    queryKey: ['kb.docs'],
+    queryFn: assistantApi.listKb,
+    refetchInterval: (q) => {
+      const data = q.state.data as KnowledgeDoc[] | undefined
+      return data?.some((d) => d.status === 'processing' || d.status === 'pending') ? 3000 : false
+    },
+  })
+  const [dragOver, setDragOver] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [alwaysIncluded, setAlwaysIncluded] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function upload(files: FileList | File[]) {
+    setUploading(true)
+    try {
+      for (const f of Array.from(files)) {
+        try {
+          await assistantApi.uploadKb(f, alwaysIncluded)
+        } catch (err: any) {
+          alert(`${f.name} — ${err?.response?.data?.message ?? err?.message ?? 'erreur'}`)
+        }
+      }
+      qc.invalidateQueries({ queryKey: ['kb.docs'] })
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  return (
+    <Section title="Base de connaissance" icon={BookOpen}>
+      {/* Drop zone */}
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault(); setDragOver(false)
+          if (e.dataTransfer.files?.length) upload(e.dataTransfer.files)
+        }}
+        className={cn(
+          'rounded-xl border-2 border-dashed p-6 text-center transition-colors',
+          dragOver ? 'border-indigo-400 bg-indigo-50' : 'border-gray-200 bg-gray-50',
+        )}
+      >
+        <Upload className="mx-auto h-7 w-7 text-gray-400" />
+        <p className="mt-2 text-sm font-medium text-gray-700">
+          Glisse-dépose tes fichiers ici ou
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            className="ml-1 text-indigo-600 underline cursor-pointer"
+          >clique pour parcourir</button>
+        </p>
+        <p className="mt-1 text-[11px] text-gray-400">PDF, image (jpg/png), txt, md — plusieurs fichiers OK</p>
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept=".pdf,.txt,.md,.markdown,image/*"
+          className="hidden"
+          onChange={(e) => e.target.files && upload(e.target.files)}
+        />
+        <label className="mt-3 inline-flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+          <input type="checkbox" checked={alwaysIncluded} onChange={(e) => setAlwaysIncluded(e.target.checked)} />
+          Toujours inclure ces documents dans le contexte (pour des docs très importants)
+        </label>
+        {uploading && (
+          <p className="mt-2 flex items-center justify-center gap-1 text-xs text-indigo-600">
+            <Loader2 className="h-3 w-3 animate-spin" /> Upload en cours…
+          </p>
+        )}
+      </div>
+
+      {/* List */}
+      <div className="mt-4">
+        {(!docs || docs.length === 0) ? (
+          <p className="text-center text-xs text-gray-400">Aucun document.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200">
+            {docs.map((d) => {
+              const Icon = docIcon(d.type)
+              return (
+                <li key={d._id} className="flex items-center gap-3 px-3 py-2.5">
+                  <Icon className="h-4 w-4 shrink-0 text-gray-500" />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="truncate text-sm font-medium text-gray-900">{d.name}</p>
+                      {d.status === 'ready' && <CheckCircle2 className="h-3 w-3 shrink-0 text-emerald-500" />}
+                      {(d.status === 'processing' || d.status === 'pending') && <Loader2 className="h-3 w-3 shrink-0 animate-spin text-indigo-500" />}
+                      {d.status === 'failed' && (
+                        <span title={d.errorMessage ?? ''}><AlertTriangle className="h-3 w-3 shrink-0 text-red-500" /></span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-gray-400">
+                      {d.type.toUpperCase()} · {formatBytes(d.bytes)} · {d.chunkCount} chunks · {d.status}
+                      {d.errorMessage && ` · ${d.errorMessage}`}
+                    </p>
+                  </div>
+                  <label className="flex items-center gap-1.5 text-[11px] text-gray-600 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={d.isAlwaysIncluded}
+                      onChange={async (e) => {
+                        await assistantApi.updateKb(d._id, { isAlwaysIncluded: e.target.checked })
+                        qc.invalidateQueries({ queryKey: ['kb.docs'] })
+                      }}
+                    />
+                    Toujours inclus
+                  </label>
+                  <button
+                    onClick={async () => {
+                      if (!confirm(`Supprimer "${d.name}" ?`)) return
+                      await assistantApi.deleteKb(d._id)
+                      qc.invalidateQueries({ queryKey: ['kb.docs'] })
+                    }}
+                    className="text-gray-400 hover:text-red-500 cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+    </Section>
   )
 }

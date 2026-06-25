@@ -1,7 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common'
-import pdfParse from 'pdf-parse'
 import { GoogleGenAI } from '@google/genai'
 import type { KnowledgeDocType } from '../schemas/knowledge-document.schema'
+
+async function parsePdf(buffer: Buffer): Promise<{ text: string; numpages: number }> {
+  const mod = await import('pdf-parse') as unknown as Record<string, unknown>
+  const PDFParseClass = mod.PDFParse as new (opts: Record<string, unknown>) => { getText: () => Promise<{ text: string; numpages?: number }> }
+  if (typeof PDFParseClass !== 'function') {
+    throw new Error(`pdf-parse: PDFParse introuvable (keys: ${Object.keys(mod).join(', ')})`)
+  }
+  const parser = new PDFParseClass({ data: buffer })
+  const result = await parser.getText()
+  return { text: result.text ?? '', numpages: result.numpages ?? 0 }
+}
 
 @Injectable()
 export class TextExtractorService {
@@ -25,8 +35,8 @@ export class TextExtractorService {
   async extract(buffer: Buffer, type: KnowledgeDocType, mimetype?: string): Promise<string> {
     switch (type) {
       case 'pdf': {
-        const res = {text: ""} //await this.pdfParse(buffer) //await pdfParse(buffer)
-        return (res?.text ?? '').trim()
+        const res = await parsePdf(buffer)
+        return (res.text ?? '').trim()
       }
       case 'txt':
       case 'md':

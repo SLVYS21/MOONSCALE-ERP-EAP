@@ -94,15 +94,6 @@ function InlineDropdown<T extends string>({
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    const fn = (e: MouseEvent) => {
-      if (!btnRef.current?.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', fn)
-    return () => document.removeEventListener('mousedown', fn)
-  }, [open])
-
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation()
     if (pending) return

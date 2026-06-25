@@ -51,11 +51,40 @@ export const MODELS_BY_PROVIDER: Record<LlmProviderName, { label: string; value:
   ],
 }
 
+export interface KnowledgeDoc {
+  _id: string
+  name: string
+  type: 'pdf' | 'txt' | 'md' | 'image'
+  url: string
+  bytes: number
+  chunkCount: number
+  isAlwaysIncluded: boolean
+  status: 'pending' | 'processing' | 'ready' | 'failed'
+  errorMessage: string | null
+  language: 'fr' | 'en' | 'mixed'
+  createdAt: string
+}
+
 export const assistantApi = {
   getConfig() {
     return api.get<AssistantConfig>('/assistant/config').then((r) => r.data)
   },
   updateConfig(patch: Partial<AssistantConfig>) {
     return api.patch<AssistantConfig>('/assistant/config', patch).then((r) => r.data)
+  },
+  listKb() {
+    return api.get<KnowledgeDoc[]>('/assistant/kb').then((r) => r.data)
+  },
+  uploadKb(file: File, isAlwaysIncluded: boolean) {
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('isAlwaysIncluded', String(isAlwaysIncluded))
+    return api.post<KnowledgeDoc>('/assistant/kb', fd, { headers: { 'Content-Type': 'multipart/form-data' } }).then((r) => r.data)
+  },
+  updateKb(id: string, patch: { isAlwaysIncluded?: boolean }) {
+    return api.patch<KnowledgeDoc>(`/assistant/kb/${id}`, patch).then((r) => r.data)
+  },
+  deleteKb(id: string) {
+    return api.delete(`/assistant/kb/${id}`).then((r) => r.data)
   },
 }
