@@ -1,6 +1,6 @@
 import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js'
 
-export const DEFAULT_COUNTRY: CountryCode = (process.env.DEFAULT_PHONE_COUNTRY as CountryCode) ?? 'CI'
+export const DEFAULT_COUNTRY: CountryCode = (process.env.DEFAULT_PHONE_COUNTRY as CountryCode) ?? 'BJ'
 
 export interface NormalizedPhone {
   e164: string | null
