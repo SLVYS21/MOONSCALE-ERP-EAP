@@ -29,6 +29,54 @@ function Section({ title, icon: Icon, children }: { title: string; icon: React.E
   )
 }
 
+function Toggle({
+  checked,
+  onChange,
+  busy = false,
+  color = 'indigo',
+  size = 'md',
+}: {
+  checked: boolean
+  onChange: (v: boolean) => void
+  busy?: boolean
+  color?: 'indigo' | 'emerald'
+  size?: 'md' | 'lg'
+}) {
+  const dim = size === 'lg'
+    ? { track: 'h-7 w-13', knob: 'h-6 w-6', translate: 'translate-x-6' }
+    : { track: 'h-6 w-11', knob: 'h-5 w-5', translate: 'translate-x-5' }
+  const onColor = color === 'emerald' ? 'bg-emerald-500' : 'bg-indigo-500'
+  return (
+    <button
+      type="button"
+      onClick={() => !busy && onChange(!checked)}
+      disabled={busy}
+      aria-pressed={checked}
+      className={cn(
+        'relative shrink-0 rounded-full transition-colors',
+        dim.track,
+        checked ? onColor : 'bg-gray-300',
+        busy ? 'cursor-wait opacity-70' : 'cursor-pointer',
+      )}
+      style={{ width: size === 'lg' ? 52 : 44, height: size === 'lg' ? 28 : 24 }}
+    >
+      <span
+        className={cn(
+          'absolute top-0.5 left-0.5 rounded-full bg-white shadow transition-transform',
+          dim.knob,
+        )}
+        style={{
+          transform: checked
+            ? `translateX(${size === 'lg' ? 24 : 20}px)`
+            : 'translateX(0)',
+        }}
+      >
+        {busy && <Loader2 className="h-full w-full animate-spin p-0.5 text-gray-400" />}
+      </span>
+    </button>
+  )
+}
+
 function ProviderPicker({ value, onChange }: { value: { provider: LlmProviderName; model: string }; onChange: (v: { provider: LlmProviderName; model: string }) => void }) {
   const models = MODELS_BY_PROVIDER[value.provider]
   return (
@@ -56,12 +104,22 @@ function ProviderPicker({ value, onChange }: { value: { provider: LlmProviderNam
   )
 }
 
+function extractError(e: unknown): string {
+  const err = e as { response?: { data?: { message?: string | string[] } }; message?: string }
+  const m = err?.response?.data?.message
+  if (Array.isArray(m)) return m.join(', ')
+  return m ?? err?.message ?? 'Erreur inconnue'
+}
+
 export function AssistantConfigPage() {
   const qc = useQueryClient()
   const { data, isLoading } = useQuery({ queryKey: ['assistant.config'], queryFn: assistantApi.getConfig })
   const [draft, setDraft] = useState<AssistantConfig | null>(null)
   const [saving, setSaving] = useState(false)
+  const [autoSaving, setAutoSaving] = useState<string | null>(null)
   const [useFallback, setUseFallback] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [successAt, setSuccessAt] = useState<number | null>(null)
 
   useEffect(() => {
     if (data) {
@@ -70,15 +128,52 @@ export function AssistantConfigPage() {
     }
   }, [data])
 
+  useEffect(() => {
+    if (!successAt) return
+    const t = setTimeout(() => setSuccessAt(null), 3500)
+    return () => clearTimeout(t)
+  }, [successAt])
+
   if (isLoading || !draft) return <div className="p-8 text-sm text-gray-500">Chargement…</div>
+
+  async function autoSave(patch: Partial<AssistantConfig>, label: string) {
+    if (!draft) return
+    setAutoSaving(label)
+    setErrorMsg(null)
+    const optimistic = { ...draft, ...patch }
+    setDraft(optimistic)
+    try {
+      const updated = await assistantApi.updateConfig(patch)
+      qc.setQueryData(['assistant.config'], updated)
+      setDraft(updated)
+      setSuccessAt(Date.now())
+    } catch (e) {
+      setDraft(draft)
+      setErrorMsg(`Échec ${label}: ${extractError(e)}`)
+    } finally {
+      setAutoSaving(null)
+    }
+  }
 
   async function save() {
     if (!draft) return
     setSaving(true)
+    setErrorMsg(null)
     try {
-      const patch = { ...draft, fallback: useFallback ? draft.fallback : null }
-      await assistantApi.updateConfig(patch)
-      qc.invalidateQueries({ queryKey: ['assistant.config'] })
+      const patch: Partial<AssistantConfig> = {
+        systemPrompt: draft.systemPrompt,
+        primary: draft.primary,
+        fallback: useFallback ? draft.fallback : null,
+        temperature: draft.temperature,
+        maxTokens: draft.maxTokens,
+        contextWindow: draft.contextWindow,
+      }
+      const updated = await assistantApi.updateConfig(patch)
+      qc.setQueryData(['assistant.config'], updated)
+      setDraft(updated)
+      setSuccessAt(Date.now())
+    } catch (e) {
+      setErrorMsg(`Échec sauvegarde: ${extractError(e)}`)
     } finally {
       setSaving(false)
     }
@@ -106,19 +201,26 @@ export function AssistantConfigPage() {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => setDraft({ ...draft, aiMasterEnabled: !draft.aiMasterEnabled })}
-          className={cn(
-            'relative h-7 w-12 rounded-full transition-colors cursor-pointer',
-            draft.aiMasterEnabled ? 'bg-emerald-500' : 'bg-gray-300',
-          )}
-        >
-          <span className={cn(
-            'absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform',
-            draft.aiMasterEnabled ? 'translate-x-5' : 'translate-x-0.5',
-          )} />
-        </button>
+        <Toggle
+          checked={draft.aiMasterEnabled}
+          onChange={(v) => autoSave({ aiMasterEnabled: v }, 'activation')}
+          busy={autoSaving === 'activation'}
+          color="emerald"
+          size="lg"
+        />
       </div>
+
+      {/* Error / success banners */}
+      {errorMsg && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-xs text-red-700">
+          {errorMsg}
+        </div>
+      )}
+      {successAt && Date.now() - successAt < 4000 && (
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-xs text-emerald-700">
+          Configuration sauvegardée
+        </div>
+      )}
 
       {/* Persona */}
       <Section title="Persona & instructions" icon={Sparkles}>
@@ -143,12 +245,13 @@ export function AssistantConfigPage() {
             <p className="text-xs font-semibold text-gray-700">Fallback</p>
             <p className="text-[11px] text-gray-400">Utilisé si le principal est en erreur</p>
           </div>
-          <button
-            onClick={() => setUseFallback(!useFallback)}
-            className={cn('relative h-6 w-11 rounded-full transition-colors cursor-pointer', useFallback ? 'bg-indigo-500' : 'bg-gray-300')}
-          >
-            <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', useFallback ? 'translate-x-5' : 'translate-x-0.5')} />
-          </button>
+          <Toggle
+            checked={useFallback}
+            onChange={async (v) => {
+              setUseFallback(v)
+              if (!v) await autoSave({ fallback: null }, 'fallback désactivé')
+            }}
+          />
         </div>
         {useFallback && (
           <ProviderPicker
@@ -196,12 +299,11 @@ export function AssistantConfigPage() {
       <Section title="Heures bureau" icon={Clock}>
         <div className="flex items-center justify-between">
           <p className="text-xs text-gray-600">Définir des heures bureau pour pouvoir couper l'IA pendant ces créneaux</p>
-          <button
-            onClick={() => setDraft({ ...draft, businessHours: { ...draft.businessHours, enabled: !draft.businessHours.enabled } })}
-            className={cn('relative h-6 w-11 rounded-full transition-colors cursor-pointer', draft.businessHours.enabled ? 'bg-indigo-500' : 'bg-gray-300')}
-          >
-            <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', draft.businessHours.enabled ? 'translate-x-5' : 'translate-x-0.5')} />
-          </button>
+          <Toggle
+            checked={draft.businessHours.enabled}
+            onChange={(v) => autoSave({ businessHours: { ...draft.businessHours, enabled: v } }, 'heures bureau')}
+            busy={autoSaving === 'heures bureau'}
+          />
         </div>
         {draft.businessHours.enabled && (
           <>
@@ -211,6 +313,7 @@ export function AssistantConfigPage() {
                   type="time"
                   value={draft.businessHours.startTime}
                   onChange={(e) => setDraft({ ...draft, businessHours: { ...draft.businessHours, startTime: e.target.value } })}
+                  onBlur={(e) => autoSave({ businessHours: { ...draft.businessHours, startTime: e.target.value } }, 'horaire')}
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
                 />
               </Field>
@@ -219,6 +322,7 @@ export function AssistantConfigPage() {
                   type="time"
                   value={draft.businessHours.endTime}
                   onChange={(e) => setDraft({ ...draft, businessHours: { ...draft.businessHours, endTime: e.target.value } })}
+                  onBlur={(e) => autoSave({ businessHours: { ...draft.businessHours, endTime: e.target.value } }, 'horaire')}
                   className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm"
                 />
               </Field>
@@ -234,11 +338,11 @@ export function AssistantConfigPage() {
                         const days = active
                           ? draft.businessHours.days.filter((x) => x !== idx)
                           : [...draft.businessHours.days, idx].sort()
-                        setDraft({ ...draft, businessHours: { ...draft.businessHours, days } })
+                        autoSave({ businessHours: { ...draft.businessHours, days } }, 'jours actifs')
                       }}
                       className={cn(
-                        'flex h-9 w-9 items-center justify-center rounded-md text-xs font-semibold cursor-pointer',
-                        active ? 'bg-indigo-500 text-white' : 'bg-gray-100 text-gray-500',
+                        'flex h-9 w-9 items-center justify-center rounded-md text-xs font-semibold cursor-pointer transition-colors',
+                        active ? 'bg-indigo-500 text-white hover:bg-indigo-600' : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
                       )}
                     >
                       {d}
@@ -251,7 +355,7 @@ export function AssistantConfigPage() {
               <input
                 type="checkbox"
                 checked={draft.businessHours.aiOffDuringHours}
-                onChange={(e) => setDraft({ ...draft, businessHours: { ...draft.businessHours, aiOffDuringHours: e.target.checked } })}
+                onChange={(e) => autoSave({ businessHours: { ...draft.businessHours, aiOffDuringHours: e.target.checked } }, 'IA pendant heures')}
               />
               Désactiver l'IA pendant les heures bureau (laisser les closers répondre)
             </label>

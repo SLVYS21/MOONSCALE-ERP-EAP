@@ -33,11 +33,11 @@ export interface AssistantConfig {
 
 export const MODELS_BY_PROVIDER: Record<LlmProviderName, { label: string; value: string }[]> = {
   groq: [
-    { label: 'Qwen 2.5 32B (fast, cheap)', value: 'qwen-2.5-32b' },
-    { label: 'Qwen 2.5 72B', value: 'qwen-2.5-72b' },
-    { label: 'Qwen QwQ 32B (reasoning)', value: 'qwen-qwq-32b' },
-    { label: 'Llama 3.3 70B', value: 'llama-3.3-70b-versatile' },
-    { label: 'Llama 3.1 8B (very cheap)', value: 'llama-3.1-8b-instant' },
+    { label: 'Llama 3.3 70B Versatile (recommended)', value: 'llama-3.3-70b-versatile' },
+    { label: 'Llama 3.1 8B Instant (very cheap)', value: 'llama-3.1-8b-instant' },
+    { label: 'Llama 4 Scout 17B', value: 'meta-llama/llama-4-scout-17b-16e-instruct' },
+    { label: 'OpenAI GPT OSS 20B', value: 'openai/gpt-oss-20b' },
+    { label: 'OpenAI GPT OSS 120B (most capable)', value: 'openai/gpt-oss-120b' },
   ],
   gemini: [
     { label: 'Gemini 2.5 Flash (recommended prod)', value: 'gemini-2.5-flash' },
@@ -65,12 +65,28 @@ export interface KnowledgeDoc {
   createdAt: string
 }
 
+const EDITABLE_FIELDS = [
+  'aiMasterEnabled',
+  'systemPrompt',
+  'primary',
+  'fallback',
+  'temperature',
+  'maxTokens',
+  'languages',
+  'businessHours',
+  'contextWindow',
+] as const
+
 export const assistantApi = {
   getConfig() {
     return api.get<AssistantConfig>('/assistant/config').then((r) => r.data)
   },
   updateConfig(patch: Partial<AssistantConfig>) {
-    return api.patch<AssistantConfig>('/assistant/config', patch).then((r) => r.data)
+    const clean: Record<string, unknown> = {}
+    for (const k of EDITABLE_FIELDS) {
+      if (k in patch) clean[k] = (patch as Record<string, unknown>)[k]
+    }
+    return api.patch<AssistantConfig>('/assistant/config', clean).then((r) => r.data)
   },
   listKb() {
     return api.get<KnowledgeDoc[]>('/assistant/kb').then((r) => r.data)

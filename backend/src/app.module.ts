@@ -22,6 +22,7 @@ import { LeadsModule } from './modules/leads/leads.module'
 import { AnalyticsModule } from './modules/analytics/analytics.module'
 import { AppSettingsModule } from './modules/app-settings/app-settings.module'
 import { ContentModule } from './modules/content/content.module'
+import { ContentTrackingModule } from './modules/content-tracking/content-tracking.module'
 import { OffersModule } from './modules/offers/offers.module'
 import { CalcomDbModule } from './modules/calcom-db/calcom-db.module'
 import { LlmModule } from './modules/llm/llm.module'
@@ -58,6 +59,7 @@ import { WhatsAppModule } from './modules/whatsapp/whatsapp.module'
     AnalyticsModule,
     AppSettingsModule,
     ContentModule,
+    ContentTrackingModule,
     OffersModule,
     CalcomDbModule,
     LlmModule,

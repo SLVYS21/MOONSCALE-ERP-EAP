@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Crosshair, BarChart2, Gift, Star, Link2,
   CheckSquare, BookOpen, MessageSquare, Settings, Zap, Sparkles,
   RefreshCw, CreditCard, ChevronDown, LogOut,
-  Calendar, GraduationCap, Video, Lightbulb, Stars, Users2,
+  Calendar, GraduationCap,
   MessageCircle, FlaskConical, Bot, TrendingUp as TrendingUpIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -177,7 +177,7 @@ const MODULES: ModuleDef[] = [
     textColor: '#2563eb',
     activeBg: '#eff6ff',
     borderColor: '#3b82f6',
-    paths: ['/automations', '/forms', '/content', '/sync', '/messages', '/settings'],
+    paths: ['/automations', '/forms', '/content', '/content/tracking', '/sync', '/messages', '/settings'],
     defaultPath: '/automations',
     sections: [
       {
@@ -190,11 +190,7 @@ const MODULES: ModuleDef[] = [
       {
         label: 'CONTENU',
         items: [
-          { to: '/content', icon: Sparkles, label: 'Dashboard', end: true },
-          { to: '/content/projects', icon: Video, label: 'Projets' },
-          { to: '/content/ideas', icon: Lightbulb, label: 'Idées' },
-          { to: '/content/suggestions', icon: Stars, label: 'Suggestions IA' },
-          { to: '/content/creators', icon: Users2, label: 'Créateurs' },
+          { to: '/content', icon: Sparkles, label: 'Création' },
         ],
       },
       {

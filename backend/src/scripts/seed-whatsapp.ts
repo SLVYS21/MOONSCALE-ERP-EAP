@@ -25,7 +25,7 @@ interface FakeConv {
 
 const FIXTURES: FakeConv[] = [
   {
-    phone: '+2250707070701',
+    phone: '+2290707070701',
     contactName: 'Aïcha Koffi',
     contactType: 'lead',
     status: 'human',
@@ -38,7 +38,7 @@ const FIXTURES: FakeConv[] = [
     ],
   },
   {
-    phone: '+2250505050502',
+    phone: '+2290505050502',
     contactName: 'Bernard Diallo',
     contactType: 'student',
     status: 'human',
@@ -50,7 +50,7 @@ const FIXTURES: FakeConv[] = [
     ],
   },
   {
-    phone: '+2250606060603',
+    phone: '+2290606060603',
     contactName: 'Chantal Mensah',
     contactType: 'unknown',
     status: 'human',
@@ -62,7 +62,7 @@ const FIXTURES: FakeConv[] = [
     ],
   },
   {
-    phone: '+2250404040404',
+    phone: '+2290404040404',
     contactName: null as any,
     contactType: 'unknown',
     status: 'human',
@@ -73,7 +73,7 @@ const FIXTURES: FakeConv[] = [
     ],
   },
   {
-    phone: '+2250808080805',
+    phone: '+2290808080805',
     contactName: 'Estelle Bamba',
     contactType: 'lead',
     status: 'paused',

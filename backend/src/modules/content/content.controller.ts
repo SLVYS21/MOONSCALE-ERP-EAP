@@ -82,6 +82,14 @@ class UpdateCaptureBody {
   @IStr() text: string
 }
 
+class AnalyzeReferencesBody {
+  @IArr() video_urls: string[]
+}
+
+class CorrectScriptBody {
+  @IStr() instruction: string
+}
+
 @Controller('content/projects')
 @UseGuards(JwtAuthGuard)
 export class ContentController {
@@ -238,6 +246,23 @@ export class ContentController {
   @Post(':id/select-hook')
   selectHook(@Param('id') id: string, @Body() body: SelectHookBody) {
     return this.contentService.selectHook(id, body.hook_index)
+  }
+
+  // ── Pipeline (references, script correction, publish time) ───────────────────
+
+  @Post(':id/analyze-references')
+  analyzeReferences(@Param('id') id: string, @Body() body: AnalyzeReferencesBody) {
+    return this.contentService.analyzeReferenceVideos(id, body.video_urls)
+  }
+
+  @Post(':id/correct-script')
+  correctScript(@Param('id') id: string, @Body() body: CorrectScriptBody) {
+    return this.contentService.correctScript(id, body.instruction)
+  }
+
+  @Post(':id/suggest-publish-time')
+  suggestPublishTime(@Param('id') id: string, @CurrentUser() user: UserDocument) {
+    return this.contentService.suggestPublishTime(id, String(user._id))
   }
 
   // ── Checklist ───────────────────────────────────────────────────────────────

@@ -15,9 +15,9 @@ interface LogEntry {
 }
 
 const PRESETS = [
-  { phone: '+2250500000001', name: 'Test client #1' },
-  { phone: '+2250500000002', name: 'Test client #2' },
-  { phone: '+2250500000003', name: 'Test client #3' },
+  { phone: '+2290500000001', name: 'Test client #1' },
+  { phone: '+2290500000002', name: 'Test client #2' },
+  { phone: '+2290500000003', name: 'Test client #3' },
 ]
 
 function formatTime(d: Date): string {

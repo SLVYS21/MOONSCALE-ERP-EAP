@@ -106,7 +106,7 @@ export class CalcomDbService implements OnApplicationBootstrap, OnApplicationShu
       this.listenerClient = client
       this.logger.log('Listening for Cal.com bookings via NOTIFY ✓')
     } catch (err) {
-      this.logger.error(`Failed to start Cal.com DB listener: ${(err as Error).message} — retrying in 5s`)
+      //this.logger.error(`Failed to start Cal.com DB listener: ${(err as Error).message} — retrying in 5s`)
       this.scheduleReconnect()
     }
   }

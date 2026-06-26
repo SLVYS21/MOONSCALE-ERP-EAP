@@ -15,6 +15,27 @@ export type DurationType = 'court' | 'long'
 export interface ChecklistItem { id: string; label: string; done: boolean }
 export interface Hook { text: string; selected: boolean }
 
+export interface ReferenceVideo {
+  url: string
+  platform: 'youtube' | 'tiktok'
+  title: string
+  channel?: string
+  views?: number
+  duration_seconds?: number
+  transcript?: string
+  keep_points: string[]
+  discard_points: string[]
+  why_it_works: string
+  added_at: Date
+}
+
+export interface ScriptCorrection {
+  id: string
+  instruction: string
+  result: string
+  at: Date
+}
+
 export function defaultVideoChecklist(): ChecklistItem[] {
   return [
     { id: 'script',      label: 'Script finalisé',            done: false },
@@ -116,6 +137,44 @@ export class VideoProject {
   checklist: ChecklistItem[]
 
   @Prop({ default: 0 }) order: number
+
+  // ── Pipeline étendu (analyse refs, corrections script, heure de publi, créateur analysé)
+  @Prop({
+    type: [{
+      _id: false,
+      url: { type: String, required: true },
+      platform: { type: String, enum: ['youtube', 'tiktok'], default: 'youtube' },
+      title: { type: String, default: '' },
+      channel: { type: String, default: '' },
+      views: { type: Number, default: 0 },
+      duration_seconds: { type: Number, default: 0 },
+      transcript: { type: String, default: '' },
+      keep_points: { type: [String], default: [] },
+      discard_points: { type: [String], default: [] },
+      why_it_works: { type: String, default: '' },
+      added_at: { type: Date, default: Date.now },
+    }],
+    default: [],
+  })
+  reference_videos: ReferenceVideo[]
+
+  @Prop({
+    type: [{
+      _id: false,
+      id: { type: String, required: true },
+      instruction: { type: String, required: true },
+      result: { type: String, default: '' },
+      at: { type: Date, default: Date.now },
+    }],
+    default: [],
+  })
+  script_correction_history: ScriptCorrection[]
+
+  @Prop({ type: String, default: '' }) publish_time_suggestion: string
+  @Prop({ type: String, default: '' }) publish_time_rationale: string
+
+  @Prop({ type: Types.ObjectId, ref: 'CreatorAnalysis', default: null })
+  analyzed_creator_id: Types.ObjectId | null
 
   @Prop({ type: Types.ObjectId, ref: 'User', default: null })
   created_by: Types.ObjectId | null

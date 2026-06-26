@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common'
 import { MongooseModule } from '@nestjs/mongoose'
+import { LlmModule } from '../llm/llm.module'
+import { ContentTrackingModule } from '../content-tracking/content-tracking.module'
 import { ContentController } from './content.controller'
 import { ContentService } from './content.service'
 import { VideoProject, VideoProjectSchema } from './schemas/video-project.schema'
@@ -9,6 +11,8 @@ import { ContentCapture, ContentCaptureSchema } from './schemas/content-capture.
 
 @Module({
   imports: [
+    LlmModule,
+    ContentTrackingModule,
     MongooseModule.forFeature([
       { name: VideoProject.name, schema: VideoProjectSchema },
       { name: ContentCreator.name, schema: ContentCreatorSchema },

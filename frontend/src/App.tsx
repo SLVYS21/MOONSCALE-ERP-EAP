@@ -27,6 +27,10 @@ import { TrackingLinksPage } from '@/pages/leads/TrackingLinksPage'
 import { AnalyticsPage } from '@/pages/analytics/AnalyticsPage'
 import { SettingsPage } from '@/pages/settings/SettingsPage'
 import { ContentPage } from '@/pages/content/ContentPage'
+import { ProjectPipelinePage } from '@/pages/content/ProjectPipelinePage'
+import { ContentTrackingPage } from '@/pages/content-tracking/ContentTrackingPage'
+import { AccountDashboardPage } from '@/pages/content-tracking/AccountDashboardPage'
+import { VideoInsightsPage } from '@/pages/content-tracking/VideoInsightsPage'
 import { SubscriptionOffersPage } from '@/pages/payments/SubscriptionOffersPage'
 import { InboxPage } from '@/pages/whatsapp/InboxPage'
 import { SimulatorPage } from '@/pages/whatsapp/SimulatorPage'
@@ -70,10 +74,10 @@ export default function App() {
           <Route path="/leads/:id" element={<LeadDetailPage />} />
           <Route path="/analytics" element={<AnalyticsPage />} />
           <Route path="/content" element={<ContentPage />} />
-          <Route path="/content/projects" element={<ContentPage />} />
-          <Route path="/content/ideas" element={<ContentPage />} />
-          <Route path="/content/suggestions" element={<ContentPage />} />
-          <Route path="/content/creators" element={<ContentPage />} />
+          <Route path="/content/projects/:id" element={<ProjectPipelinePage />} />
+          <Route path="/content/tracking" element={<ContentTrackingPage />} />
+          <Route path="/content/tracking/:id" element={<AccountDashboardPage />} />
+          <Route path="/content/tracking/:id/videos/:vid" element={<VideoInsightsPage />} />
           <Route path="/messages" element={<PlaceholderPage title="Messages" description="Communication interne d'équipe" />} />
           <Route path="/whatsapp" element={<InboxPage />} />
           <Route path="/whatsapp/simulator" element={<SimulatorPage />} />

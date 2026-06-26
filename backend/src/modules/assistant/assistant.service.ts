@@ -18,6 +18,20 @@ export class AssistantService implements OnModuleInit {
   private async ensureDefault() {
     const existing = await this.model.findOne({ key: 'default' })
     if (existing) {
+      const decommissioned = ['qwen-2.5-32b', 'qwen-2.5-72b', 'qwen-qwq-32b']
+      let mutated = false
+      if (existing.primary?.provider === 'groq' && decommissioned.includes(existing.primary.model)) {
+        existing.primary = { provider: 'groq', model: 'llama-3.3-70b-versatile' }
+        mutated = true
+      }
+      if (existing.fallback?.provider === 'groq' && decommissioned.includes(existing.fallback.model)) {
+        existing.fallback = { provider: 'groq', model: 'llama-3.3-70b-versatile' }
+        mutated = true
+      }
+      if (mutated) {
+        await existing.save()
+        this.logger.log('AssistantConfig migrated off decommissioned Groq Qwen model → llama-3.3-70b-versatile')
+      }
       this.cached = existing
       return
     }
@@ -25,7 +39,7 @@ export class AssistantService implements OnModuleInit {
       key: 'default',
       aiMasterEnabled: false,
       systemPrompt: DEFAULT_PERSONA_PROMPT,
-      primary: { provider: 'groq', model: 'qwen-2.5-32b' },
+      primary: { provider: 'groq', model: 'llama-3.3-70b-versatile' },
       fallback: null,
       temperature: 0.7,
       maxTokens: 600,
