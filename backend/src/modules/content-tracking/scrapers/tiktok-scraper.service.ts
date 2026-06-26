@@ -1,6 +1,6 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import axios, { AxiosInstance } from 'axios'
+import youtubeDl from 'youtube-dl-exec'
 import {
   IPlatformScraper,
   ScrapedMetrics,
@@ -9,106 +9,125 @@ import {
 } from './scraper.types'
 import { TrackedPlatform } from '../schemas/tracked-account.schema'
 
-// Shape returned by https://tiktok-scraper.omkar.cloud (cf. doc API)
-type OmkarVideo = {
-  video_id: string
-  region?: string
-  caption?: string
-  created_at?: number // unix seconds
-  duration_seconds?: number
-  author?: {
-    user_id?: string
-    handle?: string
-    display_name?: string
-    avatar_url?: string
-  }
-  media?: {
-    video_url?: string
-    watermarked_video_url?: string
-    hd_video_url?: string
-  }
-  thumbnails?: {
-    cover_url?: string
-    animated_cover_url?: string
-    original_cover_url?: string
-  }
-  stats?: {
-    views?: number
-    likes?: number
-    comments?: number
-    shares?: number
-    downloads?: number
-    saves?: number
-  }
-  is_advertisement?: boolean
-  is_pinned?: boolean
+// Shape of yt-dlp output for a TikTok user page (flat-playlist mode).
+// TikTok is unusual: even in flat-playlist mode, yt-dlp returns full stats
+// (view_count, like_count, comment_count, repost_count) per entry. So a single
+// listAccountVideos() call already gives us everything getVideoStats() needs.
+type TikTokFlatEntry = {
+  id: string
+  title?: string
+  description?: string
+  url?: string
+  webpage_url?: string
+  uploader?: string
+  uploader_id?: string
+  channel?: string
+  channel_id?: string
+  thumbnail?: string
+  thumbnails?: Array<{ url: string }>
+  duration?: number
+  timestamp?: number
+  upload_date?: string
+  view_count?: number
+  like_count?: number
+  comment_count?: number
+  repost_count?: number
 }
 
-type OmkarUserVideosResponse = { videos: OmkarVideo[]; next_page_cursor?: number | string | null }
-type OmkarVideoDetailsResponse = OmkarVideo
+type TikTokFlatPlaylistOutput = {
+  entries?: TikTokFlatEntry[]
+  uploader?: string
+  uploader_id?: string
+}
+
+// Shape of yt-dlp output for a single TikTok video (full extraction)
+type TikTokSingleVideoInfo = {
+  id?: string
+  title?: string
+  description?: string
+  thumbnail?: string
+  thumbnails?: Array<{ url: string }>
+  duration?: number
+  timestamp?: number
+  upload_date?: string
+  uploader?: string
+  uploader_id?: string
+  webpage_url?: string
+  view_count?: number
+  like_count?: number
+  comment_count?: number
+  repost_count?: number
+  tags?: string[]
+  hashtags?: string[]
+}
 
 @Injectable()
 export class TikTokScraperService implements IPlatformScraper {
   readonly platform: TrackedPlatform = 'tiktok'
   private readonly logger = new Logger(TikTokScraperService.name)
-  private client: AxiosInstance | null = null
-  private callCount = 0
 
-  // Cache populated by listAccountVideos so getVideoStats can read fresh stats
-  // without making a second omkar call per video.
-  // Keyed by platform_video_id.
+  // Caches populated during listAccountVideos so getVideoStats avoids a 2nd round-trip
+  // (yt-dlp can be slow — extracting one video takes 1.5-3s).
   private statsCache = new Map<string, ScrapedMetrics>()
-  // Keyed by platform_video_id → canonical TikTok URL (needed by /videos/details fallback)
   private urlCache = new Map<string, string>()
 
-  constructor(private readonly config: ConfigService) {}
-
-  private getClient(): AxiosInstance {
-    if (this.client) return this.client
-    const apiKey = this.config.get<string>('TIKTOK_SCRAPER_API_KEY')
-    if (!apiKey) {
-      throw new BadRequestException('TIKTOK_SCRAPER_API_KEY non configuré dans .env')
-    }
-    const baseURL =
-      this.config.get<string>('TIKTOK_SCRAPER_BASE_URL') ?? 'https://tiktok-scraper.omkar.cloud'
-
-    this.client = axios.create({
-      baseURL,
-      headers: { 'API-Key': apiKey, Accept: 'application/json' },
-      timeout: 30_000,
-    })
-    this.client.interceptors.request.use((req) => {
-      this.callCount++
-      this.logger.log(`TikTok scraper call #${this.callCount}: ${req.method?.toUpperCase()} ${req.url}`)
-      return req
-    })
-    return this.client
+  constructor(_config: ConfigService) {
+    // ConfigService is kept for parity with other scrapers (no env needed for yt-dlp).
   }
 
   async listAccountVideos(handle: string, limit = 30): Promise<ScrapedVideo[]> {
     const h = handle.trim().replace(/^@/, '')
-    const max = Math.min(Math.max(limit, 1), 30) // omkar caps at 30
+    const channelUrl = `https://www.tiktok.com/@${h}`
+    this.logger.log(`yt-dlp listing TikTok videos for ${channelUrl} (limit=${limit})`)
+
+    let result: TikTokFlatPlaylistOutput
     try {
-      const client = this.getClient()
-      const { data } = await client.get<OmkarUserVideosResponse>('/tiktok/users/videos', {
-        params: { handle: h, max_results: max },
-      })
-      const items = Array.isArray(data?.videos) ? data.videos : []
-      const scraped: ScrapedVideo[] = []
-      for (const v of items) {
-        if (!v.video_id) continue
-        const sv = mapToScrapedVideo(v, h)
-        scraped.push(sv)
-        // populate caches so subsequent getVideoStats() is free
-        this.statsCache.set(v.video_id, extractMetrics(v.video_id, v))
-        this.urlCache.set(v.video_id, sv.videoUrl)
-      }
-      return scraped
+      result = (await youtubeDl(channelUrl, {
+        flatPlaylist: true,
+        dumpSingleJson: true,
+        playlistEnd: limit,
+        noWarnings: true,
+        skipDownload: true,
+      })) as TikTokFlatPlaylistOutput
     } catch (err) {
-      const msg = formatAxiosError(err)
-      this.logger.error(`TikTok listAccountVideos(${h}) failed: ${msg}`)
-      throw new ScraperError(`TikTok listAccountVideos failed: ${msg}`, this.platform, err)
+      this.logger.error(`yt-dlp TikTok listing failed for ${channelUrl}: ${(err as Error).message}`)
+      throw new ScraperError(`yt-dlp TikTok listing failed: ${(err as Error).message}`, this.platform, err)
     }
+
+    const entries = result.entries ?? []
+    const scraped: ScrapedVideo[] = []
+
+    for (const e of entries) {
+      if (!e.id) continue
+      const entryHandle = e.uploader_id ?? e.channel_id ?? h
+      const url = e.webpage_url ?? e.url ?? `https://www.tiktok.com/@${entryHandle}/video/${e.id}`
+      const thumb = e.thumbnail ?? e.thumbnails?.[e.thumbnails.length - 1]?.url ?? ''
+      const publishedAt = parseTikTokDate(e.timestamp, e.upload_date)
+      const caption = e.description ?? e.title ?? ''
+      scraped.push({
+        platformVideoId: e.id,
+        title: (e.title || caption.split('\n')[0] || '(sans titre)').slice(0, 120),
+        description: caption,
+        thumbnailUrl: thumb,
+        videoUrl: url,
+        durationSeconds: e.duration,
+        publishedAt,
+        hashtags: extractHashtags(caption),
+      })
+
+      this.urlCache.set(e.id, url)
+      if (typeof e.view_count === 'number') {
+        this.statsCache.set(e.id, {
+          platformVideoId: e.id,
+          views: e.view_count,
+          likes: e.like_count ?? 0,
+          comments: e.comment_count ?? 0,
+          shares: e.repost_count ?? 0,
+        })
+      }
+    }
+
+    return scraped
   }
 
   async getVideoStats(platformVideoIds: string[]): Promise<ScrapedMetrics[]> {
@@ -116,44 +135,51 @@ export class TikTokScraperService implements IPlatformScraper {
     const results: ScrapedMetrics[] = []
     const missing: string[] = []
 
-    // Fast path: use the cache populated by listAccountVideos
+    // Fast path: cache hits from the last list call
     for (const id of platformVideoIds) {
       const cached = this.statsCache.get(id)
       if (cached) results.push(cached)
       else missing.push(id)
     }
 
-    // Slow path: per-video details call for ids absent from the latest listing
-    // (e.g. older videos that have fallen past the 30-item window).
-    // Skip if we don't have a known URL — omkar /videos/details requires a video_url.
-    if (missing.length > 0) {
-      const client = this.getClient()
-      for (const id of missing) {
-        const url = this.urlCache.get(id)
-        if (!url) {
-          this.logger.warn(`TikTok getVideoStats: no URL cached for ${id}, skipping`)
-          continue
-        }
-        try {
-          const { data } = await client.get<OmkarVideoDetailsResponse>('/tiktok/videos/details', {
-            params: { video_url: url },
-          })
-          if (!data) continue
-          const metrics = extractMetrics(id, data)
-          results.push(metrics)
-          this.statsCache.set(id, metrics)
-        } catch (err) {
-          this.logger.warn(`TikTok getVideoStats(${id}) failed: ${formatAxiosError(err)}`)
-        }
-      }
-    }
+    if (missing.length === 0) return results
 
+    // Slow path: per-video full extraction. Run with concurrency 4 to stay reasonable
+    // (yt-dlp spawns a Python subprocess each call).
+    const fetched = await runWithConcurrency(missing, 4, async (id) => {
+      const url = this.urlCache.get(id)
+      if (!url) {
+        this.logger.warn(`TikTok getVideoStats: no URL cached for ${id}, skipping`)
+        return null
+      }
+      try {
+        const info = (await youtubeDl(url, {
+          dumpSingleJson: true,
+          skipDownload: true,
+          noWarnings: true,
+        })) as TikTokSingleVideoInfo
+        const metrics: ScrapedMetrics = {
+          platformVideoId: id,
+          views: info.view_count ?? 0,
+          likes: info.like_count ?? 0,
+          comments: info.comment_count ?? 0,
+          shares: info.repost_count ?? 0,
+        }
+        this.statsCache.set(id, metrics)
+        return metrics
+      } catch (err) {
+        this.logger.warn(`yt-dlp TikTok stats failed for ${id}: ${(err as Error).message}`)
+        return null
+      }
+    })
+
+    for (const m of fetched) if (m) results.push(m)
     return results
   }
 
   /**
-   * Allow callers (e.g. content-tracking.service.scrapeAccount) to seed the URL
-   * cache from DB-stored video URLs so older videos can be refreshed via /videos/details.
+   * Seed the URL cache from DB-stored video URLs so getVideoStats can refresh
+   * old videos that have fallen past the latest-N listing window.
    */
   primeUrlCache(entries: Array<{ platform_video_id: string; video_url: string }>) {
     for (const e of entries) {
@@ -162,34 +188,18 @@ export class TikTokScraperService implements IPlatformScraper {
   }
 }
 
-function mapToScrapedVideo(v: OmkarVideo, accountHandle: string): ScrapedVideo {
-  const id = v.video_id
-  const authorHandle = v.author?.handle?.trim() || accountHandle
-  const canonicalUrl = `https://www.tiktok.com/@${authorHandle}/video/${id}`
-  const thumb = v.thumbnails?.cover_url ?? v.thumbnails?.original_cover_url ?? ''
-  const publishedAt = v.created_at ? new Date(v.created_at * 1000) : undefined
-  const caption = v.caption ?? ''
-  return {
-    platformVideoId: id,
-    title: caption.split('\n')[0]?.slice(0, 120) || '(sans titre)',
-    description: caption,
-    thumbnailUrl: thumb,
-    videoUrl: canonicalUrl,
-    durationSeconds: v.duration_seconds,
-    publishedAt,
-    hashtags: extractHashtags(caption),
+function parseTikTokDate(timestamp?: number, uploadDate?: string): Date | undefined {
+  if (typeof timestamp === 'number' && Number.isFinite(timestamp)) {
+    return new Date(timestamp * 1000)
   }
-}
-
-function extractMetrics(platformVideoId: string, v: OmkarVideo): ScrapedMetrics {
-  const s = v.stats ?? {}
-  return {
-    platformVideoId,
-    views: s.views ?? 0,
-    likes: s.likes ?? 0,
-    comments: s.comments ?? 0,
-    shares: s.shares ?? 0,
+  if (uploadDate && uploadDate.length === 8) {
+    const y = Number(uploadDate.slice(0, 4))
+    const m = Number(uploadDate.slice(4, 6)) - 1
+    const d = Number(uploadDate.slice(6, 8))
+    const date = new Date(Date.UTC(y, m, d))
+    return Number.isNaN(date.getTime()) ? undefined : date
   }
+  return undefined
 }
 
 function extractHashtags(text: string): string[] {
@@ -197,12 +207,21 @@ function extractHashtags(text: string): string[] {
   return tags.map((t) => t.slice(1).toLowerCase())
 }
 
-function formatAxiosError(err: unknown): string {
-  if (axios.isAxiosError(err)) {
-    const status = err.response?.status
-    const body = err.response?.data
-    const bodyStr = typeof body === 'string' ? body : JSON.stringify(body ?? {}).slice(0, 200)
-    return `HTTP ${status ?? '?'} — ${bodyStr || err.message}`
-  }
-  return (err as Error).message ?? 'erreur inconnue'
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let cursor = 0
+  const workerCount = Math.min(Math.max(concurrency, 1), items.length)
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (true) {
+      const i = cursor++
+      if (i >= items.length) return
+      results[i] = await fn(items[i])
+    }
+  })
+  await Promise.all(workers)
+  return results
 }

@@ -1,4 +1,4 @@
-import { Injectable, Logger, BadRequestException } from '@nestjs/common'
+import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import axios from 'axios'
 import youtubeDl from 'youtube-dl-exec'
@@ -10,116 +10,140 @@ import {
 } from './scraper.types'
 import { TrackedPlatform } from '../schemas/tracked-account.schema'
 
-const YT_DATA_API = 'https://www.googleapis.com/youtube/v3'
-
 type YtVideoFlat = {
   id: string
   title: string
+  description?: string
   thumbnail?: string
   thumbnails?: Array<{ url: string }>
   url?: string
   webpage_url?: string
   duration?: number
   upload_date?: string
+  timestamp?: number
   view_count?: number
+  like_count?: number
+  comment_count?: number
 }
 
 type YtFlatPlaylistOutput = {
   entries?: YtVideoFlat[]
 }
 
-type YtDataApiVideo = {
-  id: string
-  snippet?: {
-    title?: string
-    description?: string
-    publishedAt?: string
-    thumbnails?: { high?: { url: string }; default?: { url: string } }
-    tags?: string[]
-  }
-  contentDetails?: { duration?: string }
-  statistics?: { viewCount?: string; likeCount?: string; commentCount?: string }
-}
-
-type YtDataApiResponse = { items?: YtDataApiVideo[] }
-
-type YtCaptionFormat = { url?: string; ext?: string; name?: string }
 type YtSingleVideoInfo = {
   id?: string
   title?: string
   description?: string
+  view_count?: number
+  like_count?: number
+  comment_count?: number
   subtitles?: Record<string, YtCaptionFormat[]>
   automatic_captions?: Record<string, YtCaptionFormat[]>
 }
+
+type YtCaptionFormat = { url?: string; ext?: string; name?: string }
 
 @Injectable()
 export class YouTubeScraperService implements IPlatformScraper {
   readonly platform: TrackedPlatform = 'youtube'
   private readonly logger = new Logger(YouTubeScraperService.name)
 
-  constructor(private readonly config: ConfigService) {}
+  // Cache populated by listAccountVideos (when flat-playlist happens to return stats —
+  // rare on YouTube, but cheap to support). For the common case getVideoStats falls
+  // back to per-video full extraction.
+  private statsCache = new Map<string, ScrapedMetrics>()
+
+  constructor(_config: ConfigService) {
+    // ConfigService kept for parity. yt-dlp does not require an API key.
+  }
 
   async listAccountVideos(handle: string, limit = 30): Promise<ScrapedVideo[]> {
     const channelUrl = this.buildChannelUrl(handle)
-    this.logger.log(`yt-dlp listing videos for ${channelUrl}`)
+    this.logger.log(`yt-dlp listing YouTube videos for ${channelUrl} (limit=${limit})`)
 
+    let result: YtFlatPlaylistOutput
     try {
-      const result = (await youtubeDl(channelUrl, {
+      result = (await youtubeDl(channelUrl, {
         flatPlaylist: true,
         dumpSingleJson: true,
         playlistEnd: limit,
         noWarnings: true,
         skipDownload: true,
       })) as YtFlatPlaylistOutput
-
-      const entries = result.entries ?? []
-      return entries.map((e) => {
-        const url = e.webpage_url ?? e.url ?? `https://www.youtube.com/watch?v=${e.id}`
-        const thumb =
-          e.thumbnail ??
-          e.thumbnails?.[e.thumbnails.length - 1]?.url ??
-          `https://i.ytimg.com/vi/${e.id}/hqdefault.jpg`
-        return {
-          platformVideoId: e.id,
-          title: e.title,
-          thumbnailUrl: thumb,
-          videoUrl: url,
-          durationSeconds: e.duration ?? undefined,
-          publishedAt: parseYtUploadDate(e.upload_date),
-        }
-      })
     } catch (err) {
-      this.logger.error(`yt-dlp failed for ${channelUrl}: ${(err as Error).message}`)
-      throw new ScraperError(`yt-dlp failed: ${(err as Error).message}`, this.platform, err)
+      this.logger.error(`yt-dlp YouTube listing failed for ${channelUrl}: ${(err as Error).message}`)
+      throw new ScraperError(`yt-dlp YouTube listing failed: ${(err as Error).message}`, this.platform, err)
     }
+
+    const entries = result.entries ?? []
+    const scraped: ScrapedVideo[] = []
+    for (const e of entries) {
+      if (!e.id) continue
+      const url = e.webpage_url ?? e.url ?? `https://www.youtube.com/watch?v=${e.id}`
+      const thumb =
+        e.thumbnail ??
+        e.thumbnails?.[e.thumbnails.length - 1]?.url ??
+        `https://i.ytimg.com/vi/${e.id}/hqdefault.jpg`
+      scraped.push({
+        platformVideoId: e.id,
+        title: e.title,
+        description: e.description,
+        thumbnailUrl: thumb,
+        videoUrl: url,
+        durationSeconds: e.duration,
+        publishedAt: parseYtPublishedAt(e.timestamp, e.upload_date),
+      })
+
+      if (typeof e.view_count === 'number') {
+        this.statsCache.set(e.id, {
+          platformVideoId: e.id,
+          views: e.view_count,
+          likes: e.like_count ?? 0,
+          comments: e.comment_count ?? 0,
+        })
+      }
+    }
+    return scraped
   }
 
   async getVideoStats(platformVideoIds: string[]): Promise<ScrapedMetrics[]> {
     if (platformVideoIds.length === 0) return []
-    const apiKey = this.config.get<string>('YOUTUBE_API_KEY')
-    if (!apiKey) throw new BadRequestException('YOUTUBE_API_KEY non configuré dans .env')
-
     const results: ScrapedMetrics[] = []
-    for (let i = 0; i < platformVideoIds.length; i += 50) {
-      const batch = platformVideoIds.slice(i, i + 50)
-      try {
-        const { data } = await axios.get<YtDataApiResponse>(`${YT_DATA_API}/videos`, {
-          params: { part: 'statistics', id: batch.join(','), key: apiKey },
-          timeout: 15_000,
-        })
-        for (const item of data.items ?? []) {
-          results.push({
-            platformVideoId: item.id,
-            views: Number(item.statistics?.viewCount ?? 0),
-            likes: Number(item.statistics?.likeCount ?? 0),
-            comments: Number(item.statistics?.commentCount ?? 0),
-          })
-        }
-      } catch (err) {
-        this.logger.error(`YT Data API stats failed: ${(err as Error).message}`)
-        throw new ScraperError(`YT Data API failed: ${(err as Error).message}`, this.platform, err)
-      }
+    const missing: string[] = []
+
+    for (const id of platformVideoIds) {
+      const cached = this.statsCache.get(id)
+      if (cached) results.push(cached)
+      else missing.push(id)
     }
+
+    if (missing.length === 0) return results
+
+    // Per-video yt-dlp full extraction. ~2-5s per video on YouTube — concurrency 4
+    // keeps total wall time reasonable without spawning too many Python subprocesses.
+    const fetched = await runWithConcurrency(missing, 4, async (id) => {
+      const url = `https://www.youtube.com/watch?v=${id}`
+      try {
+        const info = (await youtubeDl(url, {
+          dumpSingleJson: true,
+          skipDownload: true,
+          noWarnings: true,
+        })) as YtSingleVideoInfo
+        const metrics: ScrapedMetrics = {
+          platformVideoId: id,
+          views: info.view_count ?? 0,
+          likes: info.like_count ?? 0,
+          comments: info.comment_count ?? 0,
+        }
+        this.statsCache.set(id, metrics)
+        return metrics
+      } catch (err) {
+        this.logger.warn(`yt-dlp YouTube stats failed for ${id}: ${(err as Error).message}`)
+        return null
+      }
+    })
+
+    for (const m of fetched) if (m) results.push(m)
     return results
   }
 
@@ -223,11 +247,35 @@ function cleanJson3(raw: string): string {
   }
 }
 
-function parseYtUploadDate(raw?: string): Date | undefined {
-  if (!raw || raw.length !== 8) return undefined
-  const y = Number(raw.slice(0, 4))
-  const m = Number(raw.slice(4, 6)) - 1
-  const d = Number(raw.slice(6, 8))
-  const date = new Date(Date.UTC(y, m, d))
-  return Number.isNaN(date.getTime()) ? undefined : date
+function parseYtPublishedAt(timestamp?: number, uploadDate?: string): Date | undefined {
+  if (typeof timestamp === 'number' && Number.isFinite(timestamp)) {
+    return new Date(timestamp * 1000)
+  }
+  if (uploadDate && uploadDate.length === 8) {
+    const y = Number(uploadDate.slice(0, 4))
+    const m = Number(uploadDate.slice(4, 6)) - 1
+    const d = Number(uploadDate.slice(6, 8))
+    const date = new Date(Date.UTC(y, m, d))
+    return Number.isNaN(date.getTime()) ? undefined : date
+  }
+  return undefined
+}
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length)
+  let cursor = 0
+  const workerCount = Math.min(Math.max(concurrency, 1), items.length)
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (true) {
+      const i = cursor++
+      if (i >= items.length) return
+      results[i] = await fn(items[i])
+    }
+  })
+  await Promise.all(workers)
+  return results
 }
