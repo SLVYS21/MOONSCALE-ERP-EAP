@@ -1,11 +1,28 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { X, Search, Sparkles, ExternalLink, Loader2, TrendingUp } from 'lucide-react'
+import { X, Search, Sparkles, ExternalLink, TrendingUp } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { CinematicLoader, type CinematicStep } from '@/components/ui/CinematicLoader'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import type { CreatorAnalysis } from '../types'
+
+const ANALYZE_STEPS_TIKTOK: CinematicStep[] = [
+  { label: 'Connexion à TikTok', description: 'Ouverture du profil et lecture de la bio.', duration: 3 },
+  { label: 'Lecture des dernières vidéos', description: 'Récupération du flux récent du créateur.', duration: 5 },
+  { label: 'Capture des métriques', description: 'Vues, likes, commentaires, partages par vidéo.', duration: 4 },
+  { label: "Analyse IA des patterns", description: 'Hooks récurrents, formats, angle, gaps à exploiter.', duration: 12 },
+  { label: 'Mise en forme du rapport', description: 'Génération des idées inspirées + score d\'opportunité.', duration: 2 },
+]
+
+const ANALYZE_STEPS_YOUTUBE: CinematicStep[] = [
+  { label: 'Connexion à YouTube', description: 'Ouverture du profil et lecture du channel.', duration: 3 },
+  { label: 'Lecture des dernières vidéos', description: 'Récupération de la liste via yt-dlp.', duration: 5 },
+  { label: 'Capture des métriques par vidéo', description: 'Extraction des vues, likes, commentaires (~5s/vidéo).', duration: 20 },
+  { label: "Analyse IA des patterns", description: 'Hooks récurrents, formats, angle, gaps à exploiter.', duration: 12 },
+  { label: 'Mise en forme du rapport', description: 'Génération des idées inspirées + score d\'opportunité.', duration: 2 },
+]
 
 export function AnalyzeCreatorModal({ onClose }: { onClose: () => void }) {
   const qc = useQueryClient()
@@ -13,6 +30,9 @@ export function AnalyzeCreatorModal({ onClose }: { onClose: () => void }) {
   const [handle, setHandle] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [activeAnalysis, setActiveAnalysis] = useState<CreatorAnalysis | null>(null)
+  // Snapshot of the platform used at submission time, so the loader steps stay
+  // consistent even if the user toggles the select mid-analysis.
+  const [pendingPlatform, setPendingPlatform] = useState<'youtube' | 'tiktok'>('youtube')
 
   const { data: history = [] } = useQuery<CreatorAnalysis[]>({
     queryKey: ['creator-analyses'],
@@ -94,7 +114,14 @@ export function AnalyzeCreatorModal({ onClose }: { onClose: () => void }) {
                 onChange={(e) => setHandle(e.target.value)}
               />
               <div className="flex items-end">
-                <Button onClick={() => analyzeMut.mutate()} loading={analyzeMut.isPending} disabled={!handle.trim()}>
+                <Button
+                  onClick={() => {
+                    setPendingPlatform(platform)
+                    analyzeMut.mutate()
+                  }}
+                  loading={analyzeMut.isPending}
+                  disabled={!handle.trim()}
+                >
                   <Search className="h-4 w-4" />
                   Analyser
                 </Button>
@@ -108,10 +135,13 @@ export function AnalyzeCreatorModal({ onClose }: { onClose: () => void }) {
             )}
 
             {analyzeMut.isPending && (
-              <div className="flex items-center justify-center gap-3 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-12 text-sm text-gray-500">
-                <Loader2 className="h-5 w-5 animate-spin text-violet-600" />
-                Scraping + analyse IA en cours… (30-60s)
-              </div>
+              <CinematicLoader
+                key={`${pendingPlatform}-${analyzeMut.submittedAt ?? 0}`}
+                steps={pendingPlatform === 'tiktok' ? ANALYZE_STEPS_TIKTOK : ANALYZE_STEPS_YOUTUBE}
+                done={false}
+                headline={`Analyse de @${handle.replace(/^@/, '')} sur ${pendingPlatform}`}
+                accent="violet"
+              />
             )}
 
             {!analyzeMut.isPending && activeAnalysis && <AnalysisView analysis={activeAnalysis} />}

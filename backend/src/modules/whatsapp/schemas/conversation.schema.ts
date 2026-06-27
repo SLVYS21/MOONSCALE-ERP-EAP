@@ -5,6 +5,7 @@ export type ConversationDocument = Conversation & Document
 
 export type ConversationStatus = 'bot' | 'human' | 'paused' | 'closed'
 export type ContactType = 'lead' | 'student' | 'unknown'
+export type LastSenderType = 'client' | 'bot' | 'closer' | 'admin' | 'system'
 
 @Schema({ timestamps: true })
 export class Conversation {
@@ -47,6 +48,20 @@ export class Conversation {
   @Prop({ type: String, default: '' })
   lastMessagePreview: string
 
+  @Prop({
+    type: String,
+    enum: ['client', 'bot', 'closer', 'admin', 'system'],
+    default: 'client',
+    index: true,
+  })
+  lastSenderType: LastSenderType
+
+  @Prop({ type: String, default: null })
+  lastSenderName: string | null
+
+  @Prop({ type: Types.ObjectId, ref: 'User', default: null })
+  lastSenderUserId: Types.ObjectId | null
+
   @Prop({ type: Number, default: 0 })
   unreadCount: number
 
@@ -68,4 +83,5 @@ export class Conversation {
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation)
 ConversationSchema.index({ status: 1, lastMessageAt: -1 })
+ConversationSchema.index({ lastSenderType: 1, lastMessageAt: -1 })
 ConversationSchema.index({ phone: 1 }, { unique: true })

@@ -7,11 +7,39 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { CinematicLoader, type CinematicStep } from '@/components/ui/CinematicLoader'
 import { cn } from '@/lib/utils'
 import api from '@/services/api'
 import { PipelineStage } from './components/PipelineStage'
 import { ScriptChat } from './components/ScriptChat'
 import { STATUS_CONFIG, type VideoProject } from './types'
+
+const REFERENCE_STEPS: CinematicStep[] = [
+  { label: 'Lecture des vidéos de référence', description: 'Téléchargement des transcripts via yt-dlp.', duration: 8 },
+  { label: 'Compréhension du contenu', description: 'Analyse de l\'angle, du ton et de la structure narrative.', duration: 8 },
+  { label: 'Extraction des patterns', description: 'Identification de ce qui marche vs ce qui n\'apporte rien.', duration: 8 },
+  { label: 'Recommandations actionnables', description: 'Synthèse des points à reprendre et à laisser.', duration: 4 },
+]
+
+const ANALYZE_HOOK_STEPS: CinematicStep[] = [
+  { label: 'Compréhension du brief', description: 'Lecture du brain dump, des notes et des références.', duration: 2 },
+  { label: 'Génération des accroches', description: 'Production de plusieurs hooks de 3-5 secondes.', duration: 6 },
+  { label: 'Structuration du plan', description: 'Découpage en intro / corps / CTA.', duration: 5 },
+  { label: 'Idées de miniatures', description: 'Suggestion de 3 directions visuelles.', duration: 3 },
+]
+
+const GENERATE_SCRIPT_STEPS: CinematicStep[] = [
+  { label: 'Mise en contexte', description: 'Lecture du brief, du hook choisi et du plan.', duration: 2 },
+  { label: 'Rédaction de l\'intro', description: 'Accroche, promesse, mise en tension.', duration: 5 },
+  { label: 'Développement du corps', description: 'Sections, exemples concrets, transitions.', duration: 10 },
+  { label: 'Conclusion + CTA', description: 'Récap, appel à l\'action, transition.', duration: 4 },
+]
+
+const THUMBNAIL_STEPS: CinematicStep[] = [
+  { label: 'Brief créatif', description: 'Transformation de la description en prompt image.', duration: 2 },
+  { label: 'Génération de la miniature', description: 'Gemini génère l\'image en cohérence avec ton angle.', duration: 18 },
+  { label: 'Compression + livraison', description: 'Encodage final et envoi vers l\'aperçu.', duration: 3 },
+]
 
 export function ProjectPipelinePage() {
   const { id } = useParams<{ id: string }>()
@@ -203,6 +231,16 @@ function Stage2References({ project }: { project: VideoProject }) {
         </div>
         {error && <p className="text-xs text-red-600">{error}</p>}
 
+        {analyzeMut.isPending && (
+          <CinematicLoader
+            key={`refs-${analyzeMut.submittedAt ?? 0}`}
+            steps={REFERENCE_STEPS}
+            done={false}
+            headline={`Analyse de ${urls.filter((u) => u.trim()).length} vidéo${urls.filter((u) => u.trim()).length > 1 ? 's' : ''} de référence`}
+            accent="amber"
+          />
+        )}
+
         {project.reference_videos.length > 0 && (
           <div className="mt-4 space-y-3">
             {project.reference_videos.map((ref, i) => (
@@ -310,6 +348,26 @@ function Stage3Script({ project }: { project: VideoProject }) {
           </Button>
         </div>
 
+        {analyzeMut.isPending && (
+          <CinematicLoader
+            key={`hook-${analyzeMut.submittedAt ?? 0}`}
+            steps={ANALYZE_HOOK_STEPS}
+            done={false}
+            headline="Analyse du brief par l'IA"
+            accent="violet"
+          />
+        )}
+
+        {generateMut.isPending && (
+          <CinematicLoader
+            key={`script-${generateMut.submittedAt ?? 0}`}
+            steps={GENERATE_SCRIPT_STEPS}
+            done={false}
+            headline="Rédaction du script complet"
+            accent="violet"
+          />
+        )}
+
         {project.script_outline && (
           <details className="rounded-lg border border-gray-200 bg-gray-50 p-3 text-sm">
             <summary className="cursor-pointer text-xs font-semibold uppercase tracking-wider text-gray-600">
@@ -361,7 +419,17 @@ function Stage4Thumbnails({ project }: { project: VideoProject }) {
       {project.thumbnail_descriptions.length === 0 ? (
         <p className="text-xs text-gray-500">Lance "Analyser" à l'étape 3 pour obtenir des descriptions de miniatures.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="space-y-4">
+          {generatingIdx !== null && (
+            <CinematicLoader
+              key={`thumb-${generatingIdx}-${generateMut.submittedAt ?? 0}`}
+              steps={THUMBNAIL_STEPS}
+              done={false}
+              headline={`Génération de la miniature ${generatingIdx + 1}/${project.thumbnail_descriptions.length}`}
+              accent="rose"
+            />
+          )}
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
           {project.thumbnail_descriptions.map((desc, i) => {
             const generated = project.generated_thumbnails[i]
             return (
@@ -391,6 +459,7 @@ function Stage4Thumbnails({ project }: { project: VideoProject }) {
               </div>
             )
           })}
+          </div>
         </div>
       )}
     </PipelineStage>

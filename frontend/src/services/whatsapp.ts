@@ -5,6 +5,7 @@ export type ContactType = 'lead' | 'student' | 'unknown'
 export type MessageDirection = 'in' | 'out'
 export type MessageFromType = 'client' | 'bot' | 'closer' | 'system'
 export type MessageMediaType = 'image' | 'video' | 'audio' | 'document'
+export type LastSenderType = 'client' | 'bot' | 'closer' | 'admin' | 'system'
 
 export interface Conversation {
   _id: string
@@ -21,6 +22,9 @@ export interface Conversation {
   tags: string[]
   lastMessageAt: string
   lastMessagePreview: string
+  lastSenderType: LastSenderType
+  lastSenderName: string | null
+  lastSenderUserId: string | null
   unreadCount: number
   typebotSessionActive: boolean
   language: 'fr' | 'en'
@@ -95,7 +99,7 @@ export const COMPLAINT_LABELS: Record<ComplaintCategory, string> = {
 }
 
 export const whatsapp = {
-  listConversations(params?: { status?: ConversationStatus; search?: string; tag?: string; contactType?: ContactType }) {
+  listConversations(params?: { status?: ConversationStatus; search?: string; tag?: string; contactType?: ContactType; pending?: boolean }) {
     return api.get<Conversation[]>('/whatsapp/conversations', { params }).then((r) => r.data)
   },
   getConversation(id: string) {

@@ -70,8 +70,10 @@ export class WhatsAppController {
     @Query('search') search?: string,
     @Query('tag') tag?: string,
     @Query('contactType') contactType?: 'lead' | 'student' | 'unknown',
+    @Query('pending') pending?: string,
   ) {
-    return this.service.listConversations({ status, search, tag, contactType })
+    const pendingFlag = pending === 'true' ? true : pending === 'false' ? false : undefined
+    return this.service.listConversations({ status, search, tag, contactType, pending: pendingFlag })
   }
 
   @Get('conversations/:id')

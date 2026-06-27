@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { Send, RefreshCw, User, Smartphone, Terminal, Bot, ArrowLeftRight, Trash2 } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { Send, RefreshCw, User, Smartphone, Terminal, Bot, ArrowLeftRight, Trash2, Loader2 } from 'lucide-react'
 import { whatsapp, type Message } from '@/services/whatsapp'
 import { useWhatsAppSocket } from '@/hooks/useWhatsAppSocket'
 import { Button } from '@/components/ui/Button'
@@ -24,12 +24,44 @@ function formatTime(d: Date): string {
   return d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 }
 
+type OptimisticMessage = Message & { _optimistic?: boolean }
+
+function makeOptimisticMessage(text: string): OptimisticMessage {
+  const now = new Date().toISOString()
+  return {
+    _id: `tmp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    conversationId: '',
+    direction: 'in',
+    fromType: 'client',
+    fromUserId: null,
+    content: text,
+    mediaUrl: null,
+    mediaType: null,
+    mediaName: null,
+    status: 'pending',
+    providerMessageId: null,
+    intent: null,
+    toolCalls: [],
+    tokensIn: null,
+    tokensOut: null,
+    costUsd: null,
+    llmProvider: null,
+    llmModel: null,
+    createdAt: now,
+    updatedAt: now,
+    _optimistic: true,
+  }
+}
+
 export function SimulatorPage() {
+  const queryClient = useQueryClient()
   const [phone, setPhone] = useState(PRESETS[0].phone)
   const [name, setName] = useState(PRESETS[0].name)
   const [draft, setDraft] = useState('')
   const [sending, setSending] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
+  const [optimistic, setOptimistic] = useState<OptimisticMessage[]>([])
+  const [botTyping, setBotTyping] = useState(false)
   const threadRef = useRef<HTMLDivElement>(null)
   const logRef = useRef<HTMLDivElement>(null)
 
@@ -47,7 +79,39 @@ export function SimulatorPage() {
     enabled: !!conv,
     refetchOnWindowFocus: false,
   })
-  const messages = messagesQ.data ?? []
+  const serverMessages = messagesQ.data ?? []
+
+  // Merge server messages with optimistic ones (drop optimistic once server confirms by content match)
+  const messages = useMemo<OptimisticMessage[]>(() => {
+    if (optimistic.length === 0) return serverMessages
+    const live = optimistic.filter((opt) => {
+      return !serverMessages.some(
+        (srv) =>
+          srv.fromType === 'client' &&
+          srv.content === opt.content &&
+          Math.abs(new Date(srv.createdAt).getTime() - new Date(opt.createdAt).getTime()) < 30_000,
+      )
+    })
+    return [...serverMessages, ...live].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+    )
+  }, [serverMessages, optimistic])
+
+  // Garbage-collect optimistic ones once they're confirmed server-side
+  useEffect(() => {
+    if (optimistic.length === 0) return
+    setOptimistic((prev) =>
+      prev.filter((opt) =>
+        !serverMessages.some(
+          (srv) =>
+            srv.fromType === 'client' &&
+            srv.content === opt.content &&
+            Math.abs(new Date(srv.createdAt).getTime() - new Date(opt.createdAt).getTime()) < 30_000,
+        ),
+      ),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverMessages])
 
   useEffect(() => {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' })
@@ -64,7 +128,13 @@ export function SimulatorPage() {
   useWhatsAppSocket({
     onNewMessage: ({ conversationId, message }) => {
       if (conv && conversationId === conv._id) {
-        messagesQ.refetch()
+        // Append immediately via cache mutation — no refetch round-trip
+        queryClient.setQueryData<Message[]>(['wa.sim.messages', conv._id], (prev) => {
+          if (!prev) return [message]
+          if (prev.some((m) => m._id === message._id)) return prev
+          return [...prev, message]
+        })
+        if (message.fromType === 'bot' || message.fromType === 'system') setBotTyping(false)
         if (message.fromType === 'bot') {
           // Log tool calls first if any
           if (Array.isArray(message.toolCalls) && message.toolCalls.length > 0) {
@@ -121,14 +191,26 @@ export function SimulatorPage() {
   })
 
   async function handleSend() {
-    if (!draft.trim() || sending) return
+    const text = draft.trim()
+    if (!text || sending) return
     setSending(true)
+
+    // Optimistic bubble — visible the moment the user clicks Send
+    const optimisticMsg = makeOptimisticMessage(text)
+    setOptimistic((prev) => [...prev, optimisticMsg])
+    setDraft('')
+    addLog({ kind: 'inbound', label: 'IN client (sim)', detail: text })
+    setBotTyping(true)
+
     try {
-      await whatsapp.simulateInbound({ from: phone, text: draft.trim(), fromName: name })
-      addLog({ kind: 'inbound', label: 'IN client (sim)', detail: draft.trim() })
-      setDraft('')
+      await whatsapp.simulateInbound({ from: phone, text, fromName: name })
+      // Server roundtrip OK — convs may need a refetch if this was the first message
+      if (!conv) convsQ.refetch()
     } catch (e: any) {
       addLog({ kind: 'error', label: 'Erreur', detail: e?.message ?? 'unknown' })
+      // Roll back the optimistic bubble on failure
+      setOptimistic((prev) => prev.filter((m) => m._id !== optimisticMsg._id))
+      setBotTyping(false)
     } finally {
       setSending(false)
     }
@@ -139,6 +221,8 @@ export function SimulatorPage() {
     await whatsapp.resetSimulatedConversation(phone)
     addLog({ kind: 'event', label: 'Conversation réinitialisée' })
     convsQ.refetch()
+    setOptimistic([])
+    setBotTyping(false)
     setLogs([])
   }
 
@@ -170,6 +254,8 @@ export function SimulatorPage() {
                 const p = PRESETS.find((x) => x.phone === e.target.value)!
                 setPhone(p.phone)
                 setName(p.name)
+                setOptimistic([])
+                setBotTyping(false)
                 setLogs([])
               }}
               className="flex-1 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs"
@@ -187,6 +273,14 @@ export function SimulatorPage() {
             <p className="mt-12 text-center text-xs text-gray-500">Aucun message. Tape ton premier message ci-dessous.</p>
           )}
           {messages.map((m) => <SimBubble key={m._id} msg={m} />)}
+          {botTyping && (
+            <div className="flex w-full justify-start">
+              <div className="flex items-center gap-1.5 rounded-2xl border border-gray-200 bg-white px-3 py-2 text-xs text-gray-500 shadow-sm">
+                <Loader2 className="h-3 w-3 animate-spin text-indigo-500" />
+                Assistant écrit…
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Composer (client side) */}
@@ -286,13 +380,15 @@ export function SimulatorPage() {
   )
 }
 
-function SimBubble({ msg }: { msg: Message }) {
+function SimBubble({ msg }: { msg: OptimisticMessage }) {
   const isClient = msg.direction === 'in'
+  const isPending = msg._optimistic || msg.status === 'pending'
   return (
     <div className={cn('flex w-full', isClient ? 'justify-end' : 'justify-start')}>
       <div className={cn(
-        'max-w-[80%] rounded-2xl px-3 py-1.5 text-sm shadow-sm',
+        'max-w-[80%] rounded-2xl px-3 py-1.5 text-sm shadow-sm transition-opacity',
         isClient ? 'bg-emerald-500 text-white' : 'bg-white text-gray-900 border border-gray-200',
+        isPending && 'opacity-70',
       )}>
         {msg.fromType === 'bot' && (
           <div className="mb-0.5 flex items-center gap-1 text-[10px] font-semibold text-indigo-600">
@@ -305,8 +401,9 @@ function SimBubble({ msg }: { msg: Message }) {
           </div>
         )}
         {msg.content && <p className="whitespace-pre-wrap break-words">{msg.content}</p>}
-        <p className={cn('mt-0.5 text-[10px] text-right', isClient ? 'text-white/70' : 'text-gray-400')}>
+        <p className={cn('mt-0.5 flex items-center justify-end gap-1 text-[10px]', isClient ? 'text-white/70' : 'text-gray-400')}>
           {new Date(msg.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+          {isClient && isPending && <Loader2 className="h-2.5 w-2.5 animate-spin" />}
         </p>
       </div>
     </div>

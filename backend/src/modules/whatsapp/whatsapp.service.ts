@@ -7,6 +7,7 @@ import { Complaint, ComplaintDocument, ComplaintCategory } from './schemas/compl
 import { QuickReply, QuickReplyDocument } from './schemas/quick-reply.schema'
 import { Lead, LeadDocument } from '../leads/schemas/lead.schema'
 import { Student, StudentDocument } from '../students/schemas/student.schema'
+import { User, UserDocument } from '../users/schemas/user.schema'
 import { WHATSAPP_PROVIDER } from './providers/whatsapp-provider.factory'
 import type { IWhatsAppProvider, IncomingMessageEvent } from './providers/whatsapp-provider.interface'
 import { normalizePhone } from '../../common/utils/phone.util'
@@ -27,6 +28,8 @@ export interface ListConversationsQuery {
   search?: string
   tag?: string
   contactType?: 'lead' | 'student' | 'unknown'
+  /** true = client is waiting for a reply; false = team replied last */
+  pending?: boolean
   limit?: number
 }
 
@@ -48,6 +51,7 @@ export class WhatsAppService {
     @InjectModel(QuickReply.name) private readonly quickReplyModel: Model<QuickReplyDocument>,
     @InjectModel(Lead.name) private readonly leadModel: Model<LeadDocument>,
     @InjectModel(Student.name) private readonly studentModel: Model<StudentDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @Inject(WHATSAPP_PROVIDER) private readonly provider: IWhatsAppProvider,
     private readonly gateway: WhatsAppGateway,
     private readonly assistant: AssistantService,
@@ -73,10 +77,11 @@ export class WhatsAppService {
       isNew = true
       const contact = await this.resolveContact(norm.e164)
       const detectedLang = event.text ? detectLanguage(event.text) : 'fr'
+      const clientName = contact.name ?? event.fromName ?? null
       conv = await this.convModel.create({
         phone: norm.e164,
         phoneRaw: event.from,
-        contactName: contact.name ?? event.fromName ?? null,
+        contactName: clientName,
         contactType: contact.type,
         contactId: contact.id,
         status: aiShouldAnswer ? 'bot' : 'human',
@@ -84,6 +89,9 @@ export class WhatsAppService {
         language: detectedLang,
         lastMessageAt: event.receivedAt ?? new Date(),
         lastMessagePreview: event.text?.slice(0, 100) ?? '(media)',
+        lastSenderType: 'client',
+        lastSenderName: clientName,
+        lastSenderUserId: null,
         unreadCount: 1,
       })
       this.gateway.emitConversationCreated(conv)
@@ -103,6 +111,9 @@ export class WhatsAppService {
 
     conv.lastMessageAt = event.receivedAt ?? new Date()
     conv.lastMessagePreview = event.text?.slice(0, 100) ?? '(media)'
+    conv.lastSenderType = 'client'
+    conv.lastSenderName = conv.contactName ?? event.fromName ?? null
+    conv.lastSenderUserId = null
     conv.unreadCount = (conv.unreadCount ?? 0) + 1
     await conv.save()
 
@@ -169,6 +180,9 @@ export class WhatsAppService {
     if (refreshed) {
       refreshed.lastMessageAt = new Date()
       refreshed.lastMessagePreview = text.slice(0, 100)
+      refreshed.lastSenderType = opts.fromType === 'system' ? 'system' : 'bot'
+      refreshed.lastSenderName = opts.fromType === 'system' ? 'Système' : 'Assistant'
+      refreshed.lastSenderUserId = null
       await refreshed.save()
       this.gateway.emitNewMessage(refreshed, botMsg)
       this.gateway.emitSimulatedOutbound(refreshed, botMsg)
@@ -359,6 +373,9 @@ export class WhatsAppService {
       if (updated) {
         updated.lastMessageAt = new Date()
         updated.lastMessagePreview = finalText.slice(0, 100)
+        updated.lastSenderType = 'bot'
+        updated.lastSenderName = 'Assistant'
+        updated.lastSenderUserId = null
         await updated.save()
         this.gateway.emitNewMessage(updated, botMsg)
         this.gateway.emitSimulatedOutbound(updated, botMsg)
@@ -441,6 +458,16 @@ export class WhatsAppService {
       throw new ForbiddenException(`Conversation is locked by another user`)
     }
 
+    const sender = await this.userModel
+      .findById(userId)
+      .select({ firstName: 1, lastName: 1, role: 1 })
+      .lean()
+    const senderName = sender
+      ? `${sender.firstName ?? ''} ${sender.lastName ?? ''}`.trim() || null
+      : null
+    const senderType: 'closer' | 'admin' =
+      sender?.role === 'admin' || sender?.role === 'superadmin' ? 'admin' : 'closer'
+
     const sendRes = await this.provider.send({
       to: conv.phone,
       text: payload.text,
@@ -464,6 +491,9 @@ export class WhatsAppService {
 
     conv.lastMessageAt = new Date()
     conv.lastMessagePreview = payload.text?.slice(0, 100) ?? '(media)'
+    conv.lastSenderType = senderType
+    conv.lastSenderName = senderName
+    conv.lastSenderUserId = new Types.ObjectId(userId)
     conv.status = 'human'
     conv.aiEnabled = false
     await conv.save()
@@ -480,6 +510,9 @@ export class WhatsAppService {
     if (q.status) filter.status = q.status
     if (q.tag) filter.tags = q.tag
     if (q.contactType) filter.contactType = q.contactType
+    if (typeof q.pending === 'boolean') {
+      filter.lastSenderType = q.pending ? 'client' : { $in: ['bot', 'closer', 'admin', 'system'] }
+    }
     if (q.search) {
       const r = new RegExp(q.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i')
       filter.$or = [{ contactName: r }, { phone: r }, { lastMessagePreview: r }]

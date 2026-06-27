@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   MessageSquare, Send, Search, Bot, Lock, Unlock, Tag, AlertTriangle, X,
   Paperclip, Check, CheckCheck, Phone, Wrench, UserSearch, ArrowRightFromLine, Mail, Star, FileText, Tags,
+  UserCircle2, ShieldCheck, Clock, Inbox,
 } from 'lucide-react'
 import { whatsapp, type Conversation, type Message, type ComplaintCategory, COMPLAINT_LABELS } from '@/services/whatsapp'
 import { useWhatsAppSocket } from '@/hooks/useWhatsAppSocket'
@@ -29,14 +30,60 @@ function formatTime(iso: string): string {
 
 // ── Conversation list item ───────────────────────────────────────────────────
 
+function LastSenderLine({ conv }: { conv: Conversation }) {
+  const type = conv.lastSenderType
+  const name = conv.lastSenderName?.trim()
+
+  if (type === 'client') {
+    return (
+      <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-amber-700">
+        <Clock className="h-3 w-3" />
+        En attente — dernier message de {name || 'client'}
+      </div>
+    )
+  }
+  if (type === 'bot') {
+    return (
+      <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-indigo-600">
+        <Bot className="h-3 w-3" />
+        Répondu par Assistant
+      </div>
+    )
+  }
+  if (type === 'admin') {
+    return (
+      <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-violet-700">
+        <ShieldCheck className="h-3 w-3" />
+        Répondu par {name || 'admin'}
+      </div>
+    )
+  }
+  if (type === 'closer') {
+    return (
+      <div className="mt-1 flex items-center gap-1 text-[11px] font-medium text-emerald-700">
+        <UserCircle2 className="h-3 w-3" />
+        Répondu par {name || 'closer'}
+      </div>
+    )
+  }
+  return (
+    <div className="mt-1 flex items-center gap-1 text-[11px] text-gray-400">
+      <MessageSquare className="h-3 w-3" />
+      Système
+    </div>
+  )
+}
+
 function ConvItem({ conv, active, onClick }: { conv: Conversation; active: boolean; onClick: () => void }) {
   const initials = (conv.contactName ?? conv.phone).slice(0, 2).toUpperCase()
+  const isPending = conv.lastSenderType === 'client'
   return (
     <button
       onClick={onClick}
       className={cn(
         'flex w-full items-start gap-3 border-b border-gray-100 px-4 py-3 text-left transition-colors cursor-pointer',
         active ? 'bg-indigo-50' : 'hover:bg-gray-50',
+        isPending && !active && 'bg-amber-50/40',
       )}
     >
       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 text-xs font-bold text-white">
@@ -50,12 +97,11 @@ function ConvItem({ conv, active, onClick }: { conv: Conversation; active: boole
           <span className="shrink-0 text-[10px] text-gray-400">{timeAgo(conv.lastMessageAt)}</span>
         </div>
         <p className="mt-0.5 truncate text-xs text-gray-500">{conv.lastMessagePreview || '—'}</p>
+        <LastSenderLine conv={conv} />
         <div className="mt-1.5 flex items-center gap-1.5">
-          {conv.status === 'human' && <Badge variant="warning" className="text-[10px]">Humain</Badge>}
-          {conv.status === 'bot' && <Badge variant="info" className="text-[10px]">IA</Badge>}
-          {conv.status === 'paused' && <Badge variant="default" className="text-[10px]">Pause</Badge>}
           {conv.contactType === 'lead' && <Badge variant="success" className="text-[10px]">Lead</Badge>}
           {conv.contactType === 'student' && <Badge variant="info" className="text-[10px]">Étudiant</Badge>}
+          {!conv.aiEnabled && <Badge variant="warning" className="text-[10px]">IA off</Badge>}
           {conv.unreadCount > 0 && (
             <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-bold text-white">
               {conv.unreadCount}
@@ -210,7 +256,7 @@ export function InboxPage() {
   const queryClient = useQueryClient()
   const currentUserId = useAuthStore((s) => s.user?._id)
   const [activeId, setActiveId] = useState<string | null>(null)
-  const [filterStatus, setFilterStatus] = useState<'all' | 'bot' | 'human'>('all')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'answered'>('all')
   const [search, setSearch] = useState('')
   const [composer, setComposer] = useState('')
   const [showComplaint, setShowComplaint] = useState(false)
@@ -218,15 +264,25 @@ export function InboxPage() {
   const threadRef = useRef<HTMLDivElement>(null)
 
   // ── Queries ──
+  // Fetch all matching the search; filter pending/answered client-side so counts stay accurate.
   const convsQ = useQuery({
-    queryKey: ['wa.conversations', filterStatus, search],
+    queryKey: ['wa.conversations', search],
     queryFn: () => whatsapp.listConversations({
-      status: filterStatus === 'all' ? undefined : filterStatus,
       search: search || undefined,
     }),
     refetchOnWindowFocus: false,
   })
-  const conversations = convsQ.data ?? []
+  const allConversations = convsQ.data ?? []
+  const counts = useMemo(() => ({
+    pending: allConversations.filter((c) => c.lastSenderType === 'client').length,
+    answered: allConversations.filter((c) => c.lastSenderType !== 'client').length,
+    total: allConversations.length,
+  }), [allConversations])
+  const conversations = useMemo(() => {
+    if (filter === 'pending') return allConversations.filter((c) => c.lastSenderType === 'client')
+    if (filter === 'answered') return allConversations.filter((c) => c.lastSenderType !== 'client')
+    return allConversations
+  }, [allConversations, filter])
 
   const messagesQ = useQuery({
     queryKey: ['wa.messages', activeId],
@@ -310,16 +366,28 @@ export function InboxPage() {
             />
           </div>
           <div className="mt-2 flex gap-1">
-            {(['all', 'human', 'bot'] as const).map((s) => (
+            {([
+              { key: 'all',      label: 'Tous',       Icon: Inbox,   count: counts.total },
+              { key: 'pending',  label: 'En attente', Icon: Clock,   count: counts.pending },
+              { key: 'answered', label: 'Répondus',   Icon: CheckCheck, count: counts.answered },
+            ] as const).map(({ key, label, Icon, count }) => (
               <button
-                key={s}
-                onClick={() => setFilterStatus(s)}
+                key={key}
+                onClick={() => setFilter(key)}
                 className={cn(
-                  'flex-1 rounded-md px-2 py-1 text-xs font-medium transition-colors cursor-pointer',
-                  filterStatus === s ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100',
+                  'flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors cursor-pointer',
+                  filter === key
+                    ? key === 'pending'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-500 hover:bg-gray-100',
                 )}
               >
-                {s === 'all' ? 'Tous' : s === 'human' ? 'Humain' : 'IA'}
+                <Icon className="h-3 w-3" />
+                {label}
+                <span className={cn('rounded-full px-1.5 text-[10px]', filter === key ? 'bg-white/60' : 'bg-gray-100')}>
+                  {count}
+                </span>
               </button>
             ))}
           </div>

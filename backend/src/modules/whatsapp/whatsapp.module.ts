@@ -7,6 +7,7 @@ import { QuickReply, QuickReplySchema } from './schemas/quick-reply.schema'
 import { FormSession, FormSessionSchema } from './schemas/form-session.schema'
 import { Lead, LeadSchema } from '../leads/schemas/lead.schema'
 import { Student, StudentSchema } from '../students/schemas/student.schema'
+import { User, UserSchema } from '../users/schemas/user.schema'
 import { WhatsAppService } from './whatsapp.service'
 import { WhatsAppController } from './whatsapp.controller'
 import { WhatsAppWebhookController } from './whatsapp-webhook.controller'
@@ -30,6 +31,7 @@ import { LeadsModule } from '../leads/leads.module'
       { name: FormSession.name, schema: FormSessionSchema },
       { name: Lead.name, schema: LeadSchema },
       { name: Student.name, schema: StudentSchema },
+      { name: User.name, schema: UserSchema },
     ]),
     AssistantModule,
     LlmModule,
