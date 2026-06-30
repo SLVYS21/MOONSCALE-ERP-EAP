@@ -28,6 +28,7 @@ import { CalcomDbModule } from './modules/calcom-db/calcom-db.module'
 import { LlmModule } from './modules/llm/llm.module'
 import { AssistantModule } from './modules/assistant/assistant.module'
 import { WhatsAppModule } from './modules/whatsapp/whatsapp.module'
+import { TypebotModule } from './modules/typebot/typebot.module'
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { WhatsAppModule } from './modules/whatsapp/whatsapp.module'
     LlmModule,
     AssistantModule,
     WhatsAppModule,
+    TypebotModule,
   ],
 })
 export class AppModule {}
