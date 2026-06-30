@@ -50,13 +50,15 @@ export class TypebotController {
     }
     const { key, size } = await this.minio.putVocal(file.buffer, file.mimetype)
     const publicBase = this.config.get<string>('BACKEND_PUBLIC_URL', 'http://localhost:3001')
-    const url = `${publicBase.replace(/\/$/, '')}/api/typebot/vocal/${encodeURIComponent(key)}`
+    const urlPath = key.split('/').map(encodeURIComponent).join('/')
+    const url = `${publicBase.replace(/\/$/, '')}/api/typebot/vocal/${urlPath}`
     this.logger.log(`Vocal stocké → ${key} (${size} bytes)`)
     return { url, key, size }
   }
 
-  @Get('vocal/:key(*)')
-  async streamVocal(@Param('key') key: string, @Res() res: Response) {
+  @Get('vocal/*key')
+  async streamVocal(@Param('key') keySegments: string | string[], @Res() res: Response) {
+    const key = Array.isArray(keySegments) ? keySegments.join('/') : keySegments
     try {
       const stat = await this.minio.statObject(key)
       const stream = await this.minio.getStream(key)
