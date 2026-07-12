@@ -297,18 +297,24 @@
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       els.status.textContent = '✅ Vocal envoyé !';
-      els.result.innerHTML = '<strong>URL de ton vocal :</strong><br>'
-        + '<span id="vocal-url">' + data.url + '</span><br>'
-        + '<button class="btn-primary" id="btn-copy" style="margin-top:8px;padding:8px 16px;font-size:13px">📋 Copier l\'URL</button>';
+      els.result.innerHTML =
+        '<strong>👉 Copie cette URL et colle-la dans le formulaire :</strong>'
+        + '<div style="margin:8px 0;padding:8px;background:#fff;border:1px solid #E2E8F0;border-radius:6px;font-family:monospace;font-size:11px;word-break:break-all"'
+        + ' id="vocal-url-box">' + data.url + '</div>'
+        + '<button class="btn-primary" id="btn-copy" style="width:100%;padding:14px;font-size:15px">📋 Copier l\'URL</button>'
+        + '<p style="margin-top:8px;color:#16A34A;font-size:13px">Ferme cet onglet et reviens au formulaire pour coller l\'URL.</p>';
       els.result.style.display = 'block';
-      document.getElementById('btn-copy').onclick = () => {
-        navigator.clipboard.writeText(data.url).then(() => {
-          document.getElementById('btn-copy').textContent = '✓ Copié';
-        });
-      };
+      const copyUrl = () => navigator.clipboard.writeText(data.url).then(() => {
+        document.getElementById('btn-copy').textContent = '✓ Copié — colle dans le formulaire';
+        document.getElementById('btn-copy').style.background = '#16A34A';
+      });
+      document.getElementById('btn-copy').onclick = copyUrl;
+      // Tentative de copie automatique (peut échouer sans interaction utilisateur récente)
+      copyUrl().catch(() => {});
       try {
-        window.parent.postMessage({ type: 'typebot-vocal-uploaded', url: data.url }, '*');
-      } catch (e) { /* parent might be cross-origin without listener */ }
+        const target = window.opener || (window.parent !== window ? window.parent : null);
+        if (target) target.postMessage({ type: 'typebot-vocal-uploaded', url: data.url }, '*');
+      } catch (e) { /* origin restrictions */ }
       els.btnSend.style.display = 'none';
     } catch (e) {
       showError("Échec de l'envoi : " + e.message + '. Réessaie.');
